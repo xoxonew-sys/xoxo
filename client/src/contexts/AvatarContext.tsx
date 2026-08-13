@@ -18,8 +18,12 @@ export interface AvatarOption {
   image: string;
 }
 
-const img = (name: string) =>
-  new URL(`../assets/images/${name}.webp`, import.meta.url).href;
+/**
+ * Görseller client/public/avatars/ altında duruyor.
+ * Bundler'a bağlı çözümleme yerine düz statik yol kullanıyoruz:
+ * dosya eksikse build patlamaz, sadece o görsel yüklenmez.
+ */
+const img = (name: string) => `/avatars/${name}.webp`;
 
 const femaleAvatars: Record<Personality, AvatarOption[]> = {
   1: [

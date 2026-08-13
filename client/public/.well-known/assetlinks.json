@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.xoxo.gossipai",
+      "sha256_cert_fingerprints": [
+        "03:30:A5:C3:0D:F7:0D:3E:92:93:38:49:84:8B:2C:A8:AD:C5:B2:B7:AF:6A:AF:58:C2:00:2D:90:2C:EB:27:AB"
+      ]
+    }
+  }
+]

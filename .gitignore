@@ -5,12 +5,3 @@ dist/
 *.log
 .DS_Store
 migrations/meta/
-
-.env
-node_modules
-dist
-*.aab
-*.apk
-xoxo ipade Pro
-xoxo-android-studio*
-

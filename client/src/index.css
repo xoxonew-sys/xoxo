@@ -1,0 +1,126 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================================================
+   XOXO tema değişkenleri
+   Chat.tsx'teki text-primary / bg-secondary/10 / border-accent
+   sınıfları bu üç renge bağlı:
+     primary   = sıcak pembe  (Bestie)
+     secondary = buz mavisi   (Angel)
+     accent    = zehir moru   (Snake)
+   ============================================================ */
+@layer base {
+  :root {
+    --background: 285 60% 4%;
+    --foreground: 300 20% 96%;
+
+    --card: 285 45% 8%;
+    --card-foreground: 300 20% 96%;
+
+    --primary: 330 92% 62%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 195 88% 62%;
+    --secondary-foreground: 285 60% 8%;
+
+    --accent: 275 85% 66%;
+    --accent-foreground: 0 0% 100%;
+
+    --muted: 285 30% 16%;
+    --muted-foreground: 288 15% 62%;
+
+    --destructive: 0 78% 58%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 288 30% 20%;
+    --input: 288 30% 18%;
+    --ring: 330 92% 62%;
+
+    --radius: 1rem;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: "Inter", system-ui, -apple-system, sans-serif;
+    /* Mobilde çift dokunuşla yakınlaştırmayı engelle — sohbet ekranı zıplamasın */
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    overscroll-behavior-y: none;
+  }
+
+  /* Arka plan atmosferi */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: -1;
+    background:
+      radial-gradient(60% 40% at 15% 0%, hsl(330 92% 62% / 0.12), transparent 70%),
+      radial-gradient(50% 35% at 85% 10%, hsl(275 85% 66% / 0.1), transparent 70%),
+      radial-gradient(70% 50% at 50% 100%, hsl(195 88% 62% / 0.07), transparent 70%);
+  }
+}
+
+@layer components {
+  /* Chat.tsx bu sınıfı mesaj balonlarında ve panellerde kullanıyor */
+  .glass-panel {
+    @apply bg-white/[0.04] backdrop-blur-xl border border-white/10;
+  }
+
+  .glass-panel-strong {
+    @apply bg-white/[0.08] backdrop-blur-2xl border border-white/15;
+  }
+}
+
+@layer utilities {
+  .font-display {
+    font-family: "Outfit", system-ui, sans-serif;
+  }
+  .font-body {
+    font-family: "Inter", system-ui, sans-serif;
+  }
+  .font-mono {
+    font-family: "JetBrains Mono", ui-monospace, monospace;
+  }
+
+  /* iOS çentik ve alt çubuk güvenli alanı */
+  .safe-top {
+    padding-top: env(safe-area-inset-top);
+  }
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
+
+/* İnce kaydırma çubuğu */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted));
+  border-radius: 99px;
+}
