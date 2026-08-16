@@ -169,18 +169,26 @@ function getVisionPrompt(character: number, language: "tr" | "en", gender: "male
 // Character 1 = Angel (Melek), Character 2 = Bestie (Kanka), Character 3 = Snake (Yılan)
 // Each character has 2 sub-levels for different personalities
 
-const getSystemPrompt = (character: number, language: "tr" | "en" = "tr", gender: "male" | "female" = "female", subLevel: number = 1) => {
+// gender          = kullanicinin kendi cinsiyeti (hitap sekli). null olabilir.
+// characterGender = secilen avatarin cinsiyeti (Snake kisilik varyanti).
+const getSystemPrompt = (character: number, language: "tr" | "en" = "tr", gender: "male" | "female" | null = null, subLevel: number = 1, characterGender: "male" | "female" = "female") => {
   // ===== GLOBAL PERSONALITY PROTOCOL =====
   // Bilingual system: Auto-detect user language, respond in same language
   // Character personality NEVER changes regardless of language
 
-  const genderContextEN = gender === "male" 
-    ? `You are XOXO - the user's closest male buddy having a real conversation. Be friendly, natural, and genuinely curious about their story. The user is MALE - talk to them like a bro, use masculine friendly language.`
-    : `You are XOXO - the user's closest girlfriend having a real conversation. Be friendly, natural, and genuinely curious about their story. The user is FEMALE - talk to them like a best friend.`;
+  const genderContextEN =
+    gender === "male"
+      ? `You are XOXO - the user's closest male buddy having a real conversation. Be friendly, natural, and genuinely curious about their story. The user is MALE - talk to them like a bro, use masculine friendly language.`
+      : gender === "female"
+      ? `You are XOXO - the user's closest girlfriend having a real conversation. Be friendly, natural, and genuinely curious about their story. The user is FEMALE - talk to them like a best friend.`
+      : `You are XOXO - the user's closest friend having a real conversation. Be friendly, natural, and genuinely curious about their story. You do NOT know the user's gender - use neutral, warm language and never assume it.`;
 
-  const genderContextTR = gender === "male"
-    ? `Sen XOXO'sun - kullanıcının en yakın erkek kankası olarak gerçek bir sohbet yapıyorsun. Samimi, doğal ve onların hikayesine gerçekten meraklı ol. Kullanıcı bir ERKEK - ona kardeş, abi, kanka gibi erkek erkeğe samimi konuş.`
-    : `Sen XOXO'sun - kullanıcının en yakın kız arkadaşı olarak gerçek bir sohbet yapıyorsun. Samimi, doğal ve onların hikayesine gerçekten meraklı ol. Kullanıcı bir KIZ - ona en yakın kız arkadaşı gibi konuş.`;
+  const genderContextTR =
+    gender === "male"
+      ? `Sen XOXO'sun - kullanıcının en yakın erkek kankası olarak gerçek bir sohbet yapıyorsun. Samimi, doğal ve onların hikayesine gerçekten meraklı ol. Kullanıcı bir ERKEK - ona kardeş, abi, kanka gibi erkek erkeğe samimi konuş.`
+      : gender === "female"
+      ? `Sen XOXO'sun - kullanıcının en yakın kız arkadaşı olarak gerçek bir sohbet yapıyorsun. Samimi, doğal ve onların hikayesine gerçekten meraklı ol. Kullanıcı bir KIZ - ona en yakın kız arkadaşı gibi konuş.`
+      : `Sen XOXO'sun - kullanıcının en yakın arkadaşı olarak gerçek bir sohbet yapıyorsun. Samimi, doğal ve onların hikayesine gerçekten meraklı ol. Kullanıcının cinsiyetini BİLMİYORSUN - nötr ve sıcak bir dil kullan, asla varsayımda bulunma.`;
 
   const bilingualCore = `
 ===== GLOBAL PERSONALITY PROTOCOL - DİYALOG DEVRİMİ =====
@@ -468,11 +476,12 @@ YANIT TARZI: [Sakin kal] + [Seçenekleri koy] + [Karara doğru it]`;
   } else if (character === 3) {
     // SNAKE
     if (subLevel === 1) {
-      // Snake Level 1 has gender-specific prompts
+      // Snake Seviye 1'in erkek/kadin varyanti KARAKTERIN cinsiyetine baglidir,
+      // kullanicininkine degil. Erkek Yilan soguk ve mesafeli, kadin Yilan otoriter.
       if (language === "en") {
-        return gender === "male" ? snakeL1_EN_Male : snakeL1_EN_Female;
+        return characterGender === "male" ? snakeL1_EN_Male : snakeL1_EN_Female;
       } else {
-        return gender === "male" ? snakeL1_TR_Male : snakeL1_TR_Female;
+        return characterGender === "male" ? snakeL1_TR_Male : snakeL1_TR_Female;
       }
     } else {
       return language === "en" ? snakeL2_EN : snakeL2_TR;
@@ -485,8 +494,8 @@ YANIT TARZI: [Sakin kal] + [Seçenekleri koy] + [Karara doğru it]`;
 
 // Async version that includes admin-configured additional prompts
 // Now supports 2-level character system: character (1-3) + subLevel (1-2)
-async function getSystemPromptWithAdminSettings(character: number, language: "tr" | "en" = "tr", gender: "male" | "female" = "female", subLevel: number = 1): Promise<string> {
-  const basePrompt = getSystemPrompt(character, language, gender, subLevel);
+async function getSystemPromptWithAdminSettings(character: number, language: "tr" | "en" = "tr", gender: "male" | "female" | null = null, subLevel: number = 1, characterGender: "male" | "female" = "female"): Promise<string> {
+  const basePrompt = getSystemPrompt(character, language, gender, subLevel, characterGender);
 
   try {
     // Load admin settings from database
@@ -2809,7 +2818,12 @@ Kullanıcının sorusu: "${message}"
       // SNAKE ACCELERATION: Snake uses 60 tokens max for 3-second latency target
       // NEW: subLevel support (1 or 2) - defaults to 1 if not provided
       const subLevel = parseInt(req.body.subLevel) || 1;
-      const systemPrompt = await getSystemPromptWithAdminSettings(session.judgmentLevel, language, userGender, subLevel);
+
+      // Secilen avatarin cinsiyeti - Snake kisilik varyantini belirler.
+      // Kullanicinin kendi cinsiyeti (userGender) bundan ayridir.
+      const characterGender = (req.body.characterGender === "male" ? "male" : "female") as "male" | "female";
+
+      const systemPrompt = await getSystemPromptWithAdminSettings(session.judgmentLevel, language, userGender, subLevel, characterGender);
 
       // SNAKE ACCELERATION v2.0 - 50K TOKEN BUDGET, ULTRA-MINIMAL
       // Snake: 50 tokens = 2 cümle max = 2 saniye latency target

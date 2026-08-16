@@ -12,25 +12,35 @@ export interface ChatMessage {
 }
 
 /**
- * useChat(level, language, userId, gender, subLevel)
+ * useChat(level, language, userId, gender, subLevel, characterGender)
+ *
+ * DIKKAT - iki ayri cinsiyet var, karistirilmamali:
+ *   gender          : kullanicinin KENDI cinsiyeti. Yapay zekanin ona nasil
+ *                     hitap edecegini belirler ("kanka" / "kizim"). Giris
+ *                     yapmamis kullanicida bilinmez, null gecilir.
+ *   characterGender : kullanicinin sectigi AVATARIN cinsiyeti. Snake
+ *                     karakterinin erkek/kadin kisilik varyantini belirler.
  *
  * Oturumu ilk mesajda tembel açar; sayfa açılışında boş oturum yaratmaz.
- * Oturum kimliği localStorage'da karakter+altseviye bazında tutulur, böylece
- * kullanıcı geri gelince aynı konuşma devam eder.
+ * Oturum kimliği localStorage'da karakter+cinsiyet+altseviye bazında tutulur,
+ * böylece kullanıcı geri gelince aynı konuşma devam eder.
  */
 export function useChat(
   level: 1 | 2 | 3,
   language: "tr" | "en",
   userId: string,
-  gender: "male" | "female",
+  gender: "male" | "female" | null,
   subLevel: 1 | 2 = 1,
+  characterGender: "male" | "female" = "female",
 ) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
   const sessionIdRef = useRef<number | null>(null);
 
-  const storageKey = `xoxo_session_${userId}_${level}_${subLevel}`;
+  // Karakter cinsiyeti de anahtarda: kadin Angel ile erkek Angel
+  // ayri sohbet gecmisi tutar, konusma birbirine karismaz.
+  const storageKey = `xoxo_session_${userId}_${level}_${characterGender}_${subLevel}`;
 
   /* Kayıtlı oturumu geri yükle */
   useEffect(() => {
@@ -104,7 +114,7 @@ export function useChat(
         const res = await apiRequest(
           "POST",
           `/api/chat/sessions/${sessionId}/messages`,
-          { content, language, gender, subLevel, imageBase64, imageType },
+          { content, language, gender, characterGender, subLevel, imageBase64, imageType },
         );
         const assistantMessage: ChatMessage = await res.json();
         setMessages((prev) => [...prev, assistantMessage]);
@@ -117,7 +127,7 @@ export function useChat(
         setIsTyping(false);
       }
     },
-    [ensureSession, language, gender, subLevel],
+    [ensureSession, language, gender, characterGender, subLevel],
   );
 
   const resetChat = useCallback(() => {

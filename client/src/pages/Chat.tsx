@@ -70,7 +70,7 @@ export default function Chat() {
   const level = parseInt(params?.level || "2") as 1 | 2 | 3;
   const theme = personalityThemes[level];
   const { t, language } = useLanguage();
-  const { getAvatar } = useAvatar();
+  const { getAvatar, gender, syncGenderFromAccount } = useAvatar();
   const { user } = useAuth();
 
   const [content, setContent] = useState("");
@@ -84,7 +84,8 @@ export default function Chat() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const cameraStreamRef = useRef<MediaStream | null>(null);
   const [showPaywall, setShowPaywall] = useState(false);
-  const [subLevel, setSubLevel] = useState<1 | 2>(1); // NEW: 2-Level character system
+  // subLevel artik ayri bir state degil - secili avatardan turetiliyor.
+  // Avatar secimi = kisilik seviyesi secimi (bkz. AvatarContext).
   const queryClient = useQueryClient();
   
   // GLOBAL VOICE MODE STATE (ANAYASA KURALI #1)
@@ -121,16 +122,31 @@ export default function Chat() {
   // Use authenticated user email for cross-device persistent memory
   const userIdForMemory = user?.email ? `email_${user.email}` : (user ? `user_${user.id}` : undefined);
   
-  // Get gender-based avatars for AI characters
-  const userGender = (user?.gender === "male" ? "male" : "female") as "male" | "female";
-  const { messages, isLoading, isTyping, sendMessage, resetChat } = useChat(level, language, userIdForMemory, userGender, subLevel);
+  // KARAKTERIN cinsiyeti - hangi avatar setini gordugumuz.
+  // Tek dogru kaynagi AvatarContext'tir; hesaptaki deger, kullanici bu cihazda
+  // henuz secim yapmadiysa oraya senkronlanir.
+  const characterGender = gender;
+
+  // KULLANICININ kendi cinsiyeti - yapay zekanin ona nasil hitap edecegi.
+  // Giris yapmamissa bilinmiyor; null gecip notr hitaba dusuyoruz.
+  const userGender =
+    user?.gender === "male" || user?.gender === "female" ? user.gender : null;
+
+  useEffect(() => {
+    syncGenderFromAccount(user?.gender);
+  }, [user?.gender]);
+
+  // ONEMLI: Bu uclu useChat cagrisindan ONCE tanimlanmali.
+  // getAvatar hicbir zaman undefined donmez; secim yoksa ilk secenege duser.
+  // Secili avatarin sirasi (subLevel) dogrudan kisilik seviyesidir.
+  const selectedAvatar = getAvatar(level);
+  const avatarImage = selectedAvatar.image;
+  const subLevel = selectedAvatar.subLevel as 1 | 2;
+  const { messages, isLoading, isTyping, sendMessage, resetChat } = useChat(level, language, userIdForMemory, userGender, subLevel, characterGender);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const genderAvatars = getAvatarsByGender(userGender);
-  
-  // Get selected avatar or default based on user's gender
-  const selectedAvatar = getAvatar(level);
-  const avatarImage = selectedAvatar?.image || genderAvatars[level][0].image;
+  // selectedAvatar / avatarImage / subLevel yukariya, useChat cagrisindan
+  // once tasindi. getAvatarsByGender importu artik gerekmiyorsa silinebilir.
 
   // Voice hooks
   const { 
@@ -581,33 +597,8 @@ export default function Chat() {
         <div className="w-11" />
       </header>
 
-      {/* SubLevel Toggle - 2-Level Character System */}
-      <div className="flex justify-center gap-2 mb-4 flex-shrink-0">
-        <button
-          onClick={() => { setSubLevel(1); resetChat(); }}
-          className={cn(
-            "font-body text-xs px-4 py-2 rounded-full transition-all duration-300 border",
-            subLevel === 1 
-              ? cn("text-white font-medium", theme.bg, theme.border, "shadow-lg", theme.glow)
-              : "bg-white/5 border-white/10 text-muted-foreground hover-elevate"
-          )}
-          data-testid="button-sublevel-1"
-        >
-          {subLevelNames[level]?.[1]?.[language] || "Level 1"}
-        </button>
-        <button
-          onClick={() => { setSubLevel(2); resetChat(); }}
-          className={cn(
-            "font-body text-xs px-4 py-2 rounded-full transition-all duration-300 border",
-            subLevel === 2 
-              ? cn("text-white font-medium", theme.bg, theme.border, "shadow-lg", theme.glow)
-              : "bg-white/5 border-white/10 text-muted-foreground hover-elevate"
-          )}
-          data-testid="button-sublevel-2"
-        >
-          {subLevelNames[level]?.[2]?.[language] || "Level 2"}
-        </button>
-      </div>
+      {/* Seviye secimi artik Judgment ekraninda avatar secimiyle birlikte yapiliyor.
+          Sohbet icinde ayri bir dugme yok - avatar ile kisilik hep tutarli kalsin diye. */}
 
       {/* Messages Area */}
       <main className="flex-1 overflow-y-auto mb-4 space-y-4 min-h-0">
