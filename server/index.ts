@@ -58,16 +58,20 @@ app.use(
    Sağlık kontrolü — railway.json bu adrese bakıyor.
    Veritabanına da dokunur ki bağlantı koptuysa fark edilsin.
    ------------------------------------------------------------ */
-app.get("/api/health", async (_req, res) => {
+app.get("/api/health", (_req, res) => {
+  res.json({ status: "ok", timestamp: new Date().toISOString() });
+});
+
+// Detaylı Veritabanı Durumu Kontrolü
+app.get("/api/health/db", async (_req, res) => {
   try {
     await pool.query("SELECT 1");
-    res.json({ status: "ok", db: "up", timestamp: new Date().toISOString() });
+    res.json({ status: "ok", db: "up" });
   } catch (err) {
     console.error("[HEALTH] Veritabanı erişilemiyor:", err);
     res.status(503).json({ status: "degraded", db: "down" });
   }
 });
-
 /* İstek günlüğü — sadece /api yolları, gövde kırpılmış */
 app.use((req, res, next) => {
   if (!req.path.startsWith("/api")) return next();

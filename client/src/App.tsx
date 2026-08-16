@@ -15,6 +15,11 @@ import { cn } from "@/lib/utils";
 const Chat = lazy(() => import("@/pages/Chat"));
 const Home = lazy(() => import("@/pages/Home"));
 const Judgment = lazy(() => import("@/pages/Judgment"));
+const Login = lazy(() => import("@/pages/Login"));
+const Profile = lazy(() => import("@/pages/Profile"));
+const Pricing = lazy(() => import("@/pages/Pricing"));
+const AdminLogin = lazy(() => import("@/pages/AdminLogin"));
+const AdminDashboard = lazy(() => import("@/pages/AdminDashboard"));
 
 function Loading() {
   return (
@@ -87,6 +92,11 @@ export default function App() {
                       <Route path="/" component={Home} />
                       <Route path="/judgment" component={Judgment} />
                       <Route path="/chat/:level" component={Chat} />
+                      <Route path="/login" component={Login} />
+                      <Route path="/profile" component={Profile} />
+                      <Route path="/pricing" component={Pricing} />
+                      <Route path="/admin/login" component={AdminLogin} />
+                      <Route path="/admin" component={AdminDashboard} />
                       <Route component={NotFound} />
                     </Switch>
                   </Suspense>
