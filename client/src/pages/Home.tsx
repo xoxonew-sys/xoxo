@@ -61,6 +61,17 @@ export default function Home() {
           transition={{ duration: 0.5 }}
           className="text-center space-y-3"
         >
+          {/* Kaynak logo-3d.png 1024x1024 / ~1.1 MB. Burada kullanilan
+              logo.webp ondan uretildi (bkz. scripts/generate-logo-assets.mjs):
+              256px, ~6 KB. Kaynagi dogrudan baglamayin - acilis ekranina
+              1.1 MB'lik bir gorsel koymak tum JS paketinin on katidir. */}
+          <img
+            src="/logo.webp"
+            alt=""
+            width={128}
+            height={128}
+            className="w-32 h-32 mx-auto mb-1 select-none pointer-events-none"
+          />
           <h1 className="text-6xl font-display font-extrabold tracking-tight text-primary">
             XOXO
           </h1>
