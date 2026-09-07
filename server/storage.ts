@@ -28,6 +28,46 @@ import { eq, and, gt, lt, desc, asc, sql, inArray } from "drizzle-orm";
    routes.ts'in çağırdığı 55 metodun tamamı.
    ============================================================ */
 
+/**
+ * Bir kredi düşümünün geçerli olup olmadığı — TEK karar noktası.
+ *
+ * NEDEN VAR:
+ * useXCredits, düşümü SQL'de `credits = credits - ${amount}` diye yapar
+ * ve koşulu `credits >= ${amount}`. Miktar negatifse ikisi de ters döner:
+ * çıkarma toplamaya, koşul da her zaman doğruya. Yani negatif bir miktar
+ * bakiyeyi düşürmez, ŞİŞİRİR — ve sınır yok.
+ *
+ * Bu yüzden karar hem uç noktada (routes.ts, istemciden gelen gövde) hem
+ * de ilkelin içinde veriliyor. Uç noktadaki kontrol kullanıcıya düzgün
+ * bir 400 döndürmek için; buradaki, ileride başka bir çağıranın aynı
+ * deliği yeniden açmaması için. Tek fonksiyon, iki yerde çağrılıyor ki
+ * kural iki ayrı yerde ayrışmasın.
+ *
+ * Pozitif TAM SAYI şartı: 0.5 kredi diye bir şey yok, 0 düşüm anlamsız,
+ * NaN sessizce geçmemeli.
+ *
+ * İKİ AYRI TAVAN, BİLEREK:
+ * Buradaki tavan yalnızca akıl sağlığı içindir; sunucunun kendi hesapladığı
+ * meşru düşümleri kesmemeli. En pahalı meşru düşüm 60 dakikalık oda: 80
+ * kredi, ve getRoomCreditCost tabloda olmayan süreler için dakika başına 2
+ * kredi üretir - yani 100'lük dar bir tavan uzun odaları sessizce bozardı.
+ * Güvenlik düzeltmesinin bir özelliği kırması kabul edilemez.
+ *
+ * Dar tavan, istemcinin miktarı KENDİ gönderdiği tek yerde durur:
+ * /api/credits/use (bkz. MAX_CLIENT_CREDIT_CHARGE).
+ */
+const ABSOLUTE_MAX_CREDIT_CHARGE = 10_000;
+
+/** İstemcinin gövdede gönderebileceği en yüksek miktar. Meşru kullanım 1-2. */
+export const MAX_CLIENT_CREDIT_CHARGE = 100;
+
+export function isValidCreditAmount(amount: unknown): amount is number {
+  return typeof amount === "number"
+    && Number.isInteger(amount)
+    && amount >= 1
+    && amount <= ABSOLUTE_MAX_CREDIT_CHARGE;
+}
+
 /* X-Room kredi maliyet tablosu (dakika → kredi) */
 const ROOM_COST_TABLE: Record<number, number> = {
   5: 10,
@@ -266,6 +306,15 @@ export const storage = {
     amount: number,
   ): Promise<{ success: boolean; remaining: number }> {
     const id = Number(userId);
+
+    // Çağırana güvenmiyoruz: negatif miktar aşağıdaki çıkarmayı toplamaya
+    // çevirir. Bkz. isValidCreditAmount başlığı.
+    if (!isValidCreditAmount(amount)) {
+      console.error(`[CREDITS] Geçersiz düşüm miktarı reddedildi: ${amount} (kullanıcı ${id})`);
+      const user = await this.getUserById(id);
+      return { success: false, remaining: user?.credits ?? 0 };
+    }
+
     const [updated] = await db
       .update(users)
       .set({ credits: sql`${users.credits} - ${amount}` })

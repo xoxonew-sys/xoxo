@@ -1,6 +1,6 @@
 import type { Express, Request, Response, NextFunction } from "express";
 import type { Server } from "http";
-import { storage } from "./storage";
+import { storage, isValidCreditAmount, MAX_CLIENT_CREDIT_CHARGE } from "./storage";
 import { api } from "@shared/routes";
 import Anthropic from "@anthropic-ai/sdk";
 import OpenAI from "openai";
@@ -1562,7 +1562,22 @@ export async function registerRoutes(
         return res.status(401).json({ message: "Kullanıcı bulunamadı" });
       }
 
-      const amount = parseInt(req.body.amount) || 1;
+      // Miktar istemciden gelir ve DOĞRUDAN düşüme giderdi. parseInt(-1000)
+      // negatif bir sayıdır, `|| 1` onu yakalamaz, ve useXCredits'teki
+      // çıkarma toplamaya döner: tek istekle sınırsız kredi. Bkz. commit.
+      //
+      // Yokluğunda 1 varsayımı korunuyor (mevcut çağıranlar öyle bekliyor),
+      // ama GELEN bir değer geçersizse sessizce 1'e düşmüyoruz - 400.
+      // Sessiz düzeltme, istemcideki bir hatayı görünmez yapardı.
+      const rawAmount = req.body?.amount;
+      const amount = rawAmount === undefined || rawAmount === null ? 1 : Number(rawAmount);
+      if (!isValidCreditAmount(amount) || amount > MAX_CLIENT_CREDIT_CHARGE) {
+        console.warn(`[CREDITS] Geçersiz miktar reddedildi: ${JSON.stringify(rawAmount)}`);
+        return res.status(400).json({
+          message: "Geçersiz kredi miktarı",
+          allowed: `1-${MAX_CLIENT_CREDIT_CHARGE}`,
+        });
+      }
 
       // EXPLICIT ADMIN EMAIL BYPASS - works even if database flags are incorrect
       if (ADMIN_EMAILS.includes(user.email)) {
