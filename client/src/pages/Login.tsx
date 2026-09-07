@@ -50,7 +50,7 @@ export default function Login() {
   const fail = (err: unknown) =>
     toast({
       title: t("chat.error"),
-      description: err instanceof Error ? err.message : "Bir şeyler ters gitti",
+      description: err instanceof Error ? err.message : t("auth.toast.generic_error"),
       variant: "destructive",
     });
 
@@ -65,7 +65,7 @@ export default function Login() {
       if (message.toLowerCase().includes("doğrula")) {
         setEmail(identifier.includes("@") ? identifier : "");
         setMode("otp");
-        toast({ title: "E-postanı doğrula", description: "Kodu gir ve devam et." });
+        toast({ title: t("auth.toast.verify_email"), description: t("auth.toast.verify_email_body") });
       } else {
         fail(err);
       }
@@ -80,7 +80,7 @@ export default function Login() {
       await register({ username, email, password, gender });
       setMode("otp");
       toast({
-        title: "Kod gönderildi",
+        title: t("auth.toast.code_sent"),
         description: `${email} adresine 6 haneli doğrulama kodu yolladık.`,
         variant: "success",
       });
@@ -95,7 +95,7 @@ export default function Login() {
     setBusy(true);
     try {
       await verifyOtp(email, otpCode);
-      toast({ title: "Hesabın hazır", variant: "success" });
+      toast({ title: t("auth.toast.account_ready"), variant: "success" });
       setLocation("/");
     } catch (err) {
       fail(err);
@@ -109,7 +109,7 @@ export default function Login() {
     try {
       await apiRequest("POST", "/api/auth/password-reset-request", { email });
       setMode("reset-verify");
-      toast({ title: "Sıfırlama kodu gönderildi", variant: "success" });
+      toast({ title: t("auth.toast.reset_sent"), variant: "success" });
     } catch (err) {
       fail(err);
     } finally {
@@ -125,7 +125,7 @@ export default function Login() {
         otpCode,
         newPassword: password,
       });
-      toast({ title: "Şifren değişti", variant: "success" });
+      toast({ title: t("auth.toast.password_changed"), variant: "success" });
       setMode("login");
       setIdentifier(email);
       setPassword("");
@@ -138,11 +138,11 @@ export default function Login() {
   };
 
   const titles: Record<Mode, string> = {
-    login: "Giriş yap",
-    register: "Hesap oluştur",
-    otp: "E-postanı doğrula",
-    "reset-request": "Şifreni sıfırla",
-    "reset-verify": "Yeni şifre belirle",
+    login: t("auth.title.login"),
+    register: t("auth.title.register"),
+    otp: t("auth.title.otp"),
+    "reset-request": t("auth.title.reset-request"),
+    "reset-verify": t("auth.title.reset-verify"),
   };
 
   return (
@@ -173,7 +173,7 @@ export default function Login() {
               <>
                 <Field
                   icon={User}
-                  placeholder="Kullanıcı adı veya e-posta"
+                  placeholder={t("auth.identifier")}
                   value={identifier}
                   autoComplete="username"
                   onChange={(e) => setIdentifier(e.target.value)}
@@ -181,25 +181,25 @@ export default function Login() {
                 <Field
                   icon={Lock}
                   type="password"
-                  placeholder="Şifre"
+                  placeholder={t("auth.password")}
                   value={password}
                   autoComplete="current-password"
                   onChange={(e) => setPassword(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && handleLogin()}
                 />
                 <NeonButton fullWidth size="lg" isLoading={busy} onClick={handleLogin}>
-                  Giriş yap
+                  {t("auth.submit.login")}
                 </NeonButton>
                 <div className="flex justify-between pt-1 text-xs text-muted-foreground">
                   <button type="button" onClick={() => setMode("reset-request")}>
-                    Şifremi unuttum
+                    {t("auth.forgot")}
                   </button>
                   <button
                     type="button"
                     className="text-primary"
                     onClick={() => setMode("register")}
                   >
-                    Hesap oluştur
+                    {t("auth.title.register")}
                   </button>
                 </div>
               </>
@@ -209,21 +209,21 @@ export default function Login() {
               <>
                 <Field
                   icon={User}
-                  placeholder="Kullanıcı adı"
+                  placeholder={t("auth.username")}
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                 />
                 <Field
                   icon={Mail}
                   type="email"
-                  placeholder="E-posta"
+                  placeholder={t("auth.email")}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                 />
                 <Field
                   icon={Lock}
                   type="password"
-                  placeholder="Şifre (en az 6 karakter)"
+                  placeholder={t("auth.password_min")}
                   value={password}
                   autoComplete="new-password"
                   onChange={(e) => setPassword(e.target.value)}
@@ -242,18 +242,18 @@ export default function Login() {
                           : "border-border text-muted-foreground",
                       )}
                     >
-                      {g === "female" ? "Kadın" : "Erkek"}
+                      {g === "female" ? t("auth.gender.female") : t("auth.gender.male")}
                     </button>
                   ))}
                 </div>
 
                 <NeonButton fullWidth size="lg" isLoading={busy} onClick={handleRegister}>
-                  Devam et
+                  {t("auth.submit.continue")}
                 </NeonButton>
                 <p className="text-center text-xs text-muted-foreground pt-1">
-                  Hesabın var mı?{" "}
+                  {t("auth.have_account")}{" "}
                   <button type="button" className="text-primary" onClick={() => setMode("login")}>
-                    Giriş yap
+                    {t("auth.submit.login")}
                   </button>
                 </p>
               </>
@@ -262,7 +262,7 @@ export default function Login() {
             {mode === "otp" && (
               <>
                 <p className="text-sm text-muted-foreground text-center leading-relaxed mb-2">
-                  {email || "E-posta adresine"} gönderilen 6 haneli kodu gir.
+                  {t("auth.otp_sent").replace("{email}", email || t("auth.your_email"))}
                 </p>
                 <input
                   value={otpCode}
@@ -278,14 +278,14 @@ export default function Login() {
                   disabled={otpCode.length !== 6}
                   onClick={handleVerify}
                 >
-                  Doğrula
+                  {t("auth.submit.verify")}
                 </NeonButton>
                 <button
                   type="button"
-                  onClick={() => resendOtp(email).then(() => toast({ title: "Kod tekrar gönderildi" }))}
+                  onClick={() => resendOtp(email).then(() => toast({ title: t("auth.toast.code_resent") }))}
                   className="w-full text-xs text-muted-foreground pt-1"
                 >
-                  Kod gelmedi mi? Tekrar gönder
+                  {t("auth.resend_prompt")}
                 </button>
               </>
             )}
@@ -295,12 +295,12 @@ export default function Login() {
                 <Field
                   icon={Mail}
                   type="email"
-                  placeholder="Kayıtlı e-postan"
+                  placeholder={t("auth.email_registered")}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                 />
                 <NeonButton fullWidth size="lg" isLoading={busy} onClick={handleResetRequest}>
-                  Sıfırlama kodu gönder
+                  {t("auth.submit.send_reset")}
                 </NeonButton>
               </>
             )}
@@ -317,12 +317,12 @@ export default function Login() {
                 <Field
                   icon={Lock}
                   type="password"
-                  placeholder="Yeni şifre"
+                  placeholder={t("auth.password_new")}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                 />
                 <NeonButton fullWidth size="lg" isLoading={busy} onClick={handleReset}>
-                  Şifreyi güncelle
+                  {t("auth.submit.update_password")}
                 </NeonButton>
               </>
             )}

@@ -984,6 +984,24 @@ export async function registerRoutes(
   });
 
   // Resend OTP
+  /* otpRequestLimiter'i buradan KALDIRMAYIN.
+   *
+   * Bu uc nokta cagrildiginda posta saglayicisina (Resend) gercek bir
+   * gonderim istegi cikar. Sinir olmadan tek bir saldirgan, kurbanin
+   * gelen kutusuna istedigi kadar dogrulama postasi yagdirabilir:
+   * bedava bir posta bombasi. Faturasi ve itibar hasari (spam sikayeti,
+   * gonderici alan adinin kara listeye dusmesi) bize kalir.
+   *
+   * Sinir, RESEND_API_KEY hala sahte oldugu ve hicbir posta gercekten
+   * gitmedigi donemde eklendi - yani bugun hicbir sey engellemiyormus
+   * gibi gorunuyor. Tam da bu yuzden yaziliyor: saglayici calismaya
+   * basladigi an bu sinir tek koruma olur, ve "zaten bir ise yaramiyor"
+   * diyerek kaldirilmasi en cok o an cazip gelir.
+   *
+   * Bir kullanici "kod gelmiyor, tekrar tekrar deniyorum" diye destek
+   * talebi actiginda cozum siniri gevsetmek DEGILDIR; once postanin
+   * neden gitmedigine bakin (bkz. email_logs tablosu).
+   */
   app.post("/api/auth/resend-otp", otpRequestLimiter, async (req, res) => {
     const requestTime = new Date().toISOString();
     // KVKK: istek IP'si ve e-posta adresi loglanmaz. Akisi izlemek icin
@@ -1035,6 +1053,24 @@ export async function registerRoutes(
   });
 
   // Password Reset Request
+  /* otpRequestLimiter'i buradan KALDIRMAYIN.
+   *
+   * Bu uc nokta cagrildiginda posta saglayicisina (Resend) gercek bir
+   * gonderim istegi cikar. Sinir olmadan tek bir saldirgan, kurbanin
+   * gelen kutusuna istedigi kadar dogrulama postasi yagdirabilir:
+   * bedava bir posta bombasi. Faturasi ve itibar hasari (spam sikayeti,
+   * gonderici alan adinin kara listeye dusmesi) bize kalir.
+   *
+   * Sinir, RESEND_API_KEY hala sahte oldugu ve hicbir posta gercekten
+   * gitmedigi donemde eklendi - yani bugun hicbir sey engellemiyormus
+   * gibi gorunuyor. Tam da bu yuzden yaziliyor: saglayici calismaya
+   * basladigi an bu sinir tek koruma olur, ve "zaten bir ise yaramiyor"
+   * diyerek kaldirilmasi en cok o an cazip gelir.
+   *
+   * Bir kullanici "kod gelmiyor, tekrar tekrar deniyorum" diye destek
+   * talebi actiginda cozum siniri gevsetmek DEGILDIR; once postanin
+   * neden gitmedigine bakin (bkz. email_logs tablosu).
+   */
   app.post("/api/auth/password-reset-request", otpRequestLimiter, async (req, res) => {
     try {
       const data = passwordResetRequestSchema.parse(req.body);
