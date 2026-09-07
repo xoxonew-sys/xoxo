@@ -222,9 +222,31 @@ export default function Chat() {
     }
   }, [messages.length, ttsSupported]); // Simplified deps - only track messages
 
-  // Scroll to bottom on new messages
+  // Yeni mesajda ve mesaj BUYUDUKCE en alta kaydir.
+  // Tek seferlik scroll yetmiyor: MessageReveal metni kademeli olarak
+  // aciyor, yani yukseklik mesaj eklendikten sonra da artiyor.
+  // MutationObserver bu buyumeyi takip edip alta yapisik kalmamizi saglar.
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    const end = messagesEndRef.current;
+    const container = end?.parentElement;
+    if (!end) return;
+
+    // Yeni mesajda yumusak, buyume sirasinda ani kaydirma
+    end.scrollIntoView({ behavior: "smooth", block: "end" });
+
+    if (!container) return;
+    const stickToBottom = () => {
+      end.scrollIntoView({ behavior: "auto", block: "end" });
+    };
+
+    const observer = new MutationObserver(stickToBottom);
+    observer.observe(container, {
+      childList: true,
+      subtree: true,
+      characterData: true,
+    });
+
+    return () => observer.disconnect();
   }, [messages]);
 
   // Auto-resize textarea
