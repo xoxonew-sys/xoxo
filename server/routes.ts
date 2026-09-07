@@ -1731,6 +1731,38 @@ export async function registerRoutes(
   // ==========================================
 
   /**
+   * KANAL KAPISI — uygulama satmaz, web satar.
+   *
+   * Play ve App Store, uygulama içinde tüketilen dijital içeriğin kendi
+   * ödeme sistemleriyle satılmasını şart koşar; Stripe/PayTR/Polar bunun
+   * yerine geçmez. TWA kabuğu web sitesinin kendisini gösterdiği için
+   * sitedeki her satın alma yüzeyi aynı anda uygulamanın içindedir.
+   *
+   * SUNUCU KANALI KENDİ BAŞINA ANLAYAMAZ, ve bunu açıkça yazıyoruz ki
+   * sonradan bakan biri burada olmayan bir güvenceyi varsaymasın:
+   *   - TWA, Chrome'un içinde çalışır ve Chrome'un çerez kavanozunu
+   *     paylaşır. Çereze yazılan kanal bilgisi aynı cihazdaki tarayıcı
+   *     oturumuna sızar; çerez kanalı değil cihazı işaretler.
+   *   - Sunucunun gördüğü tek gerçek sinyal `Referer: android-app://...`
+   *     ve o da yalnızca ilk BELGE isteğinde gelir. Bu /api çağrısında yok.
+   *
+   * Bu yüzden tespit istemcide (client/src/lib/channel.ts), yaptırım
+   * burada. Kapı KAPALI BAŞLAR: başlık yoksa da reddeder. Gerçek istemci
+   * her zaman gönderir; göndermeyen bir istek ya eski bir sürüm ya da
+   * elle kurulmuş bir istektir, ikisi de checkout açmamalı.
+   */
+  const requireWebChannel = (req: Request, res: Response): boolean => {
+    const channel = String(req.headers["x-client-channel"] || "").toLowerCase();
+    if (channel === "web") return true;
+    console.warn(`[CHANNEL] Checkout reddedildi - kanal: "${channel || "yok"}"`);
+    res.status(403).json({
+      message: "Satın alma web sitesinden yapılır",
+      channel: "web-only",
+    });
+    return false;
+  };
+
+  /**
    * Anahtar yokken checkout 500 döndürüyor ve log'da Stripe hatası gibi
    * görünüyordu. Eksik yapılandırma bir sunucu çökmesi değildir; 503.
    */
@@ -1755,11 +1787,18 @@ export async function registerRoutes(
   // Create checkout session for credits purchase
   app.post("/api/stripe/checkout/credits", async (req, res) => {
     try {
+      // Kanal kapısı en dışta: hangi yüzeyden geldiği, kimin geldiğinden
+      // önce gelir. Uygulamaya zaten arayüzde aynı şey yazıyor, dolayısıyla
+      // oturumsuz çağrıya 403 dönmek hiçbir şey sızdırmaz - buna karşılık
+      // kapıyı auth'un arkasına koymak, her auth kenar durumunu bir uyum
+      // sorusuna çevirirdi.
+      if (!requireWebChannel(req, res)) return;
+
       const userId = (req.session as any)?.userId;
       if (!userId) {
         return res.status(401).json({ message: "Oturum bulunamadı" });
       }
-      // Auth önce: oturumu olmayan birine yapılandırma durumunu söylemeyiz.
+      // Auth sonrası: oturumu olmayan birine yapılandırma durumunu söylemeyiz.
       if (!requireStripe(res)) return;
 
       // Fiyat gövdeden OKUNMAZ. İstemci yalnızca paket kimliği gönderir;
@@ -1842,11 +1881,18 @@ export async function registerRoutes(
   // Create checkout session for subscription
   app.post("/api/stripe/checkout/subscription", async (req, res) => {
     try {
+      // Kanal kapısı en dışta: hangi yüzeyden geldiği, kimin geldiğinden
+      // önce gelir. Uygulamaya zaten arayüzde aynı şey yazıyor, dolayısıyla
+      // oturumsuz çağrıya 403 dönmek hiçbir şey sızdırmaz - buna karşılık
+      // kapıyı auth'un arkasına koymak, her auth kenar durumunu bir uyum
+      // sorusuna çevirirdi.
+      if (!requireWebChannel(req, res)) return;
+
       const userId = (req.session as any)?.userId;
       if (!userId) {
         return res.status(401).json({ message: "Oturum bulunamadı" });
       }
-      // Auth önce: oturumu olmayan birine yapılandırma durumunu söylemeyiz.
+      // Auth sonrası: oturumu olmayan birine yapılandırma durumunu söylemeyiz.
       if (!requireStripe(res)) return;
 
       // Fiyat gövdeden OKUNMAZ; plan kimliğinden çözülür.

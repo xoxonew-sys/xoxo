@@ -3,6 +3,7 @@ import { useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Sparkles, Zap } from "lucide-react";
 import { CREDIT_PACKS, formatPrice } from "@shared/catalog";
+import { isAppChannel, channelHeaders, PURCHASE_DOMAIN } from "@/lib/channel";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useToast } from "@/hooks/use-toast";
 import { NeonButton } from "./NeonButton";
@@ -36,13 +37,17 @@ export function PaywallPopup({
   const [, setLocation] = useLocation();
   const [pendingPack, setPendingPack] = useState<string | null>(null);
 
+  // Uygulama kanalında hiçbir satın alma yüzeyi gösterilmez; bunun yerine
+  // bakiyenin web sitesinden yüklendiğini söyleyen not çıkar. Bkz. lib/channel.ts.
+  const appChannel = isAppChannel();
+
   const startCheckout = async (endpoint: string, body: Record<string, unknown>, key: string) => {
     setPendingPack(key);
     try {
       const res = await fetch(endpoint, {
         method: "POST",
         credentials: "include",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...channelHeaders() },
         body: JSON.stringify(body),
       });
       const data = await res.json();
@@ -103,6 +108,20 @@ export function PaywallPopup({
 
             <p className="text-sm text-muted-foreground leading-relaxed mb-5">{body}</p>
 
+            {appChannel ? (
+              <div className="rounded-xl border border-white/10 px-4 py-4">
+                <h3 className="font-display font-bold text-sm mb-1">
+                  {t("channel.web_only.title")}
+                </h3>
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  {t("channel.web_only.body")}
+                </p>
+                {/* Düz metin, bağlantı değil — iOS'ta ihlal, Play'de gri alan. */}
+                <p className="mt-2 select-all font-display font-bold tracking-wide">
+                  {PURCHASE_DOMAIN}
+                </p>
+              </div>
+            ) : (
             <div className="space-y-2 mb-5">
               {CREDIT_PACKS.map((pack) => (
                 <button
@@ -134,6 +153,7 @@ export function PaywallPopup({
                 </button>
               ))}
             </div>
+            )}
 
             {/*
               Eskiden buradan doğrudan {} gövdesiyle abonelik checkout'u
@@ -141,24 +161,30 @@ export function PaywallPopup({
               dönüyordu. Bu açılır pencerede plan seçecek yer yok ve
               kullanıcı adına haftalık/aylık seçmek sessiz bir karar
               olurdu — seçimin yapıldığı yere, /pricing'e gönderiyoruz.
+              Uygulama kanalında bu düğme hiç çıkmaz: /pricing orada da
+              satmıyor, ama Premium'u burada anmak satın almaya çağrı olur.
             */}
-            <NeonButton
-              variant="secondary"
-              fullWidth
-              disabled={pendingPack !== null}
-              onClick={() => {
-                onClose();
-                setLocation("/pricing");
-              }}
-              data-testid="go-premium"
-            >
-              <Sparkles className="w-4 h-4" />
-              {t("credits.premium")}
-            </NeonButton>
+            {!appChannel && (
+              <>
+                <NeonButton
+                  variant="secondary"
+                  fullWidth
+                  disabled={pendingPack !== null}
+                  onClick={() => {
+                    onClose();
+                    setLocation("/pricing");
+                  }}
+                  data-testid="go-premium"
+                >
+                  <Sparkles className="w-4 h-4" />
+                  {t("credits.premium")}
+                </NeonButton>
 
-            <p className="mt-3 text-center text-[11px] text-muted-foreground">
-              Ödeme Stripe üzerinden alınır. İstediğin zaman iptal edebilirsin.
-            </p>
+                <p className="mt-3 text-center text-[11px] text-muted-foreground">
+                  Ödeme Stripe üzerinden alınır. İstediğin zaman iptal edebilirsin.
+                </p>
+              </>
+            )}
           </motion.div>
         </motion.div>
       )}

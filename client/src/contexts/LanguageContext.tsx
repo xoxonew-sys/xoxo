@@ -37,6 +37,9 @@ const translations: Record<Language, Record<string, string>> = {
     "paywall.voice_limit.body": "Sesli sohbet her mesajda kredi harcar. Kredi al ya da Premium'a geç.",
     "paywall.message_limit.title": "Mesaj krediniz bitti",
     "paywall.message_limit.body": "Sohbete devam etmek için kredi yükle.",
+    "channel.web_only.title": "Satın alma web sitesinde",
+    "channel.web_only.body": "X-Kredi ve Premium yalnızca web sitemizden alınır. Tarayıcından şu adrese git:",
+    "channel.web_only.balance": "Mevcut bakiyen",
 
     /* giris / kayit */
     "auth.title.login": "Giriş yap",
@@ -116,6 +119,9 @@ const translations: Record<Language, Record<string, string>> = {
     "paywall.voice_limit.body": "Voice chat spends credits per message. Buy credits or go Premium.",
     "paywall.message_limit.title": "You're out of message credits",
     "paywall.message_limit.body": "Top up to keep the conversation going.",
+    "channel.web_only.title": "Purchases are made on the website",
+    "channel.web_only.body": "X-Credits and Premium are available on our website only. Open this address in your browser:",
+    "channel.web_only.balance": "Your balance",
 
     "common.back": "Back",
     "common.close": "Close",
