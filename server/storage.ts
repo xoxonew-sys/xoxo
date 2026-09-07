@@ -61,6 +61,20 @@ const ABSOLUTE_MAX_CREDIT_CHARGE = 10_000;
 /** İstemcinin gövdede gönderebileceği en yüksek miktar. Meşru kullanım 1-2. */
 export const MAX_CLIENT_CREDIT_CHARGE = 100;
 
+/**
+ * Premium erişim - TEK karar noktası.
+ *
+ * Premium artık ölçülen hiçbir şeyi ucuzlatmaz; kilit açar. Bu yüzden
+ * cevabı "bu kullanıcı şu an pencerenin içinde mi" sorusundan ibaret.
+ * users.is_premium bayrağı okunmaz: kalıcıydı, hiçbir zaman kapanmıyordu,
+ * ve premium'un sınırsız mesaj demek olduğu dönemden kalma.
+ */
+export function hasPremiumAccess(
+  user: { premiumUntil?: Date | null } | null | undefined,
+): boolean {
+  return !!user?.premiumUntil && user.premiumUntil.getTime() > Date.now();
+}
+
 export function isValidCreditAmount(amount: unknown): amount is number {
   return typeof amount === "number"
     && Number.isInteger(amount)
@@ -221,17 +235,42 @@ export const storage = {
       .where(eq(users.id, Number(userId)));
   },
 
-  async updateUserPremiumStatus(
+  /**
+   * Premium penceresini uzatır ve yeni bitiş anını döndürür.
+   *
+   * Mevcut pencere hâlâ açıksa ONUN üstüne eklenir, "şimdi"nin değil:
+   * bitmeden yeniden alan kullanıcı kalan günlerini kaybetmemeli.
+   */
+  async grantPremium(
     userId: number | string,
-    isPremium: boolean,
-    stripeSubscriptionId?: string,
-  ): Promise<void> {
+    days: number,
+    stripeReference?: string,
+  ): Promise<Date> {
+    const id = Number(userId);
+    const user = await this.getUserById(id);
+    const now = new Date();
+    const base = user?.premiumUntil && user.premiumUntil > now ? user.premiumUntil : now;
+    const until = new Date(base.getTime() + days * 24 * 60 * 60 * 1000);
+
     await db
       .update(users)
       .set({
-        isPremium,
-        ...(stripeSubscriptionId ? { stripeSubscriptionId } : {}),
+        premiumUntil: until,
+        // Eski bayrak okunmuyor ama açık kalan bir kayıtta yanıltıcı
+        // durmasın diye pencereyle birlikte tutuluyor.
+        isPremium: true,
+        ...(stripeReference ? { stripeSubscriptionId: stripeReference } : {}),
       })
+      .where(eq(users.id, id));
+
+    return until;
+  },
+
+  /** Admin panelinden premium'u kapatmak için. */
+  async revokePremium(userId: number | string): Promise<void> {
+    await db
+      .update(users)
+      .set({ premiumUntil: null, isPremium: false })
       .where(eq(users.id, Number(userId)));
   },
 
@@ -295,7 +334,7 @@ export const storage = {
     const user = await this.getUserById(userId);
     return {
       credits: user?.credits ?? 0,
-      isPremium: user?.isPremium ?? false,
+      isPremium: hasPremiumAccess(user),
       isGodMode: user?.isGodMode ?? false,
     };
   },

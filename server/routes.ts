@@ -1,6 +1,8 @@
 import type { Express, Request, Response, NextFunction } from "express";
 import type { Server } from "http";
-import { storage, isValidCreditAmount, MAX_CLIENT_CREDIT_CHARGE } from "./storage";
+import {
+  storage, isValidCreditAmount, MAX_CLIENT_CREDIT_CHARGE, hasPremiumAccess,
+} from "./storage";
 import { api } from "@shared/routes";
 import Anthropic from "@anthropic-ai/sdk";
 import OpenAI from "openai";
@@ -21,7 +23,9 @@ import crypto from "crypto";
 import { generateOTP, getOTPExpiry, sendVerificationEmail, sendPasswordResetEmail } from "./email";
 import { otpMatches } from "./otp";
 import { otpVerifyLimiter, otpRequestLimiter, loginLimiter } from "./rateLimit";
-import { CURRENCY, findCreditPack, findPremiumPlan } from "@shared/catalog";
+import {
+  CURRENCY, findCreditPack, findPremiumPlan, PREMIUM_GRANT_DAYS,
+} from "@shared/catalog";
 import {
   isStripeConfigured, checkoutBaseUrl,
   getUncachableStripeClient, getStripePublishableKey,
@@ -1518,12 +1522,13 @@ export async function registerRoutes(
         return res.json({ success: true, remaining: user.credits, isGodMode: true });
       }
 
-      // Premium users have unlimited messages
-      if (user.isPremium) {
-        return res.json({ success: true, remaining: user.credits, isPremium: true });
-      }
+      // Premium ARTIK ÖLÇÜLEN HİÇBİR ŞEYİ BEDAVA YAPMAZ. Buradaki atlama
+      // kaldırıldı: premium kullanıcı da mesaj başına kredi öder.
+      // Gerekçe shared/catalog.ts başlığında - hacim satan bir abonelik,
+      // tavanı vidalanmış sınırsız premium'dur; aynı şekil, küçüğü.
+      // Premium erişim satar (karakter kilidi, öncelik), mesaj satmaz.
 
-      // Free users: deduct 1 X-Credit per message (text or voice)
+      // Deduct 1 X-Credit per message (text or voice) - everyone pays
       const MESSAGE_CREDIT_COST = 1;
       const result = await storage.useXCredits(userId, MESSAGE_CREDIT_COST);
 
@@ -1591,11 +1596,7 @@ export async function registerRoutes(
         return res.json({ success: true, remaining: user.credits, isGodMode: true });
       }
 
-      // Premium users bypass credit checks
-      if (user.isPremium) {
-        console.log(`[CREDITS] Premium user ${user.email} bypassing ${amount} credit deduction`);
-        return res.json({ success: true, remaining: user.credits, isPremium: true });
-      }
+      // Premium atlaması kaldırıldı - bkz. mesaj uç noktasındaki not.
 
       // Check if user has enough credits
       if (user.credits < amount) {
@@ -1643,7 +1644,7 @@ export async function registerRoutes(
 
       res.json({
         credits: user.credits,
-        isPremium: user.isPremium,
+        isPremium: hasPremiumAccess(user),
         isGodMode: effectiveIsGodMode,
         isAdmin: effectiveIsAdmin,
         isUnlimited: effectiveIsGodMode || effectiveIsAdmin // For "Kredi: Unlimited" display
@@ -1688,10 +1689,14 @@ export async function registerRoutes(
         return res.json({ success: true, remaining: user.credits, isGodMode: true, cost: 0 });
       }
 
-      // Premium users don't pay for rooms
-      if (user.isPremium) {
-        return res.json({ success: true, remaining: user.credits, isPremium: true });
-      }
+      // X-ROOM İNDİRİMİ v1'DE BİLEREK YOK - eksiklik değil, karar.
+      // Premium'un diğer ayrıcalıkları ölçülmez: bir karakterin kilidini
+      // açmak, sıra önceliği, rozet - kullanım ne olursa olsun maliyeti
+      // sabit. Oda indirimi tek ölçülen ayrıcalıktı: maliyeti kullanımla
+      // büyür, geliri sabit kalır, yani sınırsız premium'un küçük bir
+      // kopyasını geri getirirdi. Doğru sınırlamak (dönem başına oda
+      // kotası, indirim oranı, kötüye kullanım) bu aşamada hak ettiğinden
+      // fazla tasarım. Geri gelecekse bir sayıyla ve kotayla gelsin.
 
       const { duration } = req.body;
       if (!duration || typeof duration !== 'number') {
@@ -1921,9 +1926,10 @@ export async function registerRoutes(
         return res.status(401).json({ message: "Kullanıcı bulunamadı" });
       }
 
-      if (user.isPremium) {
-        return res.status(400).json({ message: "Zaten premium üyesiniz" });
-      }
+      // Aktif premium'u olan biri yeniden satın alabilir: grantPremium
+      // pencereyi mevcut bitişin ÜSTÜNE ekler. Eskiden burada 400 vardı;
+      // süreli pencerede bu, kullanıcıyı bitmesini beklemeye ve arada
+      // erişimsiz kalmaya zorlardı.
 
       const stripe = await getUncachableStripeClient();
 
@@ -1952,7 +1958,7 @@ export async function registerRoutes(
 
       // Create checkout session for subscription
       const baseUrl = checkoutBaseUrl();
-      const planName = plan.id === 'weekly' ? 'Haftalık Premium' : 'Aylık Premium';
+      const planName = 'Aylık Premium';
 
       const session = await stripe.checkout.sessions.create({
         customer: stripeCustomerId,
@@ -1962,14 +1968,18 @@ export async function registerRoutes(
             currency: CURRENCY,
             product_data: {
               name: `XOXO ${planName}`,
-              description: `Sınırsız sesli mesaj, sınırsız oda süresi, Snake karakteri`
+              description: `Snake karakteri, tüm avatarlar, seste sıra önceliği - mesaj kredisi içermez`
             },
-            unit_amount: plan.priceInCents,
-            recurring: { interval: plan.interval }
+            unit_amount: plan.priceInCents
           },
           quantity: 1
         }],
-        mode: 'subscription',
+        // TEK SEFERLİK, ABONELİK DEĞİL. Yenilenen bir abonelik, iptal ve
+        // ödeme başarısızlığını uzlaştıracak bir webhook ister; o yokken
+        // fatura durumu ile yetki birbirinden kopar - bu kodun geldiği
+        // hâl tam olarak buydu. Tek ödeme 30 gün açar, kendiliğinden
+        // kapanır, uzlaştırılacak bir şey kalmaz.
+        mode: 'payment',
         success_url: `${baseUrl}/payment-success?type=subscription&plan=${plan.id}&session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${baseUrl}/pricing`,
         metadata: {
@@ -2084,12 +2094,15 @@ export async function registerRoutes(
       } else if (productType === 'subscription') {
         console.log('[VERIFY] 📊 Activating premium for user', userId);
 
-        await storage.updateUserPremiumStatus(userId, true, session.subscription as string);
+        const until = await storage.grantPremium(
+          userId, PREMIUM_GRANT_DAYS, session.payment_intent as string,
+        );
+        console.log(`[VERIFY] Premium ${PREMIUM_GRANT_DAYS} gün uzatıldı, bitiş: ${until.toISOString()}`);
 
         await storage.recordPayment({
           userId,
           stripeSessionId: session.id,
-          stripeSubscriptionId: session.subscription as string,
+          stripePaymentIntentId: session.payment_intent as string,
           amount: session.amount_total || 0,
           currency: session.currency || 'usd',
           productType: 'subscription',
@@ -2355,7 +2368,7 @@ export async function registerRoutes(
       }
 
       // Build update object with validation
-      const updates: Partial<{ credits: number; isPremium: boolean; isAdmin: boolean; isGodMode: boolean; isBanned: boolean }> = {};
+      const updates: Partial<{ credits: number; isAdmin: boolean; isGodMode: boolean; isBanned: boolean }> = {};
 
       if (typeof creditDelta === "number" && creditDelta !== 0) {
         const newCredits = Math.max(0, (user.credits || 0) + Math.floor(creditDelta));
@@ -2363,7 +2376,13 @@ export async function registerRoutes(
       } else if (typeof credits === "number" && credits >= 0 && credits <= 1000000) {
         updates.credits = Math.floor(credits);
       }
-      if (typeof isPremium === "boolean") updates.isPremium = isPremium;
+      // Admin panelindeki premium anahtarı artık pencereyi yazar.
+      // Boolean sütunu doğrudan set etmek yetkiyi değiştirmezdi -
+      // hasPremiumAccess premium_until'e bakıyor.
+      if (typeof isPremium === "boolean") {
+        if (isPremium) await storage.grantPremium(userId, PREMIUM_GRANT_DAYS);
+        else await storage.revokePremium(userId);
+      }
       if (typeof isAdmin === "boolean") updates.isAdmin = isAdmin;
       if (typeof isGodMode === "boolean") updates.isGodMode = isGodMode;
       if (typeof isBanned === "boolean") updates.isBanned = isBanned;
@@ -2434,7 +2453,7 @@ Kullanıcıya her zaman "Sir" veya "Mehmet" diye hitap et. Tony Stark'ın Jarvis
 GÜNCEL SİSTEM VERİLERİ:
 - Toplam Kullanıcı: ${users.length}
 - Doğrulanmış Kullanıcı: ${users.filter(u => u.emailVerified).length}
-- Premium Kullanıcı: ${users.filter(u => u.isPremium).length}
+- Premium Kullanıcı: ${users.filter(u => hasPremiumAccess(u)).length}
 - Bugünkü Satış: $${(todaySales / 100).toFixed(2)}
 - Bugünkü İşlem Sayısı: ${todayPayments.length}
 - Toplam Gelir: $${(revenueStats.totalRevenue / 100).toFixed(2)}
@@ -2518,7 +2537,7 @@ Kullanıcının sorusu: "${message}"
         stats: {
           totalUsers: users.length,
           verifiedUsers: users.filter(u => u.emailVerified).length,
-          premiumUsers: users.filter(u => u.isPremium).length,
+          premiumUsers: users.filter(u => hasPremiumAccess(u)).length,
           todaySales,
           creditUsageRate: creditStats.creditUsageRate,
           activeCredits: creditStats.activeCredits,

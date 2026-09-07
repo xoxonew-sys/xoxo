@@ -21,7 +21,6 @@ const PACK_HINTS: Record<string, string> = {
 };
 
 const PLAN_LABELS: Record<string, string> = {
-  weekly: "Haftalık",
   monthly: "Aylık",
 };
 
@@ -146,13 +145,28 @@ export default function Pricing() {
           </div>
 
           <div className="glass-panel-strong rounded-2xl p-5">
-            <h2 className="font-display font-bold text-secondary mb-3">Premium</h2>
-            <ul className="space-y-2 mb-4">
+            <h2 className="font-display font-bold text-secondary mb-1">Premium</h2>
+
+            {/*
+              BU UYARI SATIN ALMADAN ÖNCE GÖRÜNMEK ZORUNDA, SSS'de değil.
+              Premium kredi içermez; kredisi biten premium kullanıcı mesaj
+              gönderemez. Bunu önceden söylemeyen her sürüm destek yükü
+              üretir ve haklı olarak "iki kez ödedim" tepkisi alır.
+              Ayrıcalık listesinden ÖNCE duruyor, sonra değil.
+            */}
+            <p className="text-sm font-display font-bold text-foreground mb-1">
+              {t("premium.not_credits")}
+            </p>
+            <p className="text-xs text-muted-foreground leading-relaxed mb-4">
+              {t("premium.not_credits.detail")}
+            </p>
+
+            <ul className="space-y-2 mb-2">
               {[
-                "Sınırsız yazılı sohbet",
-                "Sesli modda öncelikli işlem",
+                "Snake karakterinin kilidi açılır",
                 "Tüm avatarlara erişim",
-                "X-Room oluşturmada indirim",
+                "Sesli modda sıra önceliği",
+                "Premium rozeti",
               ].map((line) => (
                 <li key={line} className="flex items-start gap-2 text-sm text-muted-foreground">
                   <Check className="w-4 h-4 text-secondary flex-shrink-0 mt-0.5" />
@@ -160,37 +174,32 @@ export default function Pricing() {
                 </li>
               ))}
             </ul>
+            <p className="text-[11px] text-muted-foreground mb-4">{t("premium.window")}</p>
 
-            {isPremium ? (
-              <NeonButton variant="secondary" fullWidth size="lg" disabled>
-                Zaten Premium'sun
+            {PREMIUM_PLANS.map((plan) => (
+              <NeonButton
+                key={plan.id}
+                variant="secondary"
+                fullWidth
+                size="lg"
+                isLoading={pending === plan.id}
+                disabled={pending !== null}
+                onClick={() =>
+                  checkout("/api/stripe/checkout/subscription", { planId: plan.id }, plan.id)
+                }
+                data-testid={`premium-plan-${plan.id}`}
+              >
+                {/* Aktifken de alınabilir: satın alma pencereyi uzatır. */}
+                {isPremium ? "Premium'u uzat" : "Premium'a geç"}
+                {" — "}
+                {formatPrice(plan.priceInCents)} / {PLAN_LABELS[plan.id].toLowerCase()}
               </NeonButton>
-            ) : (
-              <div className="grid grid-cols-2 gap-2">
-                {PREMIUM_PLANS.map((plan) => (
-                  <NeonButton
-                    key={plan.id}
-                    variant={plan.id === "monthly" ? "secondary" : "outline"}
-                    fullWidth
-                    isLoading={pending === plan.id}
-                    disabled={pending !== null}
-                    onClick={() =>
-                      checkout("/api/stripe/checkout/subscription", { planId: plan.id }, plan.id)
-                    }
-                    data-testid={`premium-plan-${plan.id}`}
-                  >
-                    <span className="flex flex-col leading-tight">
-                      <span>{PLAN_LABELS[plan.id]}</span>
-                      <span className="text-[11px] opacity-80">{formatPrice(plan.priceInCents)}</span>
-                    </span>
-                  </NeonButton>
-                ))}
-              </div>
-            )}
+            ))}
           </div>
 
           <p className="text-center text-[11px] text-muted-foreground mt-4 pb-6">
-            Ödemeler Stripe üzerinden alınır. Aboneliği istediğin zaman iptal edebilirsin.
+            Ödemeler Stripe üzerinden alınır. Premium tek seferlik bir ödemedir,
+            otomatik yenilenmez — iptal edilecek bir abonelik yok.
           </p>
         </>
       )}

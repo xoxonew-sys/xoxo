@@ -30,7 +30,20 @@ export const users = pgTable(
     avatarPreset: text("avatar_preset"),
 
     credits: integer("credits").notNull().default(0), // X-Kredi bakiyesi
+    /**
+     * KULLANMAYIN - premium erişimi artık premiumUntil'den türetilir.
+     * Sütun duruyor çünkü düşürmek üretim verisi üzerinde bir migration
+     * gerektirir ve bu değişikliğin kapsamında değil. Yetki kararı için
+     * hasPremiumAccess() çağırın; bu bayrak eski kayıtlarda güncel değil.
+     */
     isPremium: boolean("is_premium").notNull().default(false),
+    /**
+     * Premium erişimin bittiği an. null = premium değil.
+     * Boolean yerine tarih, çünkü premium artık süreli bir pencere:
+     * tek seferlik ödeme 30 gün açar, yenilenmez, kendiliğinden kapanır.
+     * Webhook olmadan doğru kalan tek biçim bu (bkz. shared/catalog.ts).
+     */
+    premiumUntil: timestamp("premium_until"),
     isGodMode: boolean("is_god_mode").notNull().default(false),
     isAdmin: boolean("is_admin").notNull().default(false),
 

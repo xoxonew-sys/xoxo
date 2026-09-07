@@ -40,6 +40,9 @@ const translations: Record<Language, Record<string, string>> = {
     "channel.web_only.title": "Satın alma web sitesinde",
     "channel.web_only.body": "X-Kredi ve Premium yalnızca web sitemizden alınır. Tarayıcından şu adrese git:",
     "channel.web_only.balance": "Mevcut bakiyen",
+    "premium.not_credits": "Premium kilit açar, mesaj vermez.",
+    "premium.not_credits.detail": "Mesajlar X-Kredi ile ödenir ve Premium kredi içermez. Kredin biterse Premium'la da mesaj gönderemezsin — X-Kredi al.",
+    "premium.window": "30 günlük erişim. Kendiliğinden biter, otomatik yenilenmez.",
 
     /* giris / kayit */
     "auth.title.login": "Giriş yap",
@@ -122,6 +125,9 @@ const translations: Record<Language, Record<string, string>> = {
     "channel.web_only.title": "Purchases are made on the website",
     "channel.web_only.body": "X-Credits and Premium are available on our website only. Open this address in your browser:",
     "channel.web_only.balance": "Your balance",
+    "premium.not_credits": "Premium unlocks. It does not feed.",
+    "premium.not_credits.detail": "Messages are paid for with X-Credits, and Premium includes none. If you run out, Premium will not let you send — buy X-Credits.",
+    "premium.window": "30 days of access. It ends on its own and never auto-renews.",
 
     "common.back": "Back",
     "common.close": "Close",
