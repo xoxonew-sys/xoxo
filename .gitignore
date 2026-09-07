@@ -5,3 +5,12 @@ dist/
 *.log
 .DS_Store
 migrations/meta/
+
+# Yedek dosyalari asla commit edilmez. patch-*.mjs betikleri bunlari
+# uretiyordu; betikler kaldirildi, kural onlem olarak kaliyor.
+*.bak
+*.orig
+
+# Kok dizindeki server/ ve shared/ kopyalari (db.ts, storage.ts, email.ts,
+# schema.ts, routes.ts) 2026-09-07'de silindi - hicbir sey import etmiyordu
+# ve guncelligini yitirmislerdi. Gercekleri server/ ve shared/ altinda.
