@@ -21,6 +21,11 @@ import crypto from "crypto";
 import { generateOTP, getOTPExpiry, sendVerificationEmail, sendPasswordResetEmail } from "./email";
 import { otpMatches } from "./otp";
 import { otpVerifyLimiter, otpRequestLimiter, loginLimiter } from "./rateLimit";
+import { CURRENCY, findCreditPack, findPremiumPlan } from "@shared/catalog";
+import {
+  isStripeConfigured, checkoutBaseUrl,
+  getUncachableStripeClient, getStripePublishableKey,
+} from "./stripeClient";
 // Note: Using ElevenLabs for high-quality TTS (already configured)
 // Client-side Web Speech API provides free alternative for basic TTS
 
@@ -1725,10 +1730,20 @@ export async function registerRoutes(
   // STRIPE CHECKOUT ROUTES
   // ==========================================
 
+  /**
+   * Anahtar yokken checkout 500 döndürüyor ve log'da Stripe hatası gibi
+   * görünüyordu. Eksik yapılandırma bir sunucu çökmesi değildir; 503.
+   */
+  const requireStripe = (res: Response): boolean => {
+    if (isStripeConfigured()) return true;
+    console.error("[STRIPE] STRIPE_SECRET_KEY tanımlı değil - ödeme yolu kapalı");
+    res.status(503).json({ message: "Ödeme sistemi şu anda kullanılamıyor" });
+    return false;
+  };
+
   // Get Stripe publishable key
   app.get("/api/stripe/publishable-key", async (req, res) => {
     try {
-      const { getStripePublishableKey } = await import("./stripeClient");
       const publishableKey = await getStripePublishableKey();
       res.json({ publishableKey });
     } catch (error) {
@@ -1744,10 +1759,14 @@ export async function registerRoutes(
       if (!userId) {
         return res.status(401).json({ message: "Oturum bulunamadı" });
       }
+      // Auth önce: oturumu olmayan birine yapılandırma durumunu söylemeyiz.
+      if (!requireStripe(res)) return;
 
-      const { creditsAmount, priceInCents } = req.body;
-      if (!creditsAmount || !priceInCents) {
-        return res.status(400).json({ message: "Kredi miktarı ve fiyat gerekli" });
+      // Fiyat gövdeden OKUNMAZ. İstemci yalnızca paket kimliği gönderir;
+      // tutar shared/catalog.ts'ten okunur — bkz. oradaki başlık notu.
+      const pack = findCreditPack(req.body?.packId);
+      if (!pack) {
+        return res.status(400).json({ message: "Geçersiz kredi paketi" });
       }
 
       const user = await storage.getUserById(userId);
@@ -1755,7 +1774,6 @@ export async function registerRoutes(
         return res.status(401).json({ message: "Kullanıcı bulunamadı" });
       }
 
-      const { getUncachableStripeClient } = await import("./stripeClient");
       const stripe = await getUncachableStripeClient();
 
       // Create or get Stripe customer - always verify customer exists
@@ -1782,32 +1800,33 @@ export async function registerRoutes(
       }
 
       // Create checkout session for one-time credits purchase
-      const baseUrl = `https://${process.env.REPLIT_DOMAINS?.split(',')[0]}`;
+      const baseUrl = checkoutBaseUrl();
       const session = await stripe.checkout.sessions.create({
         customer: stripeCustomerId,
         payment_method_types: ['card'],
         line_items: [{
           price_data: {
-            currency: 'usd',
+            currency: CURRENCY,
             product_data: {
-              name: `${creditsAmount} X-Credits`,
-              description: `Purchase ${creditsAmount} X-Credits for XOXO`
+              name: `${pack.credits} X-Credits`,
+              description: `Purchase ${pack.credits} X-Credits for XOXO`
             },
-            unit_amount: priceInCents
+            unit_amount: pack.priceInCents
           },
           quantity: 1
         }],
         mode: 'payment',
-        success_url: `${baseUrl}/payment-success?type=credits&amount=${creditsAmount}&session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: `${baseUrl}/x-store`,
+        success_url: `${baseUrl}/payment-success?type=credits&amount=${pack.credits}&session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${baseUrl}/pricing`,
         metadata: {
           userId: userId.toString(),
           productType: 'credits',
-          creditsAmount: creditsAmount.toString()
+          packId: pack.id,
+          creditsAmount: pack.credits.toString()
         }
       });
 
-      console.log(`[STRIPE] Created checkout session: ${session.id} for user ${userId}, credits: ${creditsAmount}`);
+      console.log(`[STRIPE] Created checkout session: ${session.id} for user ${userId}, credits: ${pack.credits}`);
       res.json({ url: session.url, sessionId: session.id });
     } catch (error: any) {
       console.error("[STRIPE] Checkout credits error:", error);
@@ -1827,10 +1846,13 @@ export async function registerRoutes(
       if (!userId) {
         return res.status(401).json({ message: "Oturum bulunamadı" });
       }
+      // Auth önce: oturumu olmayan birine yapılandırma durumunu söylemeyiz.
+      if (!requireStripe(res)) return;
 
-      const { planType, priceInCents } = req.body; // "weekly" or "monthly"
-      if (!planType || !priceInCents) {
-        return res.status(400).json({ message: "Plan tipi ve fiyat gerekli" });
+      // Fiyat gövdeden OKUNMAZ; plan kimliğinden çözülür.
+      const plan = findPremiumPlan(req.body?.planId);
+      if (!plan) {
+        return res.status(400).json({ message: "Geçersiz premium plan" });
       }
 
       const user = await storage.getUserById(userId);
@@ -1842,7 +1864,6 @@ export async function registerRoutes(
         return res.status(400).json({ message: "Zaten premium üyesiniz" });
       }
 
-      const { getUncachableStripeClient } = await import("./stripeClient");
       const stripe = await getUncachableStripeClient();
 
       // Create or get Stripe customer - always verify customer exists
@@ -1869,36 +1890,35 @@ export async function registerRoutes(
       }
 
       // Create checkout session for subscription
-      const baseUrl = `https://${process.env.REPLIT_DOMAINS?.split(',')[0]}`;
-      const planName = planType === 'weekly' ? 'Haftalık Premium' : 'Aylık Premium';
-      const interval = planType === 'weekly' ? 'week' : 'month';
+      const baseUrl = checkoutBaseUrl();
+      const planName = plan.id === 'weekly' ? 'Haftalık Premium' : 'Aylık Premium';
 
       const session = await stripe.checkout.sessions.create({
         customer: stripeCustomerId,
         payment_method_types: ['card'],
         line_items: [{
           price_data: {
-            currency: 'usd',
+            currency: CURRENCY,
             product_data: {
               name: `XOXO ${planName}`,
               description: `Sınırsız sesli mesaj, sınırsız oda süresi, Snake karakteri`
             },
-            unit_amount: priceInCents,
-            recurring: { interval }
+            unit_amount: plan.priceInCents,
+            recurring: { interval: plan.interval }
           },
           quantity: 1
         }],
         mode: 'subscription',
-        success_url: `${baseUrl}/payment-success?type=subscription&plan=${planType}&session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: `${baseUrl}/x-store`,
+        success_url: `${baseUrl}/payment-success?type=subscription&plan=${plan.id}&session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${baseUrl}/pricing`,
         metadata: {
           userId: userId.toString(),
           productType: 'subscription',
-          planType
+          planType: plan.id
         }
       });
 
-      console.log(`[STRIPE] Created subscription session: ${session.id} for user ${userId}, plan: ${planType}`);
+      console.log(`[STRIPE] Created subscription session: ${session.id} for user ${userId}, plan: ${plan.id}`);
       res.json({ url: session.url, sessionId: session.id });
     } catch (error: any) {
       console.error("[STRIPE] Checkout subscription error:", error);
@@ -1944,7 +1964,6 @@ export async function registerRoutes(
         });
       }
 
-      const { getUncachableStripeClient } = await import("./stripeClient");
       const stripe = await getUncachableStripeClient();
 
       console.log('[VERIFY] Retrieving session from Stripe...');

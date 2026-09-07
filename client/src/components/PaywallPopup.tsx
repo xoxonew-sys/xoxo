@@ -1,18 +1,26 @@
 import { useState } from "react";
+import { useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Sparkles, Zap } from "lucide-react";
+import { CREDIT_PACKS, formatPrice } from "@shared/catalog";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useToast } from "@/hooks/use-toast";
 import { NeonButton } from "./NeonButton";
 
 export type PaywallType = "voice_limit" | "message_limit" | "room_credits" | "premium";
 
-/** Kredi paketleri — miktarlar sunucudaki /api/stripe/checkout/credits ile eşleşmeli */
-const CREDIT_PACKS = [
-  { amount: 100, label: "100 X-Kredi", hint: "Başlangıç" },
-  { amount: 500, label: "500 X-Kredi", hint: "En çok tercih edilen", popular: true },
-  { amount: 1500, label: "1500 X-Kredi", hint: "En avantajlı" },
-];
+/**
+ * Paketler ve fiyatlar shared/catalog.ts'te; burada sadece Türkçe metin.
+ * Eskiden bu dosyada ayrı bir liste vardı ve "sunucuyla eşleşmeli"
+ * yorumu taşıyordu — eşleşmiyordu: istemci {amount} gönderiyor, sunucu
+ * {creditsAmount, priceInCents} bekliyordu, her istek 400 dönüyordu.
+ * Tek liste kaldı, eşleşme sorunu da kalmadı.
+ */
+const PACK_HINTS: Record<string, string> = {
+  credits_100: "Başlangıç",
+  credits_500: "En çok tercih edilen",
+  credits_1500: "En avantajlı",
+};
 
 export function PaywallPopup({
   isOpen,
@@ -25,10 +33,11 @@ export function PaywallPopup({
 }) {
   const { t } = useLanguage();
   const { toast } = useToast();
-  const [pendingAmount, setPendingAmount] = useState<number | null>(null);
+  const [, setLocation] = useLocation();
+  const [pendingPack, setPendingPack] = useState<string | null>(null);
 
-  const startCheckout = async (endpoint: string, body: Record<string, unknown>, key: number) => {
-    setPendingAmount(key);
+  const startCheckout = async (endpoint: string, body: Record<string, unknown>, key: string) => {
+    setPendingPack(key);
     try {
       const res = await fetch(endpoint, {
         method: "POST",
@@ -45,7 +54,7 @@ export function PaywallPopup({
         description: err instanceof Error ? err.message : "Ödeme başlatılamadı",
         variant: "destructive",
       });
-      setPendingAmount(null);
+      setPendingPack(null);
     }
   };
 
@@ -97,35 +106,50 @@ export function PaywallPopup({
             <div className="space-y-2 mb-5">
               {CREDIT_PACKS.map((pack) => (
                 <button
-                  key={pack.amount}
+                  key={pack.id}
                   type="button"
-                  disabled={pendingAmount !== null}
+                  disabled={pendingPack !== null}
                   onClick={() =>
-                    startCheckout("/api/stripe/checkout/credits", { amount: pack.amount }, pack.amount)
+                    startCheckout("/api/stripe/checkout/credits", { packId: pack.id }, pack.id)
                   }
                   className="w-full flex items-center justify-between px-4 py-3 rounded-xl border border-white/10 hover:border-primary/50 hover:bg-primary/10 transition-colors disabled:opacity-50"
-                  data-testid={`credit-pack-${pack.amount}`}
+                  data-testid={`credit-pack-${pack.credits}`}
                 >
                   <span className="flex items-center gap-2 text-sm font-medium">
-                    {pack.label}
+                    {pack.credits} X-Kredi
                     {pack.popular && (
                       <span className="text-[10px] uppercase tracking-wide px-1.5 py-0.5 rounded bg-primary/20 text-primary">
                         popüler
                       </span>
                     )}
                   </span>
-                  <span className="text-xs text-muted-foreground">
-                    {pendingAmount === pack.amount ? "..." : pack.hint}
+                  <span className="text-right">
+                    <span className="block text-sm font-medium text-primary">
+                      {formatPrice(pack.priceInCents)}
+                    </span>
+                    <span className="block text-[11px] text-muted-foreground">
+                      {pendingPack === pack.id ? "..." : PACK_HINTS[pack.id]}
+                    </span>
                   </span>
                 </button>
               ))}
             </div>
 
+            {/*
+              Eskiden buradan doğrudan {} gövdesiyle abonelik checkout'u
+              açılıyordu; sunucu planType beklediği için her tıklama 400
+              dönüyordu. Bu açılır pencerede plan seçecek yer yok ve
+              kullanıcı adına haftalık/aylık seçmek sessiz bir karar
+              olurdu — seçimin yapıldığı yere, /pricing'e gönderiyoruz.
+            */}
             <NeonButton
               variant="secondary"
               fullWidth
-              isLoading={pendingAmount === -1}
-              onClick={() => startCheckout("/api/stripe/checkout/subscription", {}, -1)}
+              disabled={pendingPack !== null}
+              onClick={() => {
+                onClose();
+                setLocation("/pricing");
+              }}
               data-testid="go-premium"
             >
               <Sparkles className="w-4 h-4" />

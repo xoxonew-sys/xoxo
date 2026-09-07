@@ -1,25 +1,36 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
 import { ArrowLeft, Check, Zap } from "lucide-react";
+import { CREDIT_PACKS, PREMIUM_PLANS, formatPrice } from "@shared/catalog";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCredits } from "@/contexts/CreditContext";
 import { useToast } from "@/hooks/use-toast";
 import { NeonButton } from "@/components/NeonButton";
 
-const PACKS = [
-  { amount: 100, hint: "Denemek için" },
-  { amount: 500, hint: "En çok tercih edilen", popular: true },
-  { amount: 1500, hint: "En avantajlı" },
-];
+/**
+ * Paket listesi ve fiyatlar shared/catalog.ts'ten gelir; burada sadece
+ * Türkçe arayüz metni tutulur. Sunucu tutarı gövdeden okumaz, kimlikten
+ * çözer — bu dosyadaki fiyat gösterim amaçlıdır, yetki değil.
+ */
+const PACK_HINTS: Record<string, string> = {
+  credits_100: "Denemek için",
+  credits_500: "En çok tercih edilen",
+  credits_1500: "En avantajlı",
+};
+
+const PLAN_LABELS: Record<string, string> = {
+  weekly: "Haftalık",
+  monthly: "Aylık",
+};
 
 export default function Pricing() {
   const [, setLocation] = useLocation();
   const { isAuthenticated } = useAuth();
   const { credits, isPremium } = useCredits();
   const { toast } = useToast();
-  const [pending, setPending] = useState<number | null>(null);
+  const [pending, setPending] = useState<string | null>(null);
 
-  const checkout = async (endpoint: string, body: Record<string, unknown>, key: number) => {
+  const checkout = async (endpoint: string, body: Record<string, unknown>, key: string) => {
     if (!isAuthenticated) {
       setLocation("/login");
       return;
@@ -65,27 +76,33 @@ export default function Pricing() {
       </header>
 
       <div className="space-y-2.5 mb-6">
-        {PACKS.map((pack) => (
+        {CREDIT_PACKS.map((pack) => (
           <button
-            key={pack.amount}
+            key={pack.id}
             type="button"
             disabled={pending !== null}
-            onClick={() => checkout("/api/stripe/checkout/credits", { amount: pack.amount }, pack.amount)}
+            onClick={() => checkout("/api/stripe/checkout/credits", { packId: pack.id }, pack.id)}
             className="w-full glass-panel rounded-2xl p-4 flex items-center justify-between text-left active:scale-[0.99] transition-transform disabled:opacity-50"
+            data-testid={`credit-pack-${pack.credits}`}
           >
             <div>
               <p className="flex items-center gap-2 font-display font-bold">
-                {pack.amount} X-Kredi
+                {pack.credits} X-Kredi
                 {pack.popular && (
                   <span className="text-[10px] uppercase px-1.5 py-0.5 rounded bg-primary/20 text-primary">
                     popüler
                   </span>
                 )}
               </p>
-              <p className="text-xs text-muted-foreground mt-0.5">{pack.hint}</p>
+              <p className="text-xs text-muted-foreground mt-0.5">{PACK_HINTS[pack.id]}</p>
             </div>
-            <span className="text-xs text-muted-foreground">
-              {pending === pack.amount ? "..." : "Satın al"}
+            <span className="text-right">
+              <span className="block font-display font-bold text-primary">
+                {formatPrice(pack.priceInCents)}
+              </span>
+              <span className="block text-[11px] text-muted-foreground">
+                {pending === pack.id ? "..." : "Satın al"}
+              </span>
             </span>
           </button>
         ))}
@@ -106,16 +123,33 @@ export default function Pricing() {
             </li>
           ))}
         </ul>
-        <NeonButton
-          variant="secondary"
-          fullWidth
-          size="lg"
-          disabled={isPremium}
-          isLoading={pending === -1}
-          onClick={() => checkout("/api/stripe/checkout/subscription", {}, -1)}
-        >
-          {isPremium ? "Zaten Premium'sun" : "Premium'a geç"}
-        </NeonButton>
+
+        {isPremium ? (
+          <NeonButton variant="secondary" fullWidth size="lg" disabled>
+            Zaten Premium'sun
+          </NeonButton>
+        ) : (
+          <div className="grid grid-cols-2 gap-2">
+            {PREMIUM_PLANS.map((plan) => (
+              <NeonButton
+                key={plan.id}
+                variant={plan.id === "monthly" ? "secondary" : "outline"}
+                fullWidth
+                isLoading={pending === plan.id}
+                disabled={pending !== null}
+                onClick={() =>
+                  checkout("/api/stripe/checkout/subscription", { planId: plan.id }, plan.id)
+                }
+                data-testid={`premium-plan-${plan.id}`}
+              >
+                <span className="flex flex-col leading-tight">
+                  <span>{PLAN_LABELS[plan.id]}</span>
+                  <span className="text-[11px] opacity-80">{formatPrice(plan.priceInCents)}</span>
+                </span>
+              </NeonButton>
+            ))}
+          </div>
+        )}
       </div>
 
       <p className="text-center text-[11px] text-muted-foreground mt-4 pb-6">
