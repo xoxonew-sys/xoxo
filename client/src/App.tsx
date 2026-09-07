@@ -1,10 +1,10 @@
-import { lazy, Suspense } from "react";
-import { Route, Switch } from "wouter";
+import { lazy, Suspense, useEffect } from "react";
+import { Route, Switch, useLocation } from "wouter";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "framer-motion";
 import { queryClient } from "@/lib/queryClient";
 import { LanguageProvider } from "@/contexts/LanguageContext";
-import { AuthProvider } from "@/contexts/AuthContext";
+import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { CreditProvider } from "@/contexts/CreditContext";
 import { AvatarProvider } from "@/contexts/AvatarContext";
 import { VoiceModeProvider } from "@/contexts/VoiceModeContext";
@@ -27,6 +27,29 @@ function Loading() {
       <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
     </div>
   );
+}
+
+/**
+ * Misafir kullanim kaldirildi: uygulamanin icine yalnizca uye girer.
+ *
+ * Ana ekrandaki "Basla" dugmesini degistirmek TEK BASINA yeterli degil -
+ * adres cubuguna /judgment yazan biri yine iceri girerdi. Korumanin
+ * kendisi burada; dugme sadece dogru yere goturuyor.
+ *
+ * Bu istemci tarafi bir yonlendirme, guvenlik siniri degil. Gercek sinir
+ * sunucudaki oturum kontrolu (bkz. server/routes.ts requireAuth).
+ */
+function Protected({ component: Component }: { component: React.ComponentType<any> }) {
+  const { isAuthenticated, isLoading } = useAuth();
+  const [, setLocation] = useLocation();
+
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) setLocation("/login");
+  }, [isLoading, isAuthenticated, setLocation]);
+
+  if (isLoading) return <Loading />;
+  if (!isAuthenticated) return <Loading />;
+  return <Component />;
 }
 
 function NotFound() {
@@ -90,10 +113,16 @@ export default function App() {
                   <Suspense fallback={<Loading />}>
                     <Switch>
                       <Route path="/" component={Home} />
-                      <Route path="/judgment" component={Judgment} />
-                      <Route path="/chat/:level" component={Chat} />
+                      <Route path="/judgment">
+                        <Protected component={Judgment} />
+                      </Route>
+                      <Route path="/chat/:level">
+                        <Protected component={Chat} />
+                      </Route>
                       <Route path="/login" component={Login} />
-                      <Route path="/profile" component={Profile} />
+                      <Route path="/profile">
+                        <Protected component={Profile} />
+                      </Route>
                       <Route path="/pricing" component={Pricing} />
                       <Route path="/admin/login" component={AdminLogin} />
                       <Route path="/admin" component={AdminDashboard} />

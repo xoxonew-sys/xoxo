@@ -940,6 +940,30 @@ export async function registerRoutes(
       // Verify email
       await storage.verifyUserEmail(user.id);
 
+      /* Yeni uyelik hediyesi.
+       *
+       * NEDEN BURADA, KAYIT ANINDA DEGIL:
+       * /api/auth/register dogrulanmamis bir e-posta icin tekrar tekrar
+       * cagrilabiliyor (bkz. yukaridaki "allow re-registration" dali).
+       * Hediye kayit aninda verilseydi, dogrulanmamis hesaplar uzerinden
+       * tekrar tekrar toplanabilirdi. Burasi ise yukaridaki emailVerified
+       * kontrolu sayesinde kullanici basina TAM BIR KEZ calisir.
+       *
+       * Mevcut kullanicilara dokunulmaz: bu yalnizca dogrulama anindaki
+       * bir deger, sema degisikligi ya da geriye donuk doldurma degil.
+       * users.credits sutunu zaten var ve 0 varsayilaniyla geliyor
+       * (shared/schema.ts).
+       */
+      const SIGNUP_CREDIT_GRANT = 100;
+      const grant = await storage.addXCredits(user.id, SIGNUP_CREDIT_GRANT);
+      if (!grant.success) {
+        // Hediye verilemezse kayit yine de gecerli - kullaniciyi disarida
+        // birakmiyoruz, ama iz birakiyoruz ki fark edilsin.
+        console.error(`[AUTH] Signup credit grant FAILED for user id=${user.id}`);
+      } else {
+        console.log(`[AUTH] Signup credit grant: user id=${user.id} -> ${grant.newBalance}`);
+      }
+
       // Set session
       (req.session as any).userId = user.id;
 
@@ -2679,7 +2703,21 @@ Kullanıcının sorusu: "${message}"
   // ==========================================
 
   // Legacy confession endpoint - updated for 2-level character system
-  app.post(api.confessions.create.path, async (req, res) => {
+  /**
+   * Misafir kullanim kaldirildi - gercek sinir burasi.
+   *
+   * Istemcideki <Protected> yalnizca yonlendirme yapar; adres cubugunu
+   * degil, API'yi korumak bu ara katmanin isi. Bu olmadan curl ile
+   * dogrudan istek atan biri hala hesapsiz sohbet edebilirdi.
+   */
+  const requireAuth = (req: Request, res: Response, next: NextFunction) => {
+    if (!(req.session as any)?.userId) {
+      return res.status(401).json({ message: "Bu islem icin giris yapmalisiniz" });
+    }
+    next();
+  };
+
+  app.post(api.confessions.create.path, requireAuth, async (req, res) => {
     try {
       const { content, judgmentLevel } = api.confessions.create.input.parse(req.body);
       const language = (req.body.language === "en" ? "en" : "tr") as "tr" | "en";
@@ -2723,12 +2761,15 @@ Kullanıcının sorusu: "${message}"
   });
 
   // Chat session endpoints
-  app.post(api.chatSessions.create.path, async (req, res) => {
+  app.post(api.chatSessions.create.path, requireAuth, async (req, res) => {
     try {
-      const { judgmentLevel, userId } = api.chatSessions.create.input.parse(req.body);
-      const session = await storage.createChatSession({ 
+      const { judgmentLevel } = api.chatSessions.create.input.parse(req.body);
+      // Oturum sahibi artik istemciden gelen userId'ye degil, sunucudaki
+      // oturuma bagli. Misafir kullanim kalktigi icin "anonymous" dususu
+      // de kalkti - istemcinin baskasinin adina oturum acmasi mumkun degil.
+      const session = await storage.createChatSession({
         judgmentLevel,
-        userId: userId || "anonymous"
+        userId: String((req.session as any).userId),
       });
       res.status(201).json(session);
     } catch (error) {
@@ -2737,7 +2778,7 @@ Kullanıcının sorusu: "${message}"
     }
   });
 
-  app.get("/api/chat/sessions/:id", async (req, res) => {
+  app.get("/api/chat/sessions/:id", requireAuth, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const session = await storage.getChatSession(id);
@@ -2752,7 +2793,7 @@ Kullanıcının sorusu: "${message}"
   });
 
   // Send message in chat session
-  app.post("/api/chat/sessions/:sessionId/messages", async (req, res) => {
+  app.post("/api/chat/sessions/:sessionId/messages", requireAuth, async (req, res) => {
     try {
       const sessionId = parseInt(req.params.sessionId);
       const { content } = api.chatMessages.send.input.parse(req.body);

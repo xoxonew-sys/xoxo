@@ -1,6 +1,6 @@
 import { useLocation } from "wouter";
 import { motion } from "framer-motion";
-import { User, LogIn, Zap } from "lucide-react";
+import { User, Zap } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCredits } from "@/contexts/CreditContext";
@@ -50,17 +50,7 @@ export default function Home() {
                 )}
               </button>
             </div>
-          ) : (
-            <button
-              type="button"
-              onClick={() => setLocation("/login")}
-              className="flex items-center gap-1.5 px-4 py-1.5 rounded-full glass-panel text-xs font-medium hover:text-primary transition-colors"
-              data-testid="login-button"
-            >
-              <LogIn className="w-3.5 h-3.5" />
-              {language === "tr" ? "Giriş yap" : "Log in"}
-            </button>
-          ))}
+          ) : null)}
       </header>
 
       {/* Orta blok */}
@@ -96,21 +86,16 @@ export default function Home() {
           transition={{ delay: 0.4, duration: 0.5 }}
           className="w-full max-w-xs space-y-2"
         >
-          <NeonButton size="lg" fullWidth onClick={() => setLocation("/judgment")}>
+          {/* Misafir kullanim kaldirildi: herkes uye olur.
+              Giris yapmamis kullanici once /login'e gider, oradan da
+              kayit ekranina gecebilir. */}
+          <NeonButton
+            size="lg"
+            fullWidth
+            onClick={() => setLocation(isAuthenticated ? "/judgment" : "/login")}
+          >
             {language === "tr" ? "Başla" : "Start"}
           </NeonButton>
-
-          {!isLoading && !isAuthenticated && (
-            <button
-              type="button"
-              onClick={() => setLocation("/login")}
-              className="w-full text-center text-xs text-muted-foreground py-2"
-            >
-              {language === "tr"
-                ? "Sohbetlerin kaydolsun mu? Hesap oluştur"
-                : "Want your chats saved? Create an account"}
-            </button>
-          )}
         </motion.div>
       </div>
 
