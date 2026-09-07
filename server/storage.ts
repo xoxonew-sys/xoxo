@@ -1,4 +1,5 @@
 import { db } from "./db";
+import { hashOtp } from "./otp";
 import {
   users,
   confessions,
@@ -74,6 +75,13 @@ export const storage = {
     return db.select().from(users).orderBy(desc(users.createdAt));
   },
 
+  /**
+   * OTP'yi HASH'LENMIS olarak yazar - duz metin asla sutuna girmez.
+   *
+   * Hash'leme bilerek burada, tek yazma noktasinda yapiliyor: boylece
+   * hicbir cagiran yanlislikla duz metin yazamaz. Karsilastirma icin
+   * otpMatches() kullanin (bkz. server/otp.ts).
+   */
   async updateUserOTP(
     userId: number | string,
     otpCode: string,
@@ -81,7 +89,7 @@ export const storage = {
   ): Promise<void> {
     await db
       .update(users)
-      .set({ otpCode, otpExpiry })
+      .set({ otpCode: hashOtp(otpCode), otpExpiry })
       .where(eq(users.id, Number(userId)));
   },
 

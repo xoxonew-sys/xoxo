@@ -1,6 +1,3 @@
-import { getPersona, buildSystemPrompt } from "./personas";
-const persona = getPersona(level, gender, subLevel);
-const system = buildSystemPrompt(persona, language);
 import type { Express, Request, Response, NextFunction } from "express";
 import type { Server } from "http";
 import { storage } from "./storage";
@@ -22,6 +19,8 @@ import { eq, sql, and, or, gt, isNull } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import { generateOTP, getOTPExpiry, sendVerificationEmail, sendPasswordResetEmail } from "./email";
+import { otpMatches } from "./otp";
+import { otpVerifyLimiter, otpRequestLimiter, loginLimiter } from "./rateLimit";
 // Note: Using ElevenLabs for high-quality TTS (already configured)
 // Client-side Web Speech API provides free alternative for basic TTS
 
@@ -841,7 +840,7 @@ export async function registerRoutes(
   // ==========================================
 
   // Register new user (Step 1: Create unverified user and send OTP)
-  app.post("/api/auth/register", async (req, res) => {
+  app.post("/api/auth/register", otpRequestLimiter, async (req, res) => {
     try {
       const data = registerSchema.parse(req.body);
 
@@ -913,7 +912,7 @@ export async function registerRoutes(
   });
 
   // Verify OTP (Step 2: Complete registration)
-  app.post("/api/auth/verify-otp", async (req, res) => {
+  app.post("/api/auth/verify-otp", otpVerifyLimiter, async (req, res) => {
     try {
       const data = verifyOtpSchema.parse(req.body);
 
@@ -929,7 +928,7 @@ export async function registerRoutes(
       }
 
       // Verify OTP
-      if (!user.otpCode || user.otpCode !== data.otpCode) {
+      if (!otpMatches(user.otpCode, data.otpCode)) {
         return res.status(400).json({ message: "Geçersiz doğrulama kodu" });
       }
 
@@ -961,19 +960,20 @@ export async function registerRoutes(
   });
 
   // Resend OTP
-  app.post("/api/auth/resend-otp", async (req, res) => {
+  app.post("/api/auth/resend-otp", otpRequestLimiter, async (req, res) => {
     const requestTime = new Date().toISOString();
-    console.log(`[RESEND-OTP] Request received at ${requestTime} from IP: ${req.ip || req.socket?.remoteAddress || 'unknown'}`);
-    console.log(`[RESEND-OTP] Body:`, { email: req.body?.email || '(missing)' });
+    // KVKK: istek IP'si ve e-posta adresi loglanmaz. Akisi izlemek icin
+    // asagida kullanicinin dahili id'si kullaniliyor - kisisel veri degil.
+    console.log(`[RESEND-OTP] Request received at ${requestTime}`);
 
     try {
       const data = resendOtpSchema.parse(req.body);
-      console.log(`[RESEND-OTP] Processing for email: ${data.email}`);
+      console.log(`[RESEND-OTP] Processing request`);
 
       // Find user by email
       const user = await storage.getUserByEmail(data.email);
       if (!user) {
-        console.log(`[RESEND-OTP] User not found for email: ${data.email}`);
+        console.log(`[RESEND-OTP] User not found`);
         return res.status(404).json({ message: "Kullanıcı bulunamadı" });
       }
 
@@ -988,17 +988,17 @@ export async function registerRoutes(
       console.log(`[RESEND-OTP] New OTP stored, expires: ${otpExpiry.toISOString()}`);
 
       // Send verification email
-      console.log(`[RESEND-OTP] Attempting email send to: ${data.email}`);
+      console.log(`[RESEND-OTP] Attempting email send for user id=${user.id}`);
       const emailSent = await sendVerificationEmail(data.email, otpCode, user.displayName || undefined, user.id);
 
       if (!emailSent) {
-        console.error(`[RESEND-OTP] Email send FAILED for: ${data.email} — check EMAIL ERROR logs above`);
+        console.error(`[RESEND-OTP] Email send FAILED for user id=${user.id} — check EMAIL ERROR logs above`);
         return res.status(500).json({ 
           message: "E-posta gönderilemedi. Lütfen daha sonra tekrar deneyin." 
         });
       }
 
-      console.log(`[RESEND-OTP] Success — OTP sent to: ${data.email}`);
+      console.log(`[RESEND-OTP] Success — OTP sent for user id=${user.id}`);
       res.json({ message: "Doğrulama kodu tekrar gönderildi" });
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -1011,7 +1011,7 @@ export async function registerRoutes(
   });
 
   // Password Reset Request
-  app.post("/api/auth/password-reset-request", async (req, res) => {
+  app.post("/api/auth/password-reset-request", otpRequestLimiter, async (req, res) => {
     try {
       const data = passwordResetRequestSchema.parse(req.body);
 
@@ -1030,12 +1030,12 @@ export async function registerRoutes(
       await storage.updateUserOTP(user.id, otpCode, otpExpiry);
 
       // Send password reset email
-      console.log(`[PASSWORD-RESET] Sending OTP email to: ${data.email}`);
+      console.log(`[PASSWORD-RESET] Sending OTP email for user id=${user.id}`);
       const emailSent = await sendPasswordResetEmail(data.email, otpCode, user.id);
       if (!emailSent) {
-        console.error(`[PASSWORD-RESET] Email send FAILED for: ${data.email} — check EMAIL ERROR logs above`);
+        console.error(`[PASSWORD-RESET] Email send FAILED for user id=${user.id} — check EMAIL ERROR logs above`);
       } else {
-        console.log(`[PASSWORD-RESET] OTP email sent successfully to: ${data.email}`);
+        console.log(`[PASSWORD-RESET] OTP email sent successfully for user id=${user.id}`);
       }
 
       res.json({ message: "Şifre sıfırlama kodu gönderildi" });
@@ -1049,7 +1049,7 @@ export async function registerRoutes(
   });
 
   // Password Reset - Step 1: Verify OTP only
-  app.post("/api/auth/password-reset-verify", async (req, res) => {
+  app.post("/api/auth/password-reset-verify", otpVerifyLimiter, async (req, res) => {
     try {
       const { email, otpCode } = req.body;
 
@@ -1064,7 +1064,7 @@ export async function registerRoutes(
       }
 
       // Verify OTP
-      if (!user.otpCode || user.otpCode !== otpCode) {
+      if (!otpMatches(user.otpCode, otpCode)) {
         return res.status(400).json({ message: "Geçersiz doğrulama kodu" });
       }
 
@@ -1073,7 +1073,7 @@ export async function registerRoutes(
         return res.status(400).json({ message: "Doğrulama kodunun süresi dolmuş" });
       }
 
-      console.log("[AUTH] Password reset OTP verified for:", email);
+      console.log(`[AUTH] Password reset OTP verified for user id=${user.id}`);
 
       // OTP is valid - don't clear it yet, we need it for the password reset step
       res.json({ message: "Doğrulama kodu onaylandı", verified: true });
@@ -1084,7 +1084,7 @@ export async function registerRoutes(
   });
 
   // Password Reset - Step 2: Update password (after OTP verification)
-  app.post("/api/auth/password-reset", async (req, res) => {
+  app.post("/api/auth/password-reset", otpVerifyLimiter, async (req, res) => {
     try {
       const data = passwordResetSchema.parse(req.body);
 
@@ -1095,7 +1095,7 @@ export async function registerRoutes(
       }
 
       // Verify OTP
-      if (!user.otpCode || user.otpCode !== data.otpCode) {
+      if (!otpMatches(user.otpCode, data.otpCode)) {
         return res.status(400).json({ message: "Geçersiz doğrulama kodu" });
       }
 
@@ -1114,7 +1114,7 @@ export async function registerRoutes(
       // Clear OTP to prevent reuse
       await storage.clearUserOTP(user.id);
 
-      console.log("[AUTH] Password reset successful for:", data.email, "- Email verified, OTP cleared");
+      console.log(`[AUTH] Password reset successful for user id=${user.id} - Email verified, OTP cleared`);
 
       res.json({ message: "Şifre başarıyla güncellendi! Giriş yapabilirsiniz." });
     } catch (error) {
@@ -1127,7 +1127,7 @@ export async function registerRoutes(
   });
 
   // Login user
-  app.post("/api/auth/login", async (req, res) => {
+  app.post("/api/auth/login", loginLimiter, async (req, res) => {
     try {
       const data = loginSchema.parse(req.body);
 
