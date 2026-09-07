@@ -1200,11 +1200,17 @@ export async function registerRoutes(
     try {
       const data = loginSchema.parse(req.body);
 
-      // FIX: Kullanıcı adı VEYA e-posta ile giriş desteği
-      // (Google Play incelemecisi e-posta ile giriş deniyordu ve 401 alıyordu)
-      let user = await storage.getUserByUsername(data.username);
-      if (!user && data.username.includes("@")) {
-        user = await storage.getUserByEmail(data.username.toLowerCase().trim());
+      // Kullanıcı adı VEYA e-posta ile giriş desteği.
+      //
+      // Alanın adı `identifier`. Bu üç satır 0722ab6'dan beri
+      // `data.username` okuyordu; loginSchema'da öyle bir alan hiç
+      // olmadı, dolayısıyla değer her zaman undefined'dı. Drizzle
+      // undefined'ı bağlamak yerine atıyor, sorgu `lower()` diye
+      // argümansız çıkıyor ve Postgres 42883 döndürüyordu. Yani bu
+      // yol kırılmadı - HİÇ ÇALIŞMADI.
+      let user = await storage.getUserByUsername(data.identifier);
+      if (!user && data.identifier.includes("@")) {
+        user = await storage.getUserByEmail(data.identifier.toLowerCase().trim());
       }
       if (!user) {
         return res.status(401).json({ message: "Kullanıcı adı veya şifre hatalı" });
