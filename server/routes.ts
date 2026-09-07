@@ -3725,8 +3725,14 @@ Kullanıcının sorusu: "${message}"
     try {
       const schema = z.object({
         memberId: z.string().min(1),
+        // Kardes uc nokta (/api/xroom/:code/messages) ile ayni sozlesme.
+        // Eksikse "en"e duser - asagidaki aiPersonality bunu bekliyordu
+        // ama degisken hic tanimlanmamisti: bu satir calistiginda handler
+        // ReferenceError ile 500 donuyordu.
+        language: z.string().optional(),
       });
-      const { memberId } = schema.parse(req.body);
+      const { memberId, language: msgLanguage } = schema.parse(req.body);
+      const language = msgLanguage === "en" ? "en" : "tr";
 
       const room = await storage.getRoomByCode(req.params.code.toUpperCase());
       if (!room || !room.aiMode) {
