@@ -78,7 +78,19 @@ export const chatSessions = pgTable(
   "chat_sessions",
   {
     id: serial("id").primaryKey(),
+    /**
+     * ESKI REFERANS - ARTIK YETKILI DEGIL. Uc ayri sey icerir: 'anonymous',
+     * e-posta adresi, ve sayisal id'nin metin hali. Yeni kod userRef yazar;
+     * bu sutun gecmis veri icin duruyor. Bkz. migrations/0001.
+     */
     userId: text("user_id").notNull().default("anonymous"),
+    /**
+     * Yetkili kullanici referansi. E-posta degisebilir, id degismez -
+     * adresini degistiren kullanici kendi gecmisini oksuz birakmamali.
+     * CASCADE: sohbet icerigi kullanicinin kendi verisidir, silme hakki
+     * kullanildiginda gitmesi gereken sey budur.
+     */
+    userRef: integer("user_ref").references(() => users.id, { onDelete: "cascade" }),
     judgmentLevel: integer("judgment_level").notNull(),
     subLevel: integer("sub_level").notNull().default(1),
     createdAt: timestamp("created_at").notNull().defaultNow(),
@@ -110,7 +122,17 @@ export const payments = pgTable(
   "payments",
   {
     id: serial("id").primaryKey(),
+    /** Eski metin referans - yetkili degil, bkz. userRef. */
     userId: text("user_id").notNull(),
+    /**
+     * SET NULL, CASCADE DEGIL. TUTARLI HALE GETIRMEYIN.
+     *
+     * Odeme kaydi mali belgedir: VUK 5 yil, TTK 10 yil saklanir. CASCADE,
+     * kullanici hesabini sildigi anda odeme kayitlarini da silerdi -
+     * defterde delik acardi. Gizlilik lehine kazanc degil, ters yonde
+     * uyum ihlali olurdu. SET NULL satiri birakir, kisiyi kaldirir.
+     */
+    userRef: integer("user_ref").references(() => users.id, { onDelete: "set null" }),
     stripeSessionId: text("stripe_session_id").notNull().unique(),
     stripePaymentIntentId: text("stripe_payment_intent_id"),
     stripeSubscriptionId: text("stripe_subscription_id"),

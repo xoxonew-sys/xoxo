@@ -21,7 +21,7 @@ import {
   type InsertRoomMember,
   type InsertRoomMessage,
 } from "@shared/schema";
-import { eq, and, gt, lt, desc, asc, sql, inArray } from "drizzle-orm";
+import { eq, and, gt, lt, desc, asc, sql } from "drizzle-orm";
 
 /* ============================================================
    XOXO Gossip AI — Storage katmanı
@@ -300,24 +300,27 @@ export const storage = {
     return user;
   },
 
+  /**
+   * Hesabi ve kullaniciya ait icerigi siler.
+   *
+   * SILME ARTIK VERITABANININ ISI. Bu fonksiyon eskiden chat_sessions'i
+   * `userId` metin sutununda `String(id)` arayarak siliyordu. Uretimdeki
+   * hicbir satir sayisal degildi (8'i e-posta, 10'u 'anonymous'), yani
+   * silme HICBIR SATIRA DOKUNMUYORDU - hak isleyen bir kullanicinin
+   * sohbetleri veritabaninda kaliyordu. Bkz. CLAUDE.md 8.2c.
+   *
+   * migrations/0001 ile chat_sessions.user_ref -> users.id ON DELETE
+   * CASCADE kondu; kullanici satirini silmek oturumlari, oturumlar da
+   * (mevcut cascade ile) mesajlari goturur. payments.user_ref SET NULL
+   * oldugu icin odeme kaydi kalir, kisiye baglantisi kopar - VUK/TTK
+   * saklama yukumlulugu icin bilerek boyle.
+   *
+   * BILEREK SILINMEYENLER: email_logs (90 gunluk supurme, bkz.
+   * server/retention.ts) ve user_bans (yasak kaydinin hesaptan uzun
+   * yasamasi yasagin kendisidir).
+   */
   async deleteUserAccount(userId: number | string): Promise<void> {
-    const id = Number(userId);
-    const uid = String(userId);
-    // Bağlı kayıtları temizle
-    const sessions = await db
-      .select({ id: chatSessions.id })
-      .from(chatSessions)
-      .where(eq(chatSessions.userId, uid));
-    if (sessions.length > 0) {
-      await db.delete(chatMessages).where(
-        inArray(
-          chatMessages.sessionId,
-          sessions.map((s) => s.id),
-        ),
-      );
-      await db.delete(chatSessions).where(eq(chatSessions.userId, uid));
-    }
-    await db.delete(users).where(eq(users.id, id));
+    await db.delete(users).where(eq(users.id, Number(userId)));
   },
 
   /* ---------------- Krediler ---------------- */
@@ -527,11 +530,11 @@ export const storage = {
   },
 
   /** Bellek bağlamı için: kullanıcının son oturumları + mesajları */
-  async getUserChatHistory(userId: string, limit = 5) {
+  async getUserChatHistory(userRef: number, limit = 5) {
     const sessions = await db
       .select()
       .from(chatSessions)
-      .where(eq(chatSessions.userId, userId))
+      .where(eq(chatSessions.userRef, userRef))
       .orderBy(desc(chatSessions.createdAt))
       .limit(limit);
 
@@ -544,11 +547,11 @@ export const storage = {
   },
 
   /** Admin listesi için: kullanıcının son konuştuğu karakter */
-  async getLastCharacterByUser(userId: string): Promise<number | null> {
+  async getLastCharacterByUser(userRef: number): Promise<number | null> {
     const [session] = await db
       .select({ judgmentLevel: chatSessions.judgmentLevel })
       .from(chatSessions)
-      .where(eq(chatSessions.userId, userId))
+      .where(eq(chatSessions.userRef, userRef))
       .orderBy(desc(chatSessions.createdAt))
       .limit(1);
     return session?.judgmentLevel ?? null;

@@ -2231,7 +2231,7 @@ export async function registerRoutes(
       const safeUsers = await Promise.all(
         allUsers.map(async ({ passwordHash, rememberToken, otpCode, otpExpiry, ...user }) => {
           const [lastChar, lastEmailLog] = await Promise.all([
-            storage.getLastCharacterByUser(String(user.id)),
+            storage.getLastCharacterByUser(user.id),
             storage.getLatestEmailLogByEmail(user.email),
           ]);
           return {
@@ -2581,17 +2581,24 @@ Kullanıcının sorusu: "${message}"
         return res.status(404).json({ message: "Kullanıcı bulunamadı" });
       }
 
-      // Delete all associated data
-      await db.delete(chatMessages).where(
-        sql`session_id IN (SELECT id FROM chat_sessions WHERE user_id = ${user.email})`
-      );
-      await db.delete(chatSessions).where(eq(chatSessions.userId, user.email));
-      await db.delete(payments).where(eq(payments.userId, userId));
+      /* Sohbet ve odeme artik yabanci anahtarlarin isi - bkz. migrations/0001.
+       *
+       * ESKI HALI IKI YERDEN BOZUKTU:
+       *   - chat_sessions'i user.email ile ariyordu; o sutun bugunun kodunda
+       *     String(id) yaziliyor. Sessizce hicbir sey silmiyordu. TypeScript
+       *     bunu zaten bildiriyordu (eq(<text>, <number>) uyarilari).
+       *   - payments'i SILIYORDU. Artik silmiyor: odeme kaydi mali belgedir,
+       *     VUK 5 / TTK 10 yil saklanir. user_ref SET NULL ile kisiye
+       *     baglantisi kopar, satir defterde kalir.
+       *
+       * Oda satirlari e-posta ile anahtarli ve odalar zaten 60 dakikada
+       * kendiliginden siliniyor; yine de hemen temizleniyor.
+       */
       await db.delete(roomMembers).where(eq(roomMembers.memberId, user.email));
       await db.delete(roomMessages).where(eq(roomMessages.memberId, user.email));
-      await db.delete(usageAnalytics).where(eq(usageAnalytics.userId, userId));
 
-      // Finally delete the user
+      // Kullanici satiri: chat_sessions CASCADE ile, mesajlar oturum
+      // uzerinden, payments SET NULL ile takip eder.
       await db.delete(users).where(eq(users.id, userId));
 
       console.log(`[ADMIN] User ${user.email} (ID: ${userId}) force deleted with all data`);
@@ -2917,9 +2924,13 @@ Kullanıcının sorusu: "${message}"
       // Oturum sahibi artik istemciden gelen userId'ye degil, sunucudaki
       // oturuma bagli. Misafir kullanim kalktigi icin "anonymous" dususu
       // de kalkti - istemcinin baskasinin adina oturum acmasi mumkun degil.
+      const uid = Number((req.session as any).userId);
       const session = await storage.createChatSession({
         judgmentLevel,
-        userId: String((req.session as any).userId),
+        // userRef yetkili olan; userId eski sutun, gecmis veriyle
+        // uyum icin yazilmaya devam ediyor. Bkz. migrations/0001.
+        userRef: uid,
+        userId: String(uid),
       });
       res.status(201).json(session);
     } catch (error) {
@@ -2970,8 +2981,8 @@ Kullanıcının sorusu: "${message}"
 
       // Get user's past confessions for memory context - enhanced for conversational references
       let memoryContext = "";
-      if (session.userId && session.userId !== "anonymous") {
-        const pastSessions = await storage.getUserChatHistory(session.userId, 5);
+      if (session.userRef) {
+        const pastSessions = await storage.getUserChatHistory(session.userRef, 5);
         // Filter out current session and build memory summary
         const pastConversations = pastSessions.filter(s => s.session.id !== sessionId);
         if (pastConversations.length > 0) {
