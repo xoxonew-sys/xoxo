@@ -118,6 +118,14 @@ export default function Home() {
         >
           {language === "tr" ? "X-Kredi ve Premium" : "Credits & Premium"}
         </button>
+        <span className="mx-2 text-[11px] text-muted-foreground">&middot;</span>
+        <button
+          type="button"
+          onClick={() => setLocation("/privacy")}
+          className="text-[11px] text-muted-foreground hover:text-foreground"
+        >
+          {language === "tr" ? "Gizlilik ve KVKK" : "Privacy"}
+        </button>
       </footer>
     </div>
   );

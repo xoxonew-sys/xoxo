@@ -18,6 +18,7 @@ const Judgment = lazy(() => import("@/pages/Judgment"));
 const Login = lazy(() => import("@/pages/Login"));
 const Profile = lazy(() => import("@/pages/Profile"));
 const Pricing = lazy(() => import("@/pages/Pricing"));
+const Privacy = lazy(() => import("@/pages/Privacy"));
 const AdminLogin = lazy(() => import("@/pages/AdminLogin"));
 const AdminDashboard = lazy(() => import("@/pages/AdminDashboard"));
 
@@ -124,6 +125,10 @@ export default function App() {
                         <Protected component={Profile} />
                       </Route>
                       <Route path="/pricing" component={Pricing} />
+                      {/* Yasal metin. Iki yol ayni sayfayi acar:
+                          /privacy magaza formlarinda, /kvkk yerel kullanimda. */}
+                      <Route path="/privacy" component={Privacy} />
+                      <Route path="/kvkk" component={Privacy} />
                       <Route path="/admin/login" component={AdminLogin} />
                       <Route path="/admin" component={AdminDashboard} />
                       <Route component={NotFound} />
