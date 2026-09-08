@@ -949,6 +949,15 @@ export async function registerRoutes(
       // Verify email
       await storage.verifyUserEmail(user.id);
 
+      /* Dogrulanan OTP kaydi burada temizlenir.
+       *
+       * Sifre sifirlama yolu bunu 014abc3'ten beri yapiyordu (clearUserOTP),
+       * dogrulama yolu hic yapmadi: kod hash'li de olsa kullanildiktan sonra
+       * satirda kaliyordu ve yalnizca bir sonraki OTP uzerine yazana kadar
+       * duruyordu. Kullanilmis bir kodun saklanmasi icin bir sebep yok.
+       */
+      await storage.clearUserOTP(user.id);
+
       /* Yeni uyelik hediyesi.
        *
        * NEDEN BURADA, KAYIT ANINDA DEGIL:

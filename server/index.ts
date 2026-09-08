@@ -6,6 +6,7 @@ import { createServer } from "http";
 import { registerRoutes } from "./routes";
 import { pool } from "./db";
 import { setupVite, serveStatic } from "./vite";
+import { startRetentionJobs } from "./retention";
 
 const app = express();
 const httpServer = createServer(app);
@@ -103,6 +104,9 @@ async function bootstrap() {
   } else {
     await setupVite(app, httpServer);
   }
+
+  /* Saklama süreleri — bkz. server/retention.ts, süreler ve gerekçeler orada. */
+  startRetentionJobs();
 
   httpServer.listen(PORT, "0.0.0.0", () => {
     console.log(`[SERVER] ${isProduction ? "üretim" : "geliştirme"} modunda :${PORT}`);
