@@ -30,6 +30,28 @@
  * X-Client-Channel başlığıyla bildirir, sunucu "web" demeyen her checkout
  * isteğini reddeder (bkz. server/routes.ts, requireWebChannel).
  *
+ * iOS KABUĞU BU ÜÇ SİNYALİN HİÇBİRİNE UYMAZ — VE YANLIŞ TARAFA DÜŞER.
+ * Bir WKWebView'da document.referrer boştur (android-app:// gelmez) ve
+ * display-mode: standalone Safari'nin ana ekrana eklenmiş PWA durumudur,
+ * WKWebView'ın değil. sessionStorage da ilk yüklemede boştur. Yani bugünkü
+ * tespit bir iOS kabuğunda "web" der; istemci X-Client-Channel: web yollar;
+ * sunucudaki requireWebChannel bunu GEÇİRİR ve uygulamanın içinde Stripe
+ * checkout'u açılır. Kural 3.1.1 — bu dosyanın önlemek için yazıldığı
+ * ihlalin ta kendisi.
+ *
+ * BU BÖLÜM BUGÜN ÇALIŞIYOR ÇÜNKÜ iOS KABUĞU YOK. Kabuk var olduğu anda,
+ * sessizce ve ihlal yönünde çalışmayı bırakır: hiçbir hata vermez, hiçbir
+ * test kırılmaz, sadece satış yüzeyi mağazanın yasakladığı yerde açılır.
+ *
+ * DÖRDÜNCÜ SİNYAL KABUKLA BİRLİKTE GELMEK ZORUNDA, sonradan değil. iOS
+ * kabuğunu yazan kişi aynı commit'te şunlardan birini eklesin ve detect()
+ * içinde referrer kontrolünün ÜSTÜNE koysun:
+ *   - WKUserScript ile documentStart'ta `window.__XOXO_NATIVE__ = true`
+ *   - ya da WKWebView.applicationNameForUserAgent'a bir işaret ekleyip
+ *     burada navigator.userAgent içinde aramak
+ * Kabuğu ekleyip bu sinyali eklememek, mevcut korumayı kaldırmakla aynı
+ * şeydir — üstelik korumanın hâlâ orada durduğu görüntüsüyle.
+ *
  * ÜÇ SİNYAL, BİLEREK GENİŞ:
  *   1. sessionStorage — sekme başına ayrıdır, Chrome sekmesine sızmaz;
  *      TWA içindeki yeniden yüklemelerde referrer kaybolsa da kalır.

@@ -290,3 +290,52 @@ Read-only counts against the production Neon instance (eu-central-1):
   changes.** "Same count as before" is not the same as "same errors as before" —
   and an error that vanishes deserves as much attention as one that appears,
   because it means either the defect or the code that named it is gone.
+
+### 8.8 The blocker was always "there is no iOS app"
+* Asked three times across 8 Sep 2026 what stood between XOXO and an App Store
+  submission. Each time something else surfaced first — the purchase path, then
+  the deletion right, then the missing KVKK page. **All three were real, and none
+  of them was the answer.** The answer was true at the start of the day and did
+  not change: there is no Xcode project, no `capacitor.config.*`, no `Info.plist`,
+  no Podfile, and no native dependency in `package.json`. The repo has an Android
+  Gradle wrapper and a folder of iPad screenshots.
+* Everything else on the list is downstream of an iOS app existing. They were
+  **things found on the way to discovering the submission has no subject** —
+  worth fixing, and fixed, but never the blocker.
+* Why it kept not surfacing first: each answer was assembled from what the code
+  could be asked about, and the code can be asked "is checkout compliant" far
+  more readily than "does a target platform exist." The absent thing has no file
+  to grep. When asked what blocks a release, **check that the artifact being
+  released exists before auditing its properties.**
+
+### 8.9 BLOCKING — channel.ts fails open on iOS, silently, toward the violation
+* The three detection signals are `sessionStorage`, an `android-app://` referrer,
+  and `display-mode: standalone`. **A WKWebView matches none of them.** Referrer
+  is empty; `standalone` is Safari's home-screen-PWA state, not a WKWebView's.
+* So an iOS shell reports `channel = "web"`, sends `X-Client-Channel: web`, and
+  `requireWebChannel` **admits** it. Stripe checkout opens inside the app.
+  Guideline 3.1.1 — the exact violation the split exists to prevent.
+* **The split works today only because there is no iOS shell.** It stops working
+  the moment one exists: no error, no failing test, just a purchase surface in
+  the place the store forbids. The protection appears intact while being gone.
+* The fourth signal must land **in the same commit as the shell** — a
+  `WKUserScript` setting `window.__XOXO_NATIVE__` at documentStart, or a token in
+  `applicationNameForUserAgent` — read above the referrer check in `detect()`.
+  This is written at the top of `client/src/lib/channel.ts`, where someone
+  building the shell will be standing.
+
+### 8.10 X-Room gated off — exposed API with no client
+* Thirteen route patterns and a WebSocket on `/ws` were live in production:
+  multi-user chat, no moderation, no report, no block. The client has **no
+  X-Room page, component or route** — and never did. Unreachable as a feature,
+  reachable as an API.
+* Gated behind `XROOM_ENABLED` (default off): a single guard 404s the whole room
+  surface, and the `WebSocketServer` is never constructed. 404 rather than 503 —
+  a disabled feature should not advertise itself.
+* **Gating cost: nothing.** No client code calls any room route or opens a
+  WebSocket; the admin dashboard does not call `/api/admin/rooms`. The three
+  WebSocket message types (`join_room`, `leave_room`, `send_message`) are all
+  room-only. The cleanup job stays running as the retention path for any rows.
+* Before re-enabling: content filter, user-facing report, user-facing block, and
+  a 24-hour action commitment. `userBans` exists but every endpoint is under
+  `/api/admin/*` — there is no user-facing report or block at all.

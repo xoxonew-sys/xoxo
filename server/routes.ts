@@ -839,10 +839,47 @@ async function triggerAutoAiResponse(room: { id: number; code: string; aiMode: n
   }
 }
 
+/**
+ * X-ROOM KAPALI - VARSAYILAN KAPALI, BILEREK.
+ *
+ * On uc rota ve /ws uzerinde bir WebSocket sunucusu uretimde canliydi:
+ * cok kullanicili sohbet, moderasyon yok, sikayet yok, engelleme yok.
+ * Istemcide X-Room sayfasi, bileseni veya rotasi HIC olmadi - yani
+ * ozellik kullanilabilir degildi ama API disariya aciktir.
+ *
+ * Bu bir magaza kurali meselesi degil. Kapatilmasinin sebebi, moderasyonu
+ * olmayan cok kullanicili bir sohbet API'sinin canli bir dagitimda
+ * erisilebilir olmasinin, kimse incelemese bile bir sorumluluk olmasidir.
+ *
+ * ACMADAN ONCE GEREKENLER (Apple 1.2 / Play UGC): icerik filtresi,
+ * kullanici sikayet yolu, kullanici engelleme, ve 24 saat icinde islem
+ * taahhudu. userBans altyapisi var ama tum uc noktalari /api/admin/*
+ * altinda - kullaniciya acik sikayet/engelleme YOK.
+ *
+ * Acmak icin XROOM_ENABLED=true. Kapaliyken rotalar 404 doner (503
+ * degil: kapali bir ozellik varligini duyurmamali) ve WebSocket sunucusu
+ * hic kurulmaz.
+ */
+const XROOM_ENABLED = process.env.XROOM_ENABLED === "true";
+const XROOM_PATHS = /^\/api\/(xroom|room-cost|x-credits\/use-for-room)(\/|$)/;
+
 export async function registerRoutes(
   httpServer: Server,
   app: Express
 ): Promise<Server> {
+
+  /* X-Room kapali oldugunda butun oda yuzeyi yok sayilir. Tek yerde
+     duruyor ki sonradan eklenen bir oda rotasi kapinin disinda kalmasin. */
+  app.use((req, res, next) => {
+    if (!XROOM_ENABLED && XROOM_PATHS.test(req.path)) {
+      return res.status(404).json({ message: "Not found" });
+    }
+    next();
+  });
+
+  if (!XROOM_ENABLED) {
+    console.log("[XROOM] Kapali - oda rotalari 404, WebSocket kurulmadi (XROOM_ENABLED=true ile acilir)");
+  }
 
   // ==========================================
   // AUTH ROUTES
@@ -1484,7 +1521,17 @@ export async function registerRoutes(
       res.clearCookie("remember_token");
 
       console.log("[PROFILE] Account deleted for user:", userId);
-      res.json({ success: true, message: "Hesabınız ve tüm verileriniz kalıcı olarak silindi." });
+      /* Mesaj, gizlilik sayfasinin soyledigini soyler - fazlasini degil.
+       * "Tum verileriniz" bu sabaha kadar buyuk olcude yanlisti (silme
+       * hicbir satira dokunmuyordu); simdi kucuk olcude yanlis olurdu:
+       * odeme kayitlari VUK/TTK geregi kisi baglantisi kaldirilarak,
+       * yasak kayitlari ise yasak suresince kalir. Bkz. /privacy. */
+      res.json({
+        success: true,
+        message:
+          "Hesabın ve sohbet geçmişin kalıcı olarak silindi. " +
+          "Ödeme kayıtları yasal saklama süresi boyunca, kişisel bağlantısı kaldırılarak tutulur.",
+      });
     } catch (error) {
       console.error("[PROFILE] Account delete error:", error);
       res.status(500).json({ message: "Hesap silinemedi" });
@@ -3919,7 +3966,13 @@ Kullanıcının sorusu: "${message}"
   });
 
   // ============ WebSocket Server ============
-  const wss = new WebSocketServer({ server: httpServer, path: "/ws" });
+  /* WebSocket yalnizca oda mesajlari icin: join_room, leave_room,
+     send_message. X-Room kapaliyken kurulmasinin bir anlami yok ve
+     kurulmamasi, /ws'in el sikismayi hic kabul etmemesi demektir. */
+  const wss = XROOM_ENABLED
+    ? new WebSocketServer({ server: httpServer, path: "/ws" })
+    : null;
+  if (wss) {
   console.log("[WebSocket] Server initialized on /ws path");
 
   wss.on("error", (error) => {
@@ -4045,6 +4098,7 @@ Kullanıcının sorusu: "${message}"
       }
     });
   });
+  }  // if (wss) - X-Room kapaliyken WebSocket hic kurulmaz
 
   // AI silence detector - checks every 10 seconds for rooms with 30s of silence
   setInterval(async () => {
