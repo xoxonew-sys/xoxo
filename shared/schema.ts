@@ -288,7 +288,13 @@ export const registerSchema = z.object({
     .string()
     .min(3, "Kullanıcı adı en az 3 karakter olmalı")
     .max(20, "Kullanıcı adı en fazla 20 karakter olabilir")
-    .regex(/^[a-zA-Z0-9_]+$/, "Sadece harf, rakam ve alt çizgi kullanılabilir"),
+    // Turkce harfler dahil. Bosluk ve noktalama YOK: kullanici adi tek
+    // kelime kalmali. Karsilastirma storage.getUserByUsername icinde
+    // iki tarafta da lower() ile yapiliyor, bu yuzden guvenli.
+    .regex(
+      /^[a-zA-Z0-9_çğıöşüÇĞİÖŞÜ]+$/,
+      "Boşluk ve noktalama kullanılamaz — sadece harf, rakam ve alt çizgi",
+    ),
   email: z.string().email("Geçerli bir e-posta adresi girin"),
   password: z.string().min(6, "Şifre en az 6 karakter olmalı"),
   displayName: z.string().max(30).optional(),

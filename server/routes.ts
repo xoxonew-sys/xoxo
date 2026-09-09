@@ -950,7 +950,22 @@ export async function registerRoutes(
       });
     } catch (error) {
       if (error instanceof z.ZodError) {
-        return res.status(400).json({ message: error.errors[0].message });
+        // Hangi alanin hatali oldugunu mesaja koy. Duz mesaj donunce
+        // kullanici yanlis alani duzeltmeye calisiyor - kullanici adi
+        // kurali sifre kurali saniliyor.
+        const issue = error.errors[0];
+        const labels: Record<string, string> = {
+          username: "Kullanıcı adı",
+          email: "E-posta",
+          password: "Şifre",
+          displayName: "Görünen ad",
+        };
+        const field = String(issue.path[0] ?? "");
+        const label = labels[field];
+        return res.status(400).json({
+          field: field || undefined,
+          message: label ? `${label}: ${issue.message}` : issue.message,
+        });
       }
       console.error("[AUTH] Register error:", error);
       res.status(500).json({ message: "Kayıt işlemi başarısız oldu" });
