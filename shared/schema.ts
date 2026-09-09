@@ -227,6 +227,24 @@ export const userBans = pgTable("user_bans", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
+/* ---------- roomReports ----------
+   X-Room sikayetleri. Magaza sarti olan "bildirme" yolunun kaydi.
+   Oda suresi dolunca mesajlar silinir ama sikayet kaydi KALIR -
+   yoksa 24 saat icinde inceleme taahhudu bos olur. */
+export const roomReports = pgTable("room_reports", {
+  id: serial("id").primaryKey(),
+  roomCode: text("room_code").notNull(),
+  reporterEmail: text("reporter_email").notNull(),
+  reportedEmail: text("reported_email"),
+  reportedNickname: text("reported_nickname"),
+  messageText: text("message_text"),
+  reason: text("reason"),
+  status: text("status").notNull().default("open"), // "open" | "resolved"
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  resolvedAt: timestamp("resolved_at"),
+  resolvedBy: text("resolved_by"),
+});
+
 /* ---------- globalNotifications ---------- */
 export const globalNotifications = pgTable("global_notifications", {
   id: serial("id").primaryKey(),

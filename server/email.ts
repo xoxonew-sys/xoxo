@@ -59,3 +59,49 @@ export async function sendPasswordResetEmail(email: string, otpCode: string, use
     "password_reset",
   );
 }
+
+/* ---------------- X-Room sikayet bildirimi ---------------- */
+
+/**
+ * Sikayet geldiginde moderasyon adresine mail atar.
+ * Mail kaybolursa sikayet yine de room_reports tablosunda durur -
+ * admin paneli tek dogru kaynak, mail sadece hizli uyari.
+ */
+export async function sendReportEmail(params: {
+  roomCode: string;
+  reporterEmail: string;
+  reportedNickname?: string | null;
+  reportedEmail?: string | null;
+  messageText?: string | null;
+  reason?: string | null;
+}) {
+  const to = process.env.MODERATION_EMAIL || "hello@xoxo-apps.com";
+  const esc = (s: string) =>
+    s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+  const rows = [
+    ["Oda", params.roomCode],
+    ["Bildiren", params.reporterEmail],
+    ["Bildirilen", params.reportedNickname || "—"],
+    ["Bildirilen e-posta", params.reportedEmail || "—"],
+    ["Sebep", params.reason || "—"],
+    ["Mesaj", params.messageText || "—"],
+  ]
+    .map(
+      ([k, v]) =>
+        `<tr><td style="padding:6px 12px;color:#8a6f9c;font-size:13px">${k}</td>` +
+        `<td style="padding:6px 12px;color:#fff;font-size:13px">${esc(String(v))}</td></tr>`,
+    )
+    .join("");
+
+  const html =
+    `<!DOCTYPE html><html><body style="margin:0;padding:32px;background:#0b0410;font-family:system-ui,sans-serif">` +
+    `<div style="max-width:560px;margin:0 auto;background:#160a20;border:1px solid #3b1a4d;border-radius:20px;padding:32px">` +
+    `<h2 style="margin:0 0 4px;color:#ff3fa4;font-size:18px">X-Room şikayeti</h2>` +
+    `<p style="margin:0 0 20px;color:#8a6f9c;font-size:12px">24 saat içinde incelenmeli.</p>` +
+    `<table style="width:100%;border-collapse:collapse">${rows}</table>` +
+    `<p style="margin:24px 0 0;color:#8a6f9c;font-size:12px">Yönetim panelindeki Şikayetler sekmesinden işlem yapabilirsiniz.</p>` +
+    `</div></body></html>`;
+
+  return send(to, `XOXO — X-Room şikayeti (${params.roomCode})`, html, "room_report");
+}

@@ -14,13 +14,14 @@ import {
   loginSchema, registerSchema, verifyOtpSchema, resendOtpSchema, 
   passwordResetRequestSchema, passwordResetSchema, adminLoginSchema,
   users, chatSessions, chatMessages, payments, roomMembers, roomMessages,
-  userBans, globalNotifications, usageAnalytics, apiCostTracking
+  userBans, globalNotifications, usageAnalytics, apiCostTracking,
+  roomReports
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, sql, and, or, gt, isNull } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
-import { generateOTP, getOTPExpiry, sendVerificationEmail, sendPasswordResetEmail } from "./email";
+import { generateOTP, getOTPExpiry, sendVerificationEmail, sendPasswordResetEmail, sendReportEmail } from "./email";
 import { otpMatches } from "./otp";
 import { otpVerifyLimiter, otpRequestLimiter, loginLimiter } from "./rateLimit";
 import {
@@ -808,7 +809,13 @@ async function triggerAutoAiResponse(room: { id: number; code: string; aiMode: n
     const response = await anthropic.messages.create({
       model: "claude-sonnet-4-5",
       max_tokens: 60, // 15 SECOND RULE: ~15 words max for X-Room
-      system: getXRoomAiPrompt(room.aiMode, 1, "female", language as "tr" | "en"),
+      // Cinsiyet odayi kuranin secimi. Once sabit "female" idi.
+      system: getXRoomAiPrompt(
+        room.aiMode,
+        1,
+        (room as any).aiGender === "male" ? "male" : "female",
+        language as "tr" | "en",
+      ),
       messages: [{ role: "user", content: language === "en" ? `Recent chat:\n${conversationContext}\n\nJoin this conversation BRIEFLY (max 15 words).` : `Son sohbet:\n${conversationContext}\n\nBu sohbete KISA bir şekilde katıl (max 15 kelime).` }]
     });
 
@@ -2711,6 +2718,109 @@ Kullanıcının sorusu: "${message}"
     } catch (error) {
       console.error("[ADMIN] Sifre sifirlama hatasi:", error);
       res.status(500).json({ message: "İşlem başarısız oldu" });
+    }
+  });
+
+  /* ------------------------------------------------------------
+     X-ROOM MODERASYON
+     Magaza sarti: bildirme + engelleme + 24 saat taahhudu.
+     ------------------------------------------------------------ */
+
+  app.post("/api/xroom/:code/report", requireAuth, async (req, res) => {
+    try {
+      const code = String(req.params.code || "").toUpperCase();
+      const { reportedNickname, reportedEmail, messageText, reason } = req.body ?? {};
+
+      const uid = Number((req.session as any).userId);
+      const reporter = await storage.getUserById(uid);
+      if (!reporter) {
+        return res.status(401).json({ message: "Oturum bulunamadı" });
+      }
+
+      const [row] = await db
+        .insert(roomReports)
+        .values({
+          roomCode: code,
+          reporterEmail: reporter.email,
+          reportedEmail: reportedEmail ? String(reportedEmail) : null,
+          reportedNickname: reportedNickname ? String(reportedNickname).slice(0, 40) : null,
+          messageText: messageText ? String(messageText).slice(0, 2000) : null,
+          reason: reason ? String(reason).slice(0, 200) : null,
+        })
+        .returning();
+
+      // Mail basarisiz olsa bile sikayet kayitli - kullaniciya hata donmeyiz
+      sendReportEmail({
+        roomCode: code,
+        reporterEmail: reporter.email,
+        reportedNickname,
+        reportedEmail,
+        messageText,
+        reason,
+      }).catch((err) => console.error("[REPORT] Mail gonderilemedi:", err));
+
+      console.log(`[REPORT] Oda ${code} — bildiren ${reporter.email}`);
+      res.status(201).json({
+        id: row.id,
+        message: "Bildirimin alındı. 24 saat içinde incelenecek.",
+      });
+    } catch (error) {
+      console.error("[REPORT] Hata:", error);
+      res.status(500).json({ message: "Bildirim kaydedilemedi" });
+    }
+  });
+
+  app.get("/api/admin/reports", requireAdmin, async (_req, res) => {
+    try {
+      const rows = await db
+        .select()
+        .from(roomReports)
+        .orderBy(sql`created_at DESC`)
+        .limit(200);
+      res.json({ reports: rows });
+    } catch (error) {
+      console.error("[ADMIN] Sikayetler alinamadi:", error);
+      res.status(500).json({ message: "Şikayetler alınamadı" });
+    }
+  });
+
+  app.patch("/api/admin/reports/:id", requireAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id as string);
+      if (isNaN(id)) return res.status(400).json({ message: "Geçersiz kayıt" });
+
+      const status = req.body?.status === "open" ? "open" : "resolved";
+      const adminEmail = (req.session as any).adminEmail || "admin";
+
+      await db
+        .update(roomReports)
+        .set({
+          status,
+          resolvedAt: status === "resolved" ? new Date() : null,
+          resolvedBy: status === "resolved" ? adminEmail : null,
+        })
+        .where(eq(roomReports.id, id));
+
+      res.json({ message: status === "resolved" ? "Şikayet kapatıldı" : "Şikayet yeniden açıldı" });
+    } catch (error) {
+      console.error("[ADMIN] Sikayet guncellenemedi:", error);
+      res.status(500).json({ message: "Güncellenemedi" });
+    }
+  });
+
+  /** Bani silmeden ac/kapa - gecmis kayit kalsin diye */
+  app.patch("/api/admin/bans/:banId", requireAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.banId as string);
+      if (isNaN(id)) return res.status(400).json({ message: "Geçersiz kayıt" });
+
+      const isActive = req.body?.isActive === true;
+      await db.update(userBans).set({ isActive }).where(eq(userBans.id, id));
+
+      res.json({ message: isActive ? "Yasaklama açıldı" : "Yasaklama kapatıldı" });
+    } catch (error) {
+      console.error("[ADMIN] Ban guncellenemedi:", error);
+      res.status(500).json({ message: "Güncellenemedi" });
     }
   });
 
