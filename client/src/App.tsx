@@ -3,7 +3,7 @@ import { Route, Switch, useLocation } from "wouter";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "framer-motion";
 import { queryClient } from "@/lib/queryClient";
-import { LanguageProvider } from "@/contexts/LanguageContext";
+import { LanguageProvider, useLanguage } from "@/contexts/LanguageContext";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { CreditProvider } from "@/contexts/CreditContext";
 import { AvatarProvider } from "@/contexts/AvatarContext";
@@ -51,6 +51,26 @@ function Protected({ component: Component }: { component: React.ComponentType<an
   if (isLoading) return <Loading />;
   if (!isAuthenticated) return <Loading />;
   return <Component />;
+}
+
+/**
+ * TR/EN dugmesi - her sayfada gorunur.
+ * App.tsx'te tek yerde durdugu icin yeni sayfa eklendiginde
+ * ayrica eklemeye gerek kalmiyor.
+ */
+function LanguageToggle() {
+  const { language, setLanguage } = useLanguage();
+  return (
+    <button
+      type="button"
+      onClick={() => setLanguage(language === "tr" ? "en" : "tr")}
+      className="fixed top-3 right-3 z-50 px-3 py-1.5 rounded-full glass-panel text-[11px] font-mono uppercase tracking-widest text-muted-foreground hover:text-foreground"
+      aria-label={language === "tr" ? "Switch to English" : "Türkçeye geç"}
+      data-testid="language-toggle"
+    >
+      {language === "tr" ? "EN" : "TR"}
+    </button>
+  );
 }
 
 function NotFound() {
@@ -111,6 +131,7 @@ export default function App() {
             <AvatarProvider>
               <VoiceModeProvider>
                 <div className="h-full flex flex-col">
+                  <LanguageToggle />
                   <Suspense fallback={<Loading />}>
                     <Switch>
                       <Route path="/" component={Home} />

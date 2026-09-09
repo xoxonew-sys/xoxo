@@ -219,24 +219,49 @@ export default function Chat() {
   }, [messages.length, ttsSupported]); // Simplified deps - only track messages
 
   // Yeni mesajda ve mesaj BUYUDUKCE en alta kaydir.
-  // Tek seferlik scroll yetmiyor: MessageReveal metni kademeli olarak
-  // aciyor, yani yukseklik mesaj eklendikten sonra da artiyor.
-  // MutationObserver bu buyumeyi takip edip alta yapisik kalmamizi saglar.
+  //
+  // scrollIntoView KULLANILMIYOR: hangi atanin kaydirilacagini tarayici
+  // seciyor ve ic ice kapsayicilarda yanlis olani secebiliyor - ilk
+  // denemede tam olarak bu oldu, sayfa kaydi ama mesaj alani kaymadi.
+  // Bunun yerine gercek kaydirilabilir atayi bulup scrollTop'u dogrudan
+  // yaziyoruz.
+  //
+  // MutationObserver sart: MessageReveal metni kademeli aciyor, yani
+  // yukseklik mesaj eklendikten SONRA da artiyor. Tek seferlik kaydirma
+  // son satiri ekran disinda birakiyor.
   useEffect(() => {
     const end = messagesEndRef.current;
-    const container = end?.parentElement;
     if (!end) return;
 
-    // Yeni mesajda yumusak, buyume sirasinda ani kaydirma
-    end.scrollIntoView({ behavior: "smooth", block: "end" });
-
-    if (!container) return;
-    const stickToBottom = () => {
-      end.scrollIntoView({ behavior: "auto", block: "end" });
+    /** En yakin gercekten kaydirilabilir atayi bul */
+    const findScroller = (el: HTMLElement | null): HTMLElement | null => {
+      let node = el?.parentElement ?? null;
+      while (node) {
+        const style = window.getComputedStyle(node);
+        const scrollable = /(auto|scroll)/.test(style.overflowY);
+        if (scrollable && node.scrollHeight > node.clientHeight) return node;
+        node = node.parentElement;
+      }
+      return null;
     };
 
+    const scroller = findScroller(end);
+    const stickToBottom = () => {
+      if (scroller) {
+        scroller.scrollTop = scroller.scrollHeight;
+      } else {
+        // Kaydirilabilir kapsayici yoksa sayfanin kendisi kayiyordur
+        window.scrollTo(0, document.body.scrollHeight);
+      }
+    };
+
+    stickToBottom();
+
+    const target = scroller ?? end.parentElement;
+    if (!target) return;
+
     const observer = new MutationObserver(stickToBottom);
-    observer.observe(container, {
+    observer.observe(target, {
       childList: true,
       subtree: true,
       characterData: true,

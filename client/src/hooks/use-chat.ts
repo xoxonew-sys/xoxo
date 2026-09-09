@@ -40,10 +40,11 @@ export function useChat(
 
   // Karakter cinsiyeti de anahtarda: kadin Angel ile erkek Angel
   // ayri sohbet gecmisi tutar, konusma birbirine karismaz.
-  // Karakter/mod anahtara GIRMEZ: tek oturum tum karakterlerde paylasilir.
-  // Boylece mod degistirince sohbet silinmez ve restore effect'i
-  // gereksiz yere yeniden calisip iptal edilmez.
-  const storageKey = `xoxo_session_${userId}`;
+  // Anahtarda KARAKTER var, MOD yok.
+  //   Angel -> Snake  : baska biri, sohbet sifirlanir (level degisir)
+  //   Siginak -> Sicaklik : ayni kisinin iki modu, sohbet KALIR
+  // Kullanicinin kendi ifadesiyle: "ayni kisiyim, sadece tarzim farkli".
+  const storageKey = `xoxo_session_${userId}_${level}`;
 
   /* Kayıtlı oturumu geri yükle */
   useEffect(() => {

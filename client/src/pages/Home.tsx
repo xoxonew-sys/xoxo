@@ -14,15 +14,8 @@ export default function Home() {
 
   return (
     <div className="h-full flex flex-col px-6 safe-top safe-bottom">
-      {/* Üst çubuk: dil + oturum durumu */}
-      <header className="flex items-center justify-between py-4">
-        <button
-          type="button"
-          onClick={() => setLanguage(language === "tr" ? "en" : "tr")}
-          className="text-xs font-mono uppercase tracking-widest text-muted-foreground hover:text-foreground px-2 py-1"
-        >
-          {language === "tr" ? "EN" : "TR"}
-        </button>
+      {/* Ust cubuk: oturum durumu. Dil dugmesi App.tsx'te global. */}
+      <header className="flex items-center justify-end py-4">
 
         {!isLoading &&
           (isAuthenticated ? (
