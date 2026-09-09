@@ -1530,7 +1530,8 @@ export async function registerRoutes(
         success: true,
         message:
           "Hesabın ve sohbet geçmişin kalıcı olarak silindi. " +
-          "Ödeme kayıtları yasal saklama süresi boyunca, kişisel bağlantısı kaldırılarak tutulur.",
+          "Ödeme kayıtları yasal saklama süresi boyunca, kişisel bağlantısı kaldırılarak tutulur. " +
+          "Yasaklama kaydın varsa yasağın geçerliliği süresince saklanır.",
       });
     } catch (error) {
       console.error("[PROFILE] Account delete error:", error);
@@ -2657,6 +2658,47 @@ Kullanıcının sorusu: "${message}"
   });
 
   // Get all banned users
+  /**
+   * Admin tetikli sifre sifirlama.
+   * Sifre uretilmez ve mail ile gonderilmez; kullaniciya OTP gider,
+   * yeni sifreyi kendisi belirler. Admin sifreyi hicbir zaman gormez.
+   */
+  app.post("/api/admin/users/:userId/send-password-reset", requireAdmin, async (req, res) => {
+    try {
+      const userId = parseInt(req.params.userId as string);
+      if (isNaN(userId)) {
+        return res.status(400).json({ message: "Geçersiz kullanıcı ID" });
+      }
+
+      const user = await storage.getUserById(userId);
+      if (!user) {
+        return res.status(404).json({ message: "Kullanıcı bulunamadı" });
+      }
+
+      const otpCode = generateOTP();
+      const otpExpiry = getOTPExpiry();
+      await storage.updateUserOTP(user.id, otpCode, otpExpiry);
+
+      const emailSent = await sendPasswordResetEmail(user.email, otpCode, user.id);
+
+      const adminEmail = (req.session as any).adminEmail || "admin";
+      console.log(
+        `[ADMIN] Sifre sifirlama maili: user=${user.id} admin=${adminEmail} gonderildi=${emailSent}`
+      );
+
+      if (!emailSent) {
+        return res.status(502).json({
+          message: "Mail gönderilemedi. Resend yapılandırmasını kontrol edin.",
+        });
+      }
+
+      res.json({ message: `Şifre sıfırlama kodu ${user.email} adresine gönderildi` });
+    } catch (error) {
+      console.error("[ADMIN] Sifre sifirlama hatasi:", error);
+      res.status(500).json({ message: "İşlem başarısız oldu" });
+    }
+  });
+
   app.get("/api/admin/bans", requireAdmin, async (req, res) => {
     try {
       const bans = await db.select().from(userBans).orderBy(sql`created_at DESC`);
