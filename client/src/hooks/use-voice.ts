@@ -242,7 +242,10 @@ export function useStreamingTTS(
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             text,
-            character: personality,
+            // Sunucu bu alani "personality" adiyla okuyor (/api/tts/stream).
+            // "character" adiyla gonderilirse alan eslesmez ve sunucu
+            // varsayilan personality=2 (Bestie) sesine duser.
+            personality,
             subLevel,
             gender,
             language, // FIX: dil parametresi eksikti, yanlış aksan çıkıyordu

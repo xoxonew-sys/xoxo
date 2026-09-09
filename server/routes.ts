@@ -3114,7 +3114,16 @@ Kullanıcının sorusu: "${message}"
       // Kullanicinin kendi cinsiyeti (userGender) bundan ayridir.
       const characterGender = (req.body.characterGender === "male" ? "male" : "female") as "male" | "female";
 
-      const systemPrompt = await getSystemPromptWithAdminSettings(session.judgmentLevel, language, userGender, subLevel, characterGender);
+      // Kisilik OTURUMA KILITLI DEGIL: her mesajin kendi isteginden okunur.
+      // Boylece tek oturum icinde Angel'dan Snake'e gecilebilir ve
+      // ekrandaki sohbet gecmisi kaybolmadan karakter degisir.
+      const requestedLevel = Number(req.body.judgmentLevel);
+      const activeLevel =
+        requestedLevel === 1 || requestedLevel === 2 || requestedLevel === 3
+          ? requestedLevel
+          : session.judgmentLevel;
+
+      const systemPrompt = await getSystemPromptWithAdminSettings(activeLevel, language, userGender, subLevel, characterGender);
 
       // SNAKE ACCELERATION v2.0 - 50K TOKEN BUDGET, ULTRA-MINIMAL
       // Snake: 50 tokens = 2 cümle max = 2 saniye latency target
@@ -3417,7 +3426,7 @@ Kullanıcının sorusu: "${message}"
 
   // Helper to get appropriate voice config based on user gender
   // Now supports dynamic admin settings from database
-  async function getVoiceConfigDynamic(personality: number, gender: string = "female") {
+  async function getVoiceConfigDynamic(personality: number, gender: string = "female", subLevel: number = 1) {
     const defaultConfig = gender === "male" ? elevenLabsConfigMale : elevenLabsConfigFemale;
     const fallbackConfig = defaultConfig[personality] || defaultConfig[2];
 
@@ -3483,8 +3492,9 @@ Kullanıcının sorusu: "${message}"
       // MANDATORY: Validate voice identity before generation
       const voiceIdentity = validateVoiceIdentity(personality, subLevel, gender, language);
 
-      // Get personality-specific config based on user gender preference (with admin settings support)
-      const config = await getVoiceConfigDynamic(personality, gender);
+      // Ses: karakter + cinsiyet + mod. subLevel gecirilmezse iki mod
+      // ayni tonda duyulur.
+      const config = await getVoiceConfigDynamic(personality, gender, subLevel);
 
       const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${config.voiceId}`, {
         method: "POST",
@@ -3546,8 +3556,8 @@ Kullanıcının sorusu: "${message}"
         return res.status(500).json({ message: "TTS yapilandirilmamis: ELEVENLABS_API_KEY eksik" });
       }
 
-      // Get personality-specific config based on user gender preference (with admin settings support)
-      const config = await getVoiceConfigDynamic(personality, gender);
+      // Ses: karakter + cinsiyet + mod.
+      const config = await getVoiceConfigDynamic(personality, gender, subLevel);
 
       // Use streaming endpoint with optimize_streaming_latency=4 (maximum optimization)
       const response = await fetch(

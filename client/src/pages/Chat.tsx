@@ -157,7 +157,8 @@ export default function Chat() {
     stop: stopSpeaking,
     replayFromUrl,
     lastAudioUrl
-  } = useStreamingTTS(level, user?.gender || "female", language); // Streaming TTS with personality-specific voice based on user gender
+    // Sesin cinsiyeti SECILEN AVATARIN cinsiyetidir, kullanicinin degil.
+  } = useStreamingTTS(level, characterGender, language);
   
   // Store audio URLs for each message (for replay feature) - keyed by numeric message ID
   const [messageAudioUrls, setMessageAudioUrls] = useState<Record<number, string>>({});
@@ -165,14 +166,19 @@ export default function Chat() {
   // Audio URLs are cached in-memory for current session replay only
   // Blob URLs don't persist across page refresh - audio is regenerated on demand
 
-  // Update content when voice transcript changes
+  // Sesli girdiyi input kutusuna yansit.
+  // isListening guard'i SART: gonderim sirasinda resetTranscript()
+  // cagriliyor ama stopListening() ondan sonra geliyor ve ses tanima
+  // dururken son bir sonuc daha yayinliyor. Guard olmadan o sonuc
+  // temizlenmis kutuyu geri dolduruyor.
   useEffect(() => {
+    if (!isListening) return;
     if (transcript && transcript.trim()) {
       setContent(transcript);
-      contentRef.current = transcript; // FIX: ref'i anında güncelle
+      contentRef.current = transcript;
       setIsVoiceInput(true);
     }
-  }, [transcript]);
+  }, [transcript, isListening]);
 
   // FIX: content her değiştiğinde ref'i senkron tut (klavye girişi dahil)
   useEffect(() => {

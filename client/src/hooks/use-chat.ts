@@ -40,14 +40,17 @@ export function useChat(
 
   // Karakter cinsiyeti de anahtarda: kadin Angel ile erkek Angel
   // ayri sohbet gecmisi tutar, konusma birbirine karismaz.
-  const storageKey = `xoxo_session_${userId}_${level}_${characterGender}_${subLevel}`;
+  // Karakter/mod anahtara GIRMEZ: tek oturum tum karakterlerde paylasilir.
+  // Boylece mod degistirince sohbet silinmez ve restore effect'i
+  // gereksiz yere yeniden calisip iptal edilmez.
+  const storageKey = `xoxo_session_${userId}`;
 
   /* Kayıtlı oturumu geri yükle */
   useEffect(() => {
     let cancelled = false;
 
     const restore = async () => {
-      const saved = window.localStorage.getItem(storageKey);
+      const saved = window.sessionStorage.getItem(storageKey);
       if (!saved) {
         sessionIdRef.current = null;
         setMessages([]);
@@ -66,11 +69,14 @@ export function useChat(
         setMessages(data.messages ?? []);
       } catch {
         // Oturum silinmiş veya süresi dolmuş — temiz başla
-        window.localStorage.removeItem(storageKey);
+        window.sessionStorage.removeItem(storageKey);
         sessionIdRef.current = null;
         if (!cancelled) setMessages([]);
       } finally {
-        if (!cancelled) setIsLoading(false);
+        // KRITIK: cancelled kontrolu YOK. Efekt yarida iptal edilirse
+        // isLoading sonsuza kadar true kalir ve handleSubmit ilk satirda
+        // geri doner - hicbir mesaj gonderilemez, istek bile atilmaz.
+        setIsLoading(false);
       }
     };
 
@@ -89,7 +95,7 @@ export function useChat(
     });
     const session = await res.json();
     sessionIdRef.current = session.id;
-    window.localStorage.setItem(storageKey, String(session.id));
+    window.sessionStorage.setItem(storageKey, String(session.id));
     return session.id;
   }, [level, userId, storageKey]);
 
@@ -114,7 +120,9 @@ export function useChat(
         const res = await apiRequest(
           "POST",
           `/api/chat/sessions/${sessionId}/messages`,
-          { content, language, gender, characterGender, subLevel, imageBase64, imageType },
+          // judgmentLevel her mesajda gonderilir: kisilik oturuma kilitli
+          // degil, tek oturum icinde karakter degistirilebilsin diye.
+          { content, language, judgmentLevel: level, gender, characterGender, subLevel, imageBase64, imageType },
         );
         const assistantMessage: ChatMessage = await res.json();
         setMessages((prev) => [...prev, assistantMessage]);
@@ -127,11 +135,11 @@ export function useChat(
         setIsTyping(false);
       }
     },
-    [ensureSession, language, gender, characterGender, subLevel],
+    [ensureSession, language, level, gender, characterGender, subLevel],
   );
 
   const resetChat = useCallback(() => {
-    window.localStorage.removeItem(storageKey);
+    window.sessionStorage.removeItem(storageKey);
     sessionIdRef.current = null;
     setMessages([]);
     setIsTyping(false);
