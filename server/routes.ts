@@ -2287,6 +2287,16 @@ export async function registerRoutes(
   });
 
   // Admin middleware for protected routes
+  // requireAuth burada tanimli olmali: asagida kullanan uclar var ve
+  // const hoisting yapmadigi icin sonra tanimlanirsa sunucu acilista
+  // ReferenceError ile olur.
+  const requireAuth = (req: Request, res: Response, next: NextFunction) => {
+    if (!(req.session as any)?.userId) {
+      return res.status(401).json({ message: "Bu islem icin giris yapmalisiniz" });
+    }
+    next();
+  };
+
   const requireAdmin = (req: Request, res: Response, next: NextFunction) => {
     if (!(req.session as any)?.isAdmin) {
       return res.status(401).json({ message: "Yetkisiz erişim" });
@@ -3184,13 +3194,6 @@ Kullanıcının sorusu: "${message}"
    * degil, API'yi korumak bu ara katmanin isi. Bu olmadan curl ile
    * dogrudan istek atan biri hala hesapsiz sohbet edebilirdi.
    */
-  const requireAuth = (req: Request, res: Response, next: NextFunction) => {
-    if (!(req.session as any)?.userId) {
-      return res.status(401).json({ message: "Bu islem icin giris yapmalisiniz" });
-    }
-    next();
-  };
-
   app.post(api.confessions.create.path, requireAuth, async (req, res) => {
     try {
       const { content, judgmentLevel } = api.confessions.create.input.parse(req.body);
