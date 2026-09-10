@@ -10,6 +10,7 @@ import { AvatarProvider } from "@/contexts/AvatarContext";
 import { VoiceModeProvider } from "@/contexts/VoiceModeContext";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { Settings } from "lucide-react";
 
 /* Sohbet ekranı ağır (ses + görsel yükleme) — ayrı parçaya alındı */
 const Chat = lazy(() => import("@/pages/Chat"));
@@ -55,22 +56,43 @@ function Protected({ component: Component }: { component: React.ComponentType<an
 }
 
 /**
- * TR/EN dugmesi - her sayfada gorunur.
- * App.tsx'te tek yerde durdugu icin yeni sayfa eklendiginde
- * ayrica eklemeye gerek kalmiyor.
+ * Sag ust cubuk - her sayfada gorunur: dil degistirme ve ayarlar.
+ *
+ * Tek bir "fixed" kapsayici icinde duruyorlar; ayri ayri sabitlenselerdi
+ * ust uste binerlerdi. App.tsx'te tek yerde oldugu icin yeni sayfa
+ * eklendiginde ayrica bir sey yapmaya gerek kalmiyor.
  */
-function LanguageToggle() {
+function TopBar() {
   const { language, setLanguage } = useLanguage();
+  const { isAuthenticated } = useAuth();
+  const [, setLocation] = useLocation();
+
   return (
-    <button
-      type="button"
-      onClick={() => setLanguage(language === "tr" ? "en" : "tr")}
-      className="fixed top-3 right-3 z-50 px-3 py-1.5 rounded-full glass-panel text-[11px] font-mono uppercase tracking-widest text-muted-foreground hover:text-foreground"
-      aria-label={language === "tr" ? "Switch to English" : "Türkçeye geç"}
-      data-testid="language-toggle"
-    >
-      {language === "tr" ? "EN" : "TR"}
-    </button>
+    <div className="fixed top-3 right-3 z-50 flex items-center gap-2">
+      <button
+        type="button"
+        onClick={() => setLanguage(language === "tr" ? "en" : "tr")}
+        className="px-3 py-1.5 rounded-full glass-panel text-[11px] font-mono uppercase tracking-widest text-muted-foreground hover:text-foreground"
+        aria-label={language === "tr" ? "Switch to English" : "Türkçeye geç"}
+        data-testid="language-toggle"
+      >
+        {language === "tr" ? "EN" : "TR"}
+      </button>
+
+      {/* /profile zaten Protected; giris yapmamis kullaniciya
+          gostermek onu login'e atmaktan baska ise yaramaz. */}
+      {isAuthenticated && (
+        <button
+          type="button"
+          onClick={() => setLocation("/profile")}
+          className="p-2 rounded-full glass-panel text-muted-foreground hover:text-foreground"
+          aria-label={language === "tr" ? "Ayarlar" : "Settings"}
+          data-testid="settings-button"
+        >
+          <Settings className="w-4 h-4" />
+        </button>
+      )}
+    </div>
   );
 }
 
@@ -132,7 +154,7 @@ export default function App() {
             <AvatarProvider>
               <VoiceModeProvider>
                 <div className="h-full flex flex-col">
-                  <LanguageToggle />
+                  <TopBar />
                   <Suspense fallback={<Loading />}>
                     <Switch>
                       <Route path="/" component={Home} />
