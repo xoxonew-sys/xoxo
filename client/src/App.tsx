@@ -15,6 +15,7 @@ import { cn } from "@/lib/utils";
 const Chat = lazy(() => import("@/pages/Chat"));
 const Home = lazy(() => import("@/pages/Home"));
 const Judgment = lazy(() => import("@/pages/Judgment"));
+const XRoom = lazy(() => import("@/pages/XRoom"));
 const Login = lazy(() => import("@/pages/Login"));
 const Profile = lazy(() => import("@/pages/Profile"));
 const Pricing = lazy(() => import("@/pages/Pricing"));
@@ -135,6 +136,9 @@ export default function App() {
                   <Suspense fallback={<Loading />}>
                     <Switch>
                       <Route path="/" component={Home} />
+                      <Route path="/xroom">
+                        <Protected component={XRoom} />
+                      </Route>
                       <Route path="/judgment">
                         <Protected component={Judgment} />
                       </Route>

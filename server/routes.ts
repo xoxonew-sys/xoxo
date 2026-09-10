@@ -3940,15 +3940,27 @@ Kullanıcının sorusu: "${message}"
   }
 
   // Create X-Room
-  app.post("/api/xroom/create", async (req, res) => {
+  app.post("/api/xroom/create", requireAuth, async (req, res) => {
     try {
       const schema = z.object({
-        durationMinutes: z.number().min(5).max(15),
+        // Sadece bu dort deger. Onceden max(15) idi ve arada kalan
+        // keyfi degerler (7, 13) da kabul ediliyordu.
+        durationMinutes: z.union([
+          z.literal(5),
+          z.literal(10),
+          z.literal(15),
+          z.literal(30),
+        ]),
         nickname: z.string().min(1).max(20),
         memberId: z.string().min(1),
         avatarUrl: z.string().optional(),
+        // Odayi kuranin sectigi karakter ve cinsiyet.
+        // Onceden aiMode: 2 sabit kodluydu, secim yok sayiliyordu.
+        aiMode: z.union([z.literal(1), z.literal(2), z.literal(3)]).default(2),
+        aiGender: z.enum(["male", "female"]).default("female"),
       });
-      const { durationMinutes, nickname, memberId, avatarUrl } = schema.parse(req.body);
+      const { durationMinutes, nickname, memberId, avatarUrl, aiMode, aiGender } =
+        schema.parse(req.body);
 
       // Generate unique code
       let code = generateRoomCode();
@@ -3964,9 +3976,10 @@ Kullanıcının sorusu: "${message}"
         code,
         adminId: memberId,
         durationMinutes,
-        aiMode: 2,
+        aiMode,
+        aiGender,
         expiresAt,
-      });
+      } as any);
 
       // Add creator as admin member
       await storage.addRoomMember({
@@ -3990,7 +4003,7 @@ Kullanıcının sorusu: "${message}"
   });
 
   // Join X-Room by code
-  app.post("/api/xroom/join", async (req, res) => {
+  app.post("/api/xroom/join", requireAuth, async (req, res) => {
     try {
       const schema = z.object({
         code: z.string().length(6),
@@ -4089,7 +4102,7 @@ Kullanıcının sorusu: "${message}"
   });
 
   // Send message via HTTP (fallback for WebSocket)
-  app.post("/api/xroom/:code/message", async (req, res) => {
+  app.post("/api/xroom/:code/message", requireAuth, async (req, res) => {
     try {
       const schema = z.object({
         memberId: z.string().min(1),

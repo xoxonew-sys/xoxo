@@ -1,6 +1,6 @@
 import { useLocation } from "wouter";
 import { motion } from "framer-motion";
-import { User, Zap } from "lucide-react";
+import { User, Zap, Users } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCredits } from "@/contexts/CreditContext";
@@ -100,6 +100,17 @@ export default function Home() {
           >
             {language === "tr" ? "Başla" : "Start"}
           </NeonButton>
+
+          {/* Sureli, kendini imha eden grup sohbeti */}
+          <button
+            type="button"
+            onClick={() => setLocation(isAuthenticated ? "/xroom" : "/login")}
+            className="w-full py-3 rounded-full glass-panel text-sm flex items-center justify-center gap-2 hover:text-primary transition-colors"
+            data-testid="home-xroom"
+          >
+            <Users className="w-4 h-4" />
+            X-Room
+          </button>
         </motion.div>
       </div>
 
