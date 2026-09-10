@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Copy, Check, Send, Users, Flag, Clock } from "lucide-react";
+import { ArrowLeft, Copy, Check, Send, Users, Flag } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAvatar, getAvatarsByGender, type Personality, type Gender } from "@/contexts/AvatarContext";
@@ -82,11 +82,12 @@ export default function XRoom() {
   const [messages, setMessages] = useState<RoomMessage[]>([]);
   const [content, setContent] = useState("");
   const [copied, setCopied] = useState(false);
-  const [exploded, setExploded] = useState(false);
+  const [phase, setPhase] = useState<"live" | "blast" | "dead">("live");
 
   const [remaining, setRemaining] = useState(0);
   const endRef = useRef<HTMLDivElement>(null);
   const lastIdRef = useRef(0);
+  const pollingRef = useRef(false); // ayni anda tek cekim
 
   const fail = (err: unknown) => {
     const msg = err instanceof Error ? err.message : String(err);
@@ -96,39 +97,57 @@ export default function XRoom() {
 
   /* ---------- geri sayım ---------- */
   useEffect(() => {
-    if (!expiresAt || exploded) return;
+    if (!expiresAt || phase !== "live") return;
     const tick = () => {
       const left = Math.max(0, Math.floor((expiresAt.getTime() - Date.now()) / 1000));
       setRemaining(left);
-      if (left === 0) setExploded(true);
+      if (left === 0) setPhase("blast");
     };
     tick();
     const id = setInterval(tick, 1000);
     return () => clearInterval(id);
-  }, [expiresAt, exploded]);
+  }, [expiresAt, phase]);
+
+  /* patlama efekti bitince imha ekrani */
+  useEffect(() => {
+    if (phase !== "blast") return;
+    const id = setTimeout(() => setPhase("dead"), 1600);
+    return () => clearTimeout(id);
+  }, [phase]);
 
   /* ---------- mesaj çekme ---------- */
   const poll = useCallback(async () => {
-    if (!code || exploded) return;
+    if (!code || phase !== "live") return;
+    if (pollingRef.current) return; // yaris durumunu engelle
+    pollingRef.current = true;
     try {
       const res = await fetch(`/api/xroom/${code}/messages?after=${lastIdRef.current}`, {
         credentials: "include",
       });
       if (res.status === 404) {
-        setExploded(true);
+        setPhase("blast");
         return;
       }
       if (!res.ok) return;
       const data = await res.json();
       const fresh: RoomMessage[] = data.messages ?? [];
-      if (fresh.length) {
-        lastIdRef.current = fresh[fresh.length - 1].id;
-        setMessages((prev) => [...prev, ...fresh]);
-      }
+      if (!fresh.length) return;
+
+      lastIdRef.current = Math.max(lastIdRef.current, ...fresh.map((m) => m.id));
+
+      // Kimlige gore tekillestir: ayni mesaj iki kez gelirse ekranda
+      // iki kez gorunmesin.
+      setMessages((prev) => {
+        const seen = new Set(prev.map((m) => m.id));
+        const add = fresh.filter((m) => !seen.has(m.id));
+        return add.length ? [...prev, ...add] : prev;
+      });
     } catch {
-      /* ağ dalgalanması — bir sonraki turda toparlar */
+      /* ag dalgalanmasi */
+    } finally {
+      pollingRef.current = false;
     }
-  }, [code, exploded]);
+  }, [code, phase]);
 
   useEffect(() => {
     if (step !== "chat" || !code) return;
@@ -198,7 +217,7 @@ export default function XRoom() {
   /* ---------- mesaj gönder ---------- */
   const sendMessage = async () => {
     const text = content.trim();
-    if (!text || busy || exploded) return;
+    if (!text || busy || phase !== "live") return;
     setContent("");
     try {
       await apiRequest("POST", `/api/xroom/${code}/message`, {
@@ -243,13 +262,55 @@ export default function XRoom() {
   const mmss = (s: number) =>
     `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
 
-  const critical = remaining <= 10 && remaining > 0;
+  const counting = remaining <= 10 && remaining > 0 && step === "chat";
   const avatars = getAvatarsByGender(aiGender);
 
   /* ============================================================
      PATLAMA
      ============================================================ */
-  if (exploded) {
+  /* ============================================================
+     PATLAMA — beyaz flas, sonra dagilan parcalar
+     ============================================================ */
+  if (phase === "blast") {
+    const shards = Array.from({ length: 18 });
+    return (
+      <div className="fixed inset-0 z-[100] bg-black overflow-hidden">
+        <motion.div
+          initial={{ opacity: 1 }}
+          animate={{ opacity: 0 }}
+          transition={{ duration: 0.35 }}
+          className="absolute inset-0 bg-white"
+        />
+        <motion.div
+          initial={{ scale: 0, opacity: 1 }}
+          animate={{ scale: 6, opacity: 0 }}
+          transition={{ duration: 1.1, ease: "easeOut" }}
+          className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-40 h-40 rounded-full"
+          style={{ background: "radial-gradient(circle,#fff 0%,#ff2d55 45%,transparent 70%)" }}
+        />
+        {shards.map((_, i) => {
+          const angle = (i / shards.length) * Math.PI * 2;
+          return (
+            <motion.span
+              key={i}
+              initial={{ x: 0, y: 0, opacity: 1, rotate: 0 }}
+              animate={{
+                x: Math.cos(angle) * (220 + Math.random() * 180),
+                y: Math.sin(angle) * (220 + Math.random() * 180),
+                opacity: 0,
+                rotate: Math.random() * 540 - 270,
+              }}
+              transition={{ duration: 1.2, ease: "easeOut" }}
+              className="absolute left-1/2 top-1/2 w-3 h-8"
+              style={{ background: "#ff2d55", boxShadow: "0 0 18px rgba(255,45,85,0.9)" }}
+            />
+          );
+        })}
+      </div>
+    );
+  }
+
+  if (phase === "dead") {
     return (
       <div className="h-full flex items-center justify-center bg-black">
         <motion.div
@@ -289,7 +350,40 @@ export default function XRoom() {
 
   return (
     <div className="h-full flex flex-col px-5 py-6 safe-top safe-bottom">
-      <header className="flex items-center gap-3 mb-6 flex-shrink-0">
+      {/* ---------- SON 10 SANIYE: tam ekran geri sayim ---------- */}
+      <AnimatePresence>
+        {counting && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex flex-col items-center justify-center pointer-events-none"
+            style={{ background: "radial-gradient(circle,rgba(255,45,85,0.18) 0%,rgba(0,0,0,0.86) 70%)" }}
+          >
+            <motion.div
+              key={remaining}
+              initial={{ scale: 1.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ duration: 0.3 }}
+              className="text-[8rem] leading-none font-display font-black"
+              style={{ color: "#ff2d55", textShadow: "0 0 60px rgba(255,45,85,0.95)" }}
+              data-testid="xroom-countdown"
+            >
+              {remaining}
+            </motion.div>
+            <motion.p
+              animate={{ opacity: [0.4, 1, 0.4] }}
+              transition={{ duration: 1, repeat: Infinity }}
+              className="mt-4 text-xs tracking-[0.35em] uppercase"
+              style={{ color: "#ff2d55" }}
+            >
+              auto-destruction protocol
+            </motion.p>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <header className="flex items-center gap-3 mb-4 flex-shrink-0">
         <button
           type="button"
           onClick={() => (step === "chat" ? setLocation("/") : setStep("menu"))}
@@ -302,28 +396,36 @@ export default function XRoom() {
         <h1 className="text-lg font-display font-bold flex-1">X-Room</h1>
 
         {step === "chat" && (
-          <div className="flex items-center gap-3">
-            <span className="flex items-center gap-1 text-xs text-muted-foreground">
-              <Users className="w-3.5 h-3.5" />
-              {members.length}
-            </span>
-            <motion.span
-              animate={critical ? { scale: [1, 1.25, 1] } : {}}
-              transition={{ duration: 0.6, repeat: critical ? Infinity : 0 }}
-              className={cn(
-                "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-mono font-bold",
-                critical
-                  ? "bg-destructive/20 text-destructive ring-1 ring-destructive"
-                  : "glass-panel text-primary",
-              )}
-              data-testid="xroom-timer"
-            >
-              <Clock className="w-3.5 h-3.5" />
-              {mmss(remaining)}
-            </motion.span>
-          </div>
+          <span className="flex items-center gap-1 text-xs text-muted-foreground">
+            <Users className="w-3.5 h-3.5" />
+            {members.length}
+          </span>
         )}
       </header>
+
+      {/* ---------- SURE: ust orta, buyuk ve canli ---------- */}
+      {step === "chat" && (
+        <div className="flex justify-center mb-4 flex-shrink-0">
+          <motion.div
+            animate={counting ? { scale: [1, 1.08, 1] } : {}}
+            transition={{ duration: 0.7, repeat: counting ? Infinity : 0 }}
+            className={cn(
+              "px-6 py-2.5 rounded-full font-mono font-bold text-2xl tracking-wider ring-2",
+              remaining <= 30
+                ? "text-white ring-destructive"
+                : "text-primary ring-primary/50 glass-panel",
+            )}
+            style={
+              remaining <= 30
+                ? { background: "rgba(255,45,85,0.15)", boxShadow: "0 0 28px rgba(255,45,85,0.55)" }
+                : undefined
+            }
+            data-testid="xroom-timer"
+          >
+            {mmss(remaining)}
+          </motion.div>
+        </div>
+      )}
 
       <AnimatePresence mode="wait">
         {/* ---------- MENÜ ---------- */}
