@@ -24,6 +24,15 @@ const PLAN_LABELS: Record<string, string> = {
   monthly: "Aylık",
 };
 
+/** En kucuk pakete gore kredi basina yuzde kac ucuz. */
+function savingVsBase(pack: { id: string; credits: number; priceInCents: number }): number {
+  const base = CREDIT_PACKS[0];
+  if (pack.id === base.id) return 0;
+  const basePer = base.priceInCents / base.credits;
+  const per = pack.priceInCents / pack.credits;
+  return Math.round((1 - per / basePer) * 100);
+}
+
 export default function Pricing() {
   const [, setLocation] = useLocation();
   const { isAuthenticated } = useAuth();
@@ -131,9 +140,17 @@ export default function Pricing() {
                     )}
                   </p>
                   <p className="text-xs text-muted-foreground mt-0.5">{PACK_HINTS[pack.id]}</p>
+                  {/* Birim fiyat basamakli indirimi gorunur kilar: toplam
+                      fiyata bakan kullanici 500'un 100'den pahali oldugunu
+                      gorup kucugu seciyor. Kredi basina fark ancak boyle
+                      anlasiliyor. */}
+                  <p className="text-[11px] text-muted-foreground/70 mt-1">
+                    kredi başına {formatPrice(pack.priceInCents / pack.credits)}
+                    {savingVsBase(pack) > 0 ? ` · %${savingVsBase(pack)} avantaj` : ""}
+                  </p>
                 </div>
-                <span className="text-right">
-                  <span className="block font-display font-bold text-primary">
+                <span className="text-right flex-shrink-0 ml-3">
+                  <span className="block font-display font-bold text-primary text-lg">
                     {formatPrice(pack.priceInCents)}
                   </span>
                   <span className="block text-[11px] text-muted-foreground">
@@ -155,14 +172,17 @@ export default function Pricing() {
               Ayrıcalık listesinden ÖNCE duruyor, sonra değil.
             */}
             <p className="text-sm font-display font-bold text-foreground mb-1">
-              {t("premium.not_credits")}
+              Sınırsız yazışma, 300 sesli yanıt.
             </p>
             <p className="text-xs text-muted-foreground leading-relaxed mb-4">
-              {t("premium.not_credits.detail")}
+              Yazılı mesajların 30 gün boyunca kredi harcamaz. Sesli yanıtlar
+              pakete dahil 300 krediden düşer.
             </p>
 
             <ul className="space-y-2 mb-2">
               {[
+                "Sınırsız yazılı mesaj",
+                "300 sesli yanıt dahil",
                 "Snake karakterinin kilidi açılır",
                 "Tüm avatarlara erişim",
                 "Sesli modda sıra önceliği",

@@ -169,7 +169,12 @@ export default function App() {
           <CreditProvider>
             <AvatarProvider>
               <VoiceModeProvider>
-                <div className="h-full flex flex-col">
+                {/* Uygulama mobil oncelikli tasarlandi. Genislik siniri
+                    olmadan masaustunde satirlar tum ekrana yayiliyor ve
+                    saga hizali icerik (fiyat, kredi, sayac) ekranin
+                    disinda kaliyordu. max-w-md mobil sutunu ortalar;
+                    telefonda hicbir sey degismez. */}
+                <div className="h-full w-full max-w-md mx-auto flex flex-col">
                   <TopBar />
                   <Suspense fallback={<Loading />}>
                     <Switch>
