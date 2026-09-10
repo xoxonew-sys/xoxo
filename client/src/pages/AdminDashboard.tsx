@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useLocation } from "wouter";
 import {
   RefreshCw, LogOut, Users, CreditCard, Ban, Bell, BarChart3,
-  Search, X, Zap, Crown, Shield, Mail, Trash2,
+  Search, X, Zap, Crown, Shield, Mail, Flag, Power, AlertTriangle,
 } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { cn } from "@/lib/utils";
@@ -18,7 +18,7 @@ import { cn } from "@/lib/utils";
    Kullanıcı satırına tıklayınca detay paneli açılır.
    ============================================================ */
 
-type Tab = "users" | "payments" | "bans" | "notifications" | "analytics";
+type Tab = "users" | "payments" | "reports" | "bans" | "notifications" | "analytics";
 
 interface AdminUser {
   id: number;
@@ -42,6 +42,7 @@ interface AdminUser {
 const TABS: { id: Tab; label: string; icon: typeof Users }[] = [
   { id: "users", label: "Kullanıcılar", icon: Users },
   { id: "payments", label: "Ödemeler", icon: CreditCard },
+  { id: "reports", label: "Şikayetler", icon: Flag },
   { id: "bans", label: "Banlar", icon: Ban },
   { id: "notifications", label: "Bildirimler", icon: Bell },
   { id: "analytics", label: "Analitik", icon: BarChart3 },
@@ -59,6 +60,7 @@ export default function AdminDashboard() {
   const [creditStats, setCreditStats] = useState<any>(null);
   const [payments, setPayments] = useState<any[]>([]);
   const [bans, setBans] = useState<any[]>([]);
+  const [reports, setReports] = useState<any[]>([]);
   const [notifications, setNotifications] = useState<any[]>([]);
   const [analytics, setAnalytics] = useState<any>(null);
   const [costs, setCosts] = useState<any>(null);
@@ -109,6 +111,8 @@ export default function AdminDashboard() {
       try {
         if (tab === "payments" && payments.length === 0) {
           setPayments((await getJson("/api/admin/payments")).payments ?? []);
+        } else if (tab === "reports" && reports.length === 0) {
+          setReports((await getJson("/api/admin/reports")).reports ?? []);
         } else if (tab === "bans" && bans.length === 0) {
           setBans(await getJson("/api/admin/bans"));
         } else if (tab === "notifications" && notifications.length === 0) {
@@ -156,6 +160,91 @@ export default function AdminDashboard() {
       notify(data.message ?? "Sıfırlama kodu gönderildi");
     } catch (err: any) {
       notify(err?.message || "Mail gönderilemedi", true);
+    } finally {
+      setBusy(null);
+    }
+  };
+
+
+  /** Sikayeti kapat / yeniden ac */
+  const setReportStatus = async (id: number, status: "open" | "resolved") => {
+    setBusy(`report-${id}`);
+    try {
+      await apiRequest("PATCH", `/api/admin/reports/${id}`, { status });
+      setReports((prev) =>
+        prev.map((r: any) => (r.id === id ? { ...r, status } : r)),
+      );
+      notify(status === "resolved" ? "Şikayet kapatıldı" : "Şikayet yeniden açıldı");
+    } catch (err: any) {
+      notify(err?.message || "Güncellenemedi", true);
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  /**
+   * Sikayet satirindan dogrudan yasaklama.
+   * Onay penceresi SART: tek tikla kalici ban yanlislikla basilabilir.
+   */
+  const banFromReport = async (report: any, days: number | null) => {
+    if (!report.reportedEmail) {
+      notify("Bu kayıtta e-posta yok, Kullanıcılar sekmesinden yasaklayın", true);
+      return;
+    }
+    const label = days === null ? "kalıcı olarak" : `${days} gün`;
+    if (!window.confirm(`${report.reportedEmail} ${label} yasaklansın mı?`)) return;
+
+    setBusy(`report-${report.id}`);
+    try {
+      await apiRequest("POST", "/api/admin/bans", {
+        email: report.reportedEmail,
+        banType: days === null ? "permanent" : "temporary",
+        durationDays: days ?? undefined,
+        reason: `X-Room şikayeti #${report.id}`,
+      });
+      await setReportStatus(report.id, "resolved");
+      setBans([]); // Banlar sekmesi bir sonraki acilista yenilensin
+      notify("Yasaklandı ve şikayet kapatıldı");
+    } catch (err: any) {
+      notify(err?.message || "Yasaklanamadı", true);
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  /** Bani silmeden ac/kapa - gecmis kayit kalsin diye */
+  const toggleBan = async (ban: any) => {
+    setBusy(`ban-${ban.id}`);
+    try {
+      await apiRequest("PATCH", `/api/admin/bans/${ban.id}`, { isActive: !ban.isActive });
+      setBans((prev) =>
+        prev.map((b: any) => (b.id === ban.id ? { ...b, isActive: !b.isActive } : b)),
+      );
+      notify(ban.isActive ? "Yasaklama kapatıldı" : "Yasaklama açıldı");
+    } catch (err: any) {
+      notify(err?.message || "Güncellenemedi", true);
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  /** Kullanici detayindan sureli/kalici yasaklama */
+  const banUser = async (u: AdminUser, days: number | null) => {
+    const label = days === null ? "kalıcı olarak" : `${days} gün`;
+    if (!window.confirm(`${u.email} ${label} yasaklansın mı?`)) return;
+    setBusy(`${u.id}-ban`);
+    try {
+      await apiRequest("POST", "/api/admin/bans", {
+        email: u.email,
+        banType: days === null ? "permanent" : "temporary",
+        durationDays: days ?? undefined,
+        reason: "Yönetici kararı",
+      });
+      await patchUser(u.id, { isBanned: true }, "Yasak");
+      setBans([]);
+      notify(`Yasaklandı (${label})`);
+    } catch (err: any) {
+      notify(err?.message || "Yasaklanamadı", true);
     } finally {
       setBusy(null);
     }
@@ -316,6 +405,119 @@ export default function AdminDashboard() {
         </div>
       )}
 
+
+      {/* ---------- ŞİKAYETLER ---------- */}
+      {tab === "reports" && (
+        <div className="flex-1 min-h-0 space-y-2">
+          {reports.length === 0 ? (
+            <Empty text="Şikayet yok." />
+          ) : (
+            [...reports]
+              .sort((a: any, b: any) =>
+                a.status === b.status ? 0 : a.status === "open" ? -1 : 1,
+              )
+              .map((r: any) => {
+                const open = r.status === "open";
+                return (
+                  <div
+                    key={r.id}
+                    className={cn(
+                      "glass-panel rounded-2xl p-3 ring-1",
+                      open ? "ring-destructive/40" : "ring-white/5 opacity-60",
+                    )}
+                    data-testid={`admin-report-${r.id}`}
+                  >
+                    <div className="flex items-start gap-2 mb-2">
+                      {open && (
+                        <AlertTriangle className="w-4 h-4 text-destructive flex-shrink-0 mt-0.5" />
+                      )}
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm">
+                          <span className="text-muted-foreground">Oda</span>{" "}
+                          <span className="font-mono">{r.roomCode}</span>
+                          {" · "}
+                          <span className="text-muted-foreground">Bildiren</span>{" "}
+                          {r.reporterEmail}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {r.reportedNickname || "—"}
+                          {r.reportedEmail ? ` (${r.reportedEmail})` : " (e-posta yok)"}
+                          {" · "}
+                          {date(r.createdAt)}
+                        </p>
+                      </div>
+                      {!open && (
+                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/5 text-muted-foreground flex-shrink-0">
+                          kapalı
+                        </span>
+                      )}
+                    </div>
+
+                    {r.messageText && (
+                      <p className="text-sm bg-black/30 rounded-xl px-3 py-2 mb-2 leading-relaxed">
+                        {r.messageText}
+                      </p>
+                    )}
+                    {r.reason && (
+                      <p className="text-xs text-muted-foreground mb-2">
+                        Sebep: {r.reason}
+                      </p>
+                    )}
+
+                    <div className="flex flex-wrap gap-2">
+                      {open ? (
+                        <>
+                          <button
+                            type="button"
+                            onClick={() => setReportStatus(r.id, "resolved")}
+                            disabled={busy === `report-${r.id}`}
+                            className="px-3 py-1.5 rounded-full text-xs glass-panel hover:text-primary"
+                          >
+                            İşlem yapıldı
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => banFromReport(r, 1)}
+                            disabled={busy === `report-${r.id}`}
+                            className="px-3 py-1.5 rounded-full text-xs glass-panel hover:text-destructive"
+                          >
+                            1 gün ban
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => banFromReport(r, 7)}
+                            disabled={busy === `report-${r.id}`}
+                            className="px-3 py-1.5 rounded-full text-xs glass-panel hover:text-destructive"
+                          >
+                            1 hafta ban
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => banFromReport(r, null)}
+                            disabled={busy === `report-${r.id}`}
+                            className="px-3 py-1.5 rounded-full text-xs glass-panel hover:text-destructive"
+                          >
+                            Kalıcı ban
+                          </button>
+                        </>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => setReportStatus(r.id, "open")}
+                          disabled={busy === `report-${r.id}`}
+                          className="px-3 py-1.5 rounded-full text-xs glass-panel"
+                        >
+                          Yeniden aç
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })
+          )}
+        </div>
+      )}
+
       {/* ---------- BANLAR ---------- */}
       {tab === "bans" && (
         <div className="flex-1 min-h-0 space-y-2">
@@ -333,23 +535,18 @@ export default function AdminDashboard() {
                 </div>
                 <button
                   type="button"
-                  onClick={async () => {
-                    setBusy(`ban-${b.id}`);
-                    try {
-                      await apiRequest("DELETE", `/api/admin/bans/${b.id}`);
-                      setBans((prev) => prev.filter((x: any) => x.id !== b.id));
-                      notify("Yasaklama kaldırıldı");
-                    } catch {
-                      notify("Kaldırılamadı", true);
-                    } finally {
-                      setBusy(null);
-                    }
-                  }}
+                  onClick={() => toggleBan(b)}
                   disabled={busy === `ban-${b.id}`}
-                  className="p-2 rounded-full text-muted-foreground hover:text-destructive flex-shrink-0"
-                  aria-label="Yasaklamayı kaldır"
+                  className={cn(
+                    "p-2 rounded-full flex-shrink-0",
+                    b.isActive
+                      ? "text-destructive hover:text-destructive/70"
+                      : "text-muted-foreground/40 hover:text-muted-foreground",
+                  )}
+                  aria-label={b.isActive ? "Yasaklamayı kapat" : "Yasaklamayı aç"}
+                  data-testid={`admin-ban-toggle-${b.id}`}
                 >
-                  <Trash2 className="w-4 h-4" />
+                  <Power className="w-4 h-4" />
                 </button>
               </div>
             ))
@@ -491,13 +688,58 @@ export default function AdminDashboard() {
                 busy={busy === `${openUser.id}-Admin`}
                 onChange={() => patchUser(openUser.id, { isAdmin: !openUser.isAdmin }, "Admin")}
               />
-              <Toggle
-                label="Yasaklı"
-                on={!!openUser.isBanned}
-                danger
-                busy={busy === `${openUser.id}-Yasak`}
-                onChange={() => patchUser(openUser.id, { isBanned: !openUser.isBanned }, "Yasak")}
-              />
+            </div>
+
+            {/* Yasaklama - sure secenekli.
+                Anahtar yerine dugmeler: "1 gun mu kalici mi" karari
+                tek bir ac/kapa ile ifade edilemiyor. */}
+            <div className="mb-4">
+              <p className="text-xs text-muted-foreground mb-2">
+                Yasaklama
+                {openUser.isBanned && (
+                  <span className="text-destructive"> — şu an yasaklı</span>
+                )}
+              </p>
+              <div className="flex gap-2 flex-wrap">
+                {openUser.isBanned ? (
+                  <button
+                    type="button"
+                    onClick={() => patchUser(openUser.id, { isBanned: false }, "Yasak")}
+                    disabled={busy === `${openUser.id}-Yasak`}
+                    className="px-3 py-1.5 rounded-full text-xs glass-panel hover:text-primary"
+                    data-testid="admin-unban"
+                  >
+                    Yasağı kaldır
+                  </button>
+                ) : (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => banUser(openUser, 1)}
+                      disabled={busy === `${openUser.id}-ban`}
+                      className="px-3 py-1.5 rounded-full text-xs glass-panel hover:text-destructive"
+                    >
+                      1 gün
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => banUser(openUser, 7)}
+                      disabled={busy === `${openUser.id}-ban`}
+                      className="px-3 py-1.5 rounded-full text-xs glass-panel hover:text-destructive"
+                    >
+                      1 hafta
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => banUser(openUser, null)}
+                      disabled={busy === `${openUser.id}-ban`}
+                      className="px-3 py-1.5 rounded-full text-xs glass-panel hover:text-destructive"
+                    >
+                      Kalıcı
+                    </button>
+                  </>
+                )}
+              </div>
             </div>
 
             {/* Şifre */}
