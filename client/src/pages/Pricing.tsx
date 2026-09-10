@@ -82,7 +82,7 @@ export default function Pricing() {
         >
           <ArrowLeft className="w-5 h-5" />
         </button>
-        <h1 className="text-lg font-display font-bold">X-Kredi</h1>
+        <h1 className="text-lg font-display font-bold">{t("pricing.title")}</h1>
         {isAuthenticated && (
           <span className="ml-auto flex items-center gap-1 text-sm text-primary font-display font-bold">
             <Zap className="w-4 h-4" />
@@ -133,7 +133,7 @@ export default function Pricing() {
               >
                 <div>
                   <p className="flex items-center gap-2 font-display font-bold">
-                    {pack.credits} X-Kredi
+                    {pack.credits} {t("pricing.pack.credits")}
                     {pack.popular && (
                       <span className="text-[10px] uppercase px-1.5 py-0.5 rounded bg-primary/20 text-primary">
                         popüler

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useLocation } from "wouter";
 import { ArrowLeft, LogOut, Trash2, Zap } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { useCredits } from "@/contexts/CreditContext";
 import { useAvatar, getAvatarsByGender, type Personality } from "@/contexts/AvatarContext";
 import { useToast } from "@/hooks/use-toast";
@@ -12,6 +13,7 @@ export default function Profile() {
   const [, setLocation] = useLocation();
   const { user, isLoading, logout, updateDisplayName, updateGender, deleteAccount } = useAuth();
   const { credits, isPremium } = useCredits();
+  const { t } = useLanguage();
   const { gender, setGender, selected, setAvatar } = useAvatar();
   const { toast } = useToast();
 
@@ -35,9 +37,9 @@ export default function Profile() {
     setBusy(true);
     try {
       await updateDisplayName(name.trim());
-      toast({ title: "Kaydedildi", variant: "success" });
+      toast({ title: t("profile.saved"), variant: "success" });
     } catch {
-      toast({ title: "Kaydedilemedi", variant: "destructive" });
+      toast({ title: t("profile.save_failed"), variant: "destructive" });
     } finally {
       setBusy(false);
     }
@@ -48,17 +50,17 @@ export default function Profile() {
     try {
       await updateGender(next);
     } catch {
-      toast({ title: "Sunucuya yazılamadı", variant: "destructive" });
+      toast({ title: t("profile.sync_failed"), variant: "destructive" });
     }
   };
 
   const removeAccount = async () => {
-    if (!window.confirm("Hesabın ve tüm sohbetlerin kalıcı olarak silinecek. Emin misin?")) return;
+    if (!window.confirm(t("profile.delete_confirm"))) return;
     try {
       await deleteAccount();
       setLocation("/");
     } catch {
-      toast({ title: "Silinemedi", variant: "destructive" });
+      toast({ title: t("profile.delete_failed"), variant: "destructive" });
     }
   };
 
@@ -74,7 +76,7 @@ export default function Profile() {
         >
           <ArrowLeft className="w-5 h-5" />
         </button>
-        <h1 className="text-lg font-display font-bold">Profil</h1>
+        <h1 className="text-lg font-display font-bold">{t("profile.title")}</h1>
       </header>
 
       <div className="glass-panel rounded-2xl p-4 mb-4 flex items-center justify-between">
@@ -87,13 +89,13 @@ export default function Profile() {
             <Zap className="w-4 h-4" />
             {credits}
           </p>
-          {isPremium && <p className="text-[10px] text-secondary">premium</p>}
+          {isPremium && <p className="text-[10px] text-secondary">{t("profile.premium_badge")}</p>}
         </div>
       </div>
 
       <section className="space-y-2 mb-5">
         <label className="text-xs uppercase tracking-wider text-muted-foreground">
-          Görünen ad
+          {t("profile.display_name")}
         </label>
         <div className="flex gap-2">
           <input
@@ -103,14 +105,14 @@ export default function Profile() {
             className="flex-1 px-4 py-2.5 rounded-xl bg-input/60 border border-border text-sm focus:outline-none focus:border-primary/60"
           />
           <NeonButton isLoading={busy} onClick={saveName}>
-            Kaydet
+            {t("profile.save")}
           </NeonButton>
         </div>
       </section>
 
       <section className="space-y-2 mb-5">
         <label className="text-xs uppercase tracking-wider text-muted-foreground">
-          Karakter cinsiyeti
+          {t("profile.character_gender")}
         </label>
         <div className="flex gap-2">
           {(["female", "male"] as const).map((g) => (
@@ -125,7 +127,7 @@ export default function Profile() {
                   : "border-border text-muted-foreground",
               )}
             >
-              {g === "female" ? "Kadın" : "Erkek"}
+              {t(g === "female" ? "profile.gender.female" : "profile.gender.male")}
             </button>
           ))}
         </div>
@@ -133,7 +135,7 @@ export default function Profile() {
 
       <section className="space-y-3 mb-6">
         <label className="text-xs uppercase tracking-wider text-muted-foreground">
-          Avatarlar
+          {t("profile.avatars")}
         </label>
         {([1, 2, 3] as Personality[]).map((level) => (
           <div key={level}>
@@ -164,7 +166,7 @@ export default function Profile() {
       <div className="space-y-2 pb-6">
         <NeonButton variant="outline" fullWidth onClick={() => logout().then(() => setLocation("/"))}>
           <LogOut className="w-4 h-4" />
-          Çıkış yap
+          {t("profile.logout")}
         </NeonButton>
         <button
           type="button"
@@ -172,7 +174,7 @@ export default function Profile() {
           className="w-full flex items-center justify-center gap-2 py-2.5 text-xs text-destructive/80 hover:text-destructive"
         >
           <Trash2 className="w-3.5 h-3.5" />
-          Hesabımı sil
+          {t("profile.delete_account")}
         </button>
       </div>
     </div>

@@ -387,7 +387,12 @@ export default function XRoom() {
       <header className="flex items-center gap-3 mb-4 flex-shrink-0">
         <button
           type="button"
-          onClick={() => (step === "chat" ? setLocation("/") : setStep("menu"))}
+          onClick={() => {
+            // Menude zaten "menu" adimindayiz; setStep("menu") hicbir sey
+            // yapmiyordu ve kullanici X-Room'dan cikamiyordu.
+            if (step === "menu" || step === "chat") setLocation("/");
+            else setStep("menu");
+          }}
           className="p-2 rounded-full text-muted-foreground hover:text-foreground hover:bg-white/5"
           aria-label={t("common.back")}
           data-testid="xroom-back"
