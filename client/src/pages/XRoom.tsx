@@ -403,26 +403,33 @@ export default function XRoom() {
         )}
       </header>
 
-      {/* ---------- SURE: ust orta, buyuk ve canli ---------- */}
+      {/* ---------- SURE: ust orta, LED gorunumlu geri sayim ----------
+           Odadaki herkes ayni sureyi gorur - sunucudaki expiresAt'ten
+           hesaplaniyor, istemci saatine gore degil. */}
       {step === "chat" && (
         <div className="flex justify-center mb-4 flex-shrink-0">
           <motion.div
-            animate={counting ? { scale: [1, 1.08, 1] } : {}}
+            animate={counting ? { scale: [1, 1.06, 1] } : {}}
             transition={{ duration: 0.7, repeat: counting ? Infinity : 0 }}
-            className={cn(
-              "px-6 py-2.5 rounded-full font-mono font-bold text-2xl tracking-wider ring-2",
-              remaining <= 30
-                ? "text-white ring-destructive"
-                : "text-primary ring-primary/50 glass-panel",
-            )}
-            style={
-              remaining <= 30
-                ? { background: "rgba(255,45,85,0.15)", boxShadow: "0 0 28px rgba(255,45,85,0.55)" }
-                : undefined
-            }
+            className="relative px-7 py-3 rounded-2xl"
+            style={{
+              background: "#0a0510",
+              border: `2px solid ${remaining <= 60 ? "#ff2d55" : "#ff3fa4"}`,
+              boxShadow: `0 0 24px ${remaining <= 60 ? "rgba(255,45,85,0.75)" : "rgba(255,63,164,0.55)"}, inset 0 0 18px rgba(0,0,0,0.9)`,
+            }}
             data-testid="xroom-timer"
           >
-            {mmss(remaining)}
+            <span
+              className="font-mono font-bold tabular-nums"
+              style={{
+                fontSize: "22px",
+                letterSpacing: "3px",
+                color: remaining <= 60 ? "#ff5c7a" : "#ff6ec7",
+                textShadow: `0 0 12px ${remaining <= 60 ? "#ff2d55" : "#ff3fa4"}, 0 0 28px ${remaining <= 60 ? "rgba(255,45,85,0.7)" : "rgba(255,63,164,0.6)"}`,
+              }}
+            >
+              {mmss(remaining)}
+            </span>
           </motion.div>
         </div>
       )}
