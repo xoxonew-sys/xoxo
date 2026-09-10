@@ -82,6 +82,37 @@
   .glass-panel-strong {
     @apply bg-white/[0.08] backdrop-blur-2xl border border-white/15;
   }
+
+  /* Basinca yanan dugme.
+     NeonButton kullanmayan yerlerde (glass-panel + button) ayni his icin.
+     active: dokunma aninda tetiklenir, yani mobilde de calisir. */
+  .press-glow {
+    @apply transition-all duration-150;
+  }
+
+  /* Uygulamadaki TUM glass-panel dugmeleri basinca yanar.
+     JSX'e tek tek sinif eklemek yerine burada tanimlandi: ileride
+     eklenecek dugmeler de otomatik olarak ayni hissi alir.
+     Sadece <button> ve rol=button; kart olarak kullanilan
+     glass-panel'ler etkilenmez. */
+  button.glass-panel,
+  [role="button"].glass-panel {
+    @apply transition-all duration-150;
+  }
+  button.glass-panel:active,
+  [role="button"].glass-panel:active {
+    @apply scale-[0.97] border-primary/70 text-primary;
+    box-shadow:
+      0 0 30px -6px hsl(var(--primary)),
+      inset 0 0 18px -10px hsl(var(--primary));
+  }
+
+  .press-glow:active {
+    @apply scale-[0.96] border-primary/70 text-primary;
+    box-shadow:
+      0 0 34px -6px hsl(var(--primary)),
+      inset 0 0 20px -10px hsl(var(--primary));
+  }
 }
 
 @layer utilities {

@@ -803,7 +803,7 @@ function Toggle({
       type="button"
       onClick={onChange}
       disabled={busy}
-      className="w-full glass-panel rounded-2xl px-4 py-3 flex items-center justify-between disabled:opacity-50"
+      className="w-full glass-panel press-glow rounded-2xl px-4 py-3 flex items-center justify-between disabled:opacity-50"
     >
       <span className="text-left">
         <span className="text-sm block">{label}</span>

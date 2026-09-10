@@ -644,7 +644,7 @@ export default function XRoom() {
             <button
               type="button"
               onClick={copyCode}
-              className="glass-panel rounded-2xl px-4 py-3 flex items-center justify-between mb-3 flex-shrink-0"
+              className="glass-panel press-glow rounded-2xl px-4 py-3 flex items-center justify-between mb-3 flex-shrink-0"
               data-testid="xroom-code-copy"
             >
               <span className="text-xs text-muted-foreground">

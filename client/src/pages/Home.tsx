@@ -59,21 +59,29 @@ export default function Home() {
           <h1 className="text-6xl font-display font-extrabold tracking-tight text-primary">
             XOXO
           </h1>
-          <p className="text-xs font-mono uppercase tracking-[0.35em] text-muted-foreground">
+          <p className="text-base font-mono uppercase tracking-[0.35em] text-muted-foreground">
             Gossip AI
           </p>
         </motion.div>
 
-        <motion.p
+        {/* Uzun aciklama yerine slogan: ilk ekranda okunacak degil,
+            hissedilecek bir sey olmali. */}
+        <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.25, duration: 0.5 }}
-          className="max-w-xs text-center text-sm leading-relaxed text-muted-foreground"
+          className="text-center"
         >
-          {language === "tr"
-            ? "İçini dök. Kimse yargılamıyor, hiçbir şey dışarı çıkmıyor."
-            : "Say it out loud. No judgment, nothing leaves this room."}
-        </motion.p>
+          <h2
+            className="text-3xl sm:text-4xl font-display font-black tracking-tight text-white"
+            style={{ textShadow: "0 0 34px rgba(255,63,164,0.75)" }}
+          >
+            {language === "tr" ? "YARGI YOK." : "NO JUDGMENT."}
+          </h2>
+          <p className="mt-1.5 text-sm italic text-muted-foreground">
+            {language === "tr" ? "Ya da azıcık." : "Or maybe a little."}
+          </p>
+        </motion.div>
 
         <motion.div
           initial={{ opacity: 0, y: 12 }}
@@ -87,21 +95,24 @@ export default function Home() {
           <NeonButton
             size="lg"
             fullWidth
+            className="text-lg tracking-widest font-display font-bold py-4"
             onClick={() => setLocation(isAuthenticated ? "/judgment" : "/login")}
           >
-            {language === "tr" ? "Başla" : "Start"}
+            {language === "tr" ? "BAŞLA" : "START"}
           </NeonButton>
 
           {/* Sureli, kendini imha eden grup sohbeti */}
-          <button
-            type="button"
+          <NeonButton
+            variant="outline"
+            size="lg"
+            fullWidth
+            className="text-lg tracking-widest font-display font-bold py-4"
             onClick={() => setLocation(isAuthenticated ? "/xroom" : "/login")}
-            className="w-full py-3 rounded-full glass-panel text-sm flex items-center justify-center gap-2 hover:text-primary transition-colors"
             data-testid="home-xroom"
           >
-            <Users className="w-4 h-4" />
+            <Users className="w-5 h-5" />
             X-Room
-          </button>
+          </NeonButton>
         </motion.div>
       </div>
 
