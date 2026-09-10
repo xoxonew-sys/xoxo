@@ -5,6 +5,7 @@ import { ArrowLeft, Copy, Check, Send, Users, Flag } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAvatar, getAvatarsByGender, type Personality, type Gender } from "@/contexts/AvatarContext";
+import { EmojiPicker } from "@/components/EmojiPicker";
 import { apiRequest } from "@/lib/queryClient";
 import { cn } from "@/lib/utils";
 
@@ -712,7 +713,8 @@ export default function XRoom() {
                 : "Report inappropriate messages with the flag icon — reviewed within 24 hours."}
             </p>
 
-            <div className="flex gap-2 flex-shrink-0">
+            <div className="flex gap-2 flex-shrink-0 items-center">
+              <EmojiPicker onEmojiSelect={(emoji) => setContent((prev) => prev + emoji)} />
               <input
                 value={content}
                 onChange={(e) => setContent(e.target.value)}

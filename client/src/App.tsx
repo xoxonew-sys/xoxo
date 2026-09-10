@@ -5,12 +5,12 @@ import { AnimatePresence, motion } from "framer-motion";
 import { queryClient } from "@/lib/queryClient";
 import { LanguageProvider, useLanguage } from "@/contexts/LanguageContext";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
-import { CreditProvider } from "@/contexts/CreditContext";
+import { CreditProvider, useCredits } from "@/contexts/CreditContext";
 import { AvatarProvider } from "@/contexts/AvatarContext";
 import { VoiceModeProvider } from "@/contexts/VoiceModeContext";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { Settings } from "lucide-react";
+import { Settings, Zap } from "lucide-react";
 
 /* Sohbet ekranı ağır (ses + görsel yükleme) — ayrı parçaya alındı */
 const Chat = lazy(() => import("@/pages/Chat"));
@@ -65,6 +65,7 @@ function Protected({ component: Component }: { component: React.ComponentType<an
 function TopBar() {
   const { language, setLanguage } = useLanguage();
   const { isAuthenticated } = useAuth();
+  const { credits } = useCredits();
   const [, setLocation] = useLocation();
 
   return (
@@ -78,6 +79,21 @@ function TopBar() {
       >
         {language === "tr" ? "EN" : "TR"}
       </button>
+
+      {/* Kalan kredi - her sayfada gorunur. Onceden yalnizca Home'daydi,
+          sohbet sirasinda kullanici bakiyesini goremiyordu. */}
+      {isAuthenticated && (
+        <button
+          type="button"
+          onClick={() => setLocation("/pricing")}
+          className="flex items-center gap-1 px-3 py-1.5 rounded-full glass-panel text-xs font-medium text-primary"
+          aria-label={language === "tr" ? "X-Kredi" : "Credits"}
+          data-testid="credits-badge"
+        >
+          <Zap className="w-3.5 h-3.5" />
+          {credits}
+        </button>
+      )}
 
       {/* /profile zaten Protected; giris yapmamis kullaniciya
           gostermek onu login'e atmaktan baska ise yaramaz. */}

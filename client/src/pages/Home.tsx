@@ -22,15 +22,6 @@ export default function Home() {
             <div className="flex items-center gap-2">
               <button
                 type="button"
-                onClick={() => setLocation("/pricing")}
-                className="flex items-center gap-1 px-3 py-1.5 rounded-full glass-panel text-xs font-medium text-primary"
-                data-testid="credits-badge"
-              >
-                <Zap className="w-3.5 h-3.5" />
-                {credits}
-              </button>
-              <button
-                type="button"
                 onClick={() => setLocation("/profile")}
                 className="p-2 rounded-full glass-panel text-muted-foreground hover:text-foreground"
                 aria-label="Profil"
