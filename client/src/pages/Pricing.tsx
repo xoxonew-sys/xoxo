@@ -14,14 +14,15 @@ import { NeonButton } from "@/components/NeonButton";
  * Türkçe arayüz metni tutulur. Sunucu tutarı gövdeden okumaz, kimlikten
  * çözer — buradaki fiyat gösterim amaçlıdır, yetki değil.
  */
-const PACK_HINTS: Record<string, string> = {
-  credits_100: "Denemek için",
-  credits_500: "En çok tercih edilen",
-  credits_1500: "En avantajlı",
+/** Paket kimligi -> ceviri anahtari. Metin LanguageContext'te. */
+const PACK_HINT_KEYS: Record<string, string> = {
+  credits_100: "pricing.pack.hint.100",
+  credits_500: "pricing.pack.hint.500",
+  credits_1500: "pricing.pack.hint.1500",
 };
 
-const PLAN_LABELS: Record<string, string> = {
-  monthly: "Aylık",
+const PLAN_LABEL_KEYS: Record<string, string> = {
+  monthly: "pricing.plan.monthly",
 };
 
 /** En kucuk pakete gore kredi basina yuzde kac ucuz. */
@@ -59,11 +60,11 @@ export default function Pricing() {
         body: JSON.stringify(body),
       });
       const data = await res.json();
-      if (!res.ok || !data.url) throw new Error(data.message || "Ödeme başlatılamadı");
+      if (!res.ok || !data.url) throw new Error(data.message || t("pricing.checkout_failed"));
       window.location.href = data.url;
     } catch (err) {
       toast({
-        title: "Hata",
+        title: t("chat.error"),
         description: err instanceof Error ? err.message : "",
         variant: "destructive",
       });
@@ -139,14 +140,14 @@ export default function Pricing() {
                       </span>
                     )}
                   </p>
-                  <p className="text-xs text-muted-foreground mt-0.5">{PACK_HINTS[pack.id]}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">{t(PACK_HINT_KEYS[pack.id])}</p>
                   {/* Birim fiyat basamakli indirimi gorunur kilar: toplam
                       fiyata bakan kullanici 500'un 100'den pahali oldugunu
                       gorup kucugu seciyor. Kredi basina fark ancak boyle
                       anlasiliyor. */}
                   <p className="text-[11px] text-muted-foreground/70 mt-1">
-                    kredi başına {formatPrice(pack.priceInCents / pack.credits)}
-                    {savingVsBase(pack) > 0 ? ` · %${savingVsBase(pack)} avantaj` : ""}
+                    {t("pricing.pack.unit")} {formatPrice(pack.priceInCents / pack.credits)}
+                    {savingVsBase(pack) > 0 ? ` · %${savingVsBase(pack)} ${t("pricing.pack.saving")}` : ""}
                   </p>
                 </div>
                 <span className="text-right flex-shrink-0 ml-3">
@@ -154,7 +155,7 @@ export default function Pricing() {
                     {formatPrice(pack.priceInCents)}
                   </span>
                   <span className="block text-[11px] text-muted-foreground">
-                    {pending === pack.id ? "..." : "Satın al"}
+                    {pending === pack.id ? "..." : t("pricing.pack.buy")}
                   </span>
                 </span>
               </button>
@@ -172,25 +173,24 @@ export default function Pricing() {
               Ayrıcalık listesinden ÖNCE duruyor, sonra değil.
             */}
             <p className="text-sm font-display font-bold text-foreground mb-1">
-              Sınırsız yazışma, 300 sesli yanıt.
+              {t("premium.headline")}
             </p>
             <p className="text-xs text-muted-foreground leading-relaxed mb-4">
-              Yazılı mesajların 30 gün boyunca kredi harcamaz. Sesli yanıtlar
-              pakete dahil 300 krediden düşer.
+              {t("premium.detail")}
             </p>
 
             <ul className="space-y-2 mb-2">
               {[
-                "Sınırsız yazılı mesaj",
-                "300 sesli yanıt dahil",
-                "Snake karakterinin kilidi açılır",
-                "Tüm avatarlara erişim",
-                "Sesli modda sıra önceliği",
-                "Premium rozeti",
-              ].map((line) => (
-                <li key={line} className="flex items-start gap-2 text-sm text-muted-foreground">
+                "premium.feature.unlimited_text",
+                "premium.feature.voice_included",
+                "premium.feature.snake",
+                "premium.feature.avatars",
+                "premium.feature.priority",
+                "premium.feature.badge",
+              ].map((key) => (
+                <li key={key} className="flex items-start gap-2 text-sm text-muted-foreground">
                   <Check className="w-4 h-4 text-secondary flex-shrink-0 mt-0.5" />
-                  {line}
+                  {t(key)}
                 </li>
               ))}
             </ul>
@@ -210,16 +210,15 @@ export default function Pricing() {
                 data-testid={`premium-plan-${plan.id}`}
               >
                 {/* Aktifken de alınabilir: satın alma pencereyi uzatır. */}
-                {isPremium ? "Premium'u uzat" : "Premium'a geç"}
+                {isPremium ? t("premium.cta.extend") : t("premium.cta.upgrade")}
                 {" — "}
-                {formatPrice(plan.priceInCents)} / {PLAN_LABELS[plan.id].toLowerCase()}
+                {formatPrice(plan.priceInCents)} / {t(PLAN_LABEL_KEYS[plan.id]).toLowerCase()}
               </NeonButton>
             ))}
           </div>
 
           <p className="text-center text-[11px] text-muted-foreground mt-4 pb-6">
-            Ödemeler Stripe üzerinden alınır. Premium tek seferlik bir ödemedir,
-            otomatik yenilenmez — iptal edilecek bir abonelik yok.
+            {t("pricing.footer")}
           </p>
         </>
       )}
