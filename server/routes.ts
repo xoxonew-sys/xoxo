@@ -1607,11 +1607,23 @@ export async function registerRoutes(
         return res.json({ success: true, remaining: user.credits, isGodMode: true });
       }
 
-      // Premium ARTIK ÖLÇÜLEN HİÇBİR ŞEYİ BEDAVA YAPMAZ. Buradaki atlama
-      // kaldırıldı: premium kullanıcı da mesaj başına kredi öder.
-      // Gerekçe shared/catalog.ts başlığında - hacim satan bir abonelik,
-      // tavanı vidalanmış sınırsız premium'dur; aynı şekil, küçüğü.
-      // Premium erişim satar (karakter kilidi, öncelik), mesaj satmaz.
+      /* Premium: YAZILI sinirsiz, SESLI odeli.
+         Yazili mesajin maliyeti binde birkac dolar, sinirsiz verilebilir.
+         Ses saglayici basina odeniyor; sinirsiz verilirse tek agir
+         kullanici aboneligin birkac katini harcar. Premium satin
+         alindiginda 300 kredi yukleniyor, sesli yanitlar oradan dusuyor.
+
+         Premium'un suresi dolduysa (premiumUntil gecmis) bu atlama
+         calismaz - isPremium alani sunucu tarafinda guncelleniyor. */
+      const isVoice = req.body?.mode === "voice";
+
+      if (user.isPremium && !isVoice) {
+        return res.json({
+          success: true,
+          remaining: user.credits,
+          premiumUnlimitedText: true,
+        });
+      }
 
       // Deduct 1 X-Credit per message (text or voice) - everyone pays
       const MESSAGE_CREDIT_COST = 1;

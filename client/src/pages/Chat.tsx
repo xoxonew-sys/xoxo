@@ -388,9 +388,13 @@ export default function Chat() {
       deductCredits(1); // UI'da anında güncelle
       
       // Arka planda kredi kontrolü yap
+      // Sunucu Premium'da yazili mesaji bedava geciriyor, sesliyi
+      // ucretlendiriyor - hangisi oldugunu bilmesi sart.
       fetch("/api/message-credits/use", {
         method: "POST",
-        credentials: "include"
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ mode: isVoiceModeActive ? "voice" : "text" }),
       }).then(async (response) => {
         const data = await response.json();
         if (!response.ok || data.insufficientCredits) {
