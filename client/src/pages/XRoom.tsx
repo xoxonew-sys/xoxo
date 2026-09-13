@@ -554,7 +554,7 @@ export default function XRoom() {
                       type="button"
                       onClick={() => setAiMode(level)}
                       className={cn(
-                        "w-full glass-panel rounded-2xl p-3 flex items-center gap-3 text-left ring-1 transition-colors",
+                        "w-full glass-panel rounded-2xl p-4 flex items-center gap-4 text-left ring-1 transition-colors",
                         active ? "ring-primary" : "ring-white/5",
                       )}
                       data-testid={`xroom-ai-${level}`}
@@ -562,14 +562,14 @@ export default function XRoom() {
                       <img
                         src={option.image}
                         alt=""
-                        className="w-12 h-12 rounded-xl object-cover flex-shrink-0"
+                        className="w-20 h-20 rounded-xl object-cover flex-shrink-0"
                         loading="lazy"
                       />
                       <div className="min-w-0">
-                        <p className="text-sm font-medium">
+                        <p className="text-lg font-display font-bold">
                           {level === 1 ? "Angel" : level === 2 ? "Bestie" : "Snake"}
                         </p>
-                        <p className="text-xs text-muted-foreground truncate">
+                        <p className="text-sm text-muted-foreground truncate">
                           {isTr ? option.blurbTr : option.blurbEn}
                         </p>
                       </div>

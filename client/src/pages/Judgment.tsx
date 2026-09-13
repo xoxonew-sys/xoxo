@@ -120,12 +120,15 @@ export default function Judgment() {
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: index * 0.08, duration: 0.35 }}
                 onClick={() => setChosenType(character.level)}
-                className="glass-panel rounded-3xl p-4 flex items-center gap-4 text-left active:scale-[0.98] transition-transform"
+                className="glass-panel rounded-3xl p-5 flex items-center gap-5 text-left active:scale-[0.98] transition-transform"
                 data-testid={`character-${character.level}`}
               >
+                {/* Gorsel 16 -> 24: ekranin ust yarisi bostu, kartlar
+                    kucuk kaliyordu. Avatar secimi gorsele dayali bir
+                    karar; yuz ne kadar buyuk gorunurse o kadar iyi. */}
                 <div
                   className={cn(
-                    "w-16 h-16 rounded-2xl overflow-hidden ring-2 flex-shrink-0",
+                    "w-24 h-24 rounded-2xl overflow-hidden ring-2 flex-shrink-0",
                     character.ring,
                   )}
                 >
@@ -140,13 +143,13 @@ export default function Judgment() {
                 <div className="min-w-0">
                   <h2
                     className={cn(
-                      "text-lg font-display font-bold",
+                      "text-2xl font-display font-bold",
                       character.text,
                     )}
                   >
                     {t(character.nameKey)}
                   </h2>
-                  <p className="text-xs text-muted-foreground leading-relaxed">
+                  <p className="text-sm text-muted-foreground leading-relaxed mt-0.5">
                     {t(character.taglineKey)}
                   </p>
                 </div>
@@ -178,14 +181,14 @@ export default function Judgment() {
                   transition={{ delay: index * 0.08, duration: 0.35 }}
                   onClick={() => pickAvatar(chosenType, option.id)}
                   className={cn(
-                    "glass-panel rounded-3xl p-4 flex items-center gap-4 text-left active:scale-[0.98] transition-transform ring-1",
+                    "glass-panel rounded-3xl p-5 flex items-center gap-5 text-left active:scale-[0.98] transition-transform ring-1",
                     isSelected ? theme.ring : "ring-white/5",
                   )}
                   data-testid={`avatar-${option.id}`}
                 >
                   <div
                     className={cn(
-                      "w-24 h-24 rounded-2xl overflow-hidden ring-2 flex-shrink-0",
+                      "w-28 h-28 rounded-2xl overflow-hidden ring-2 flex-shrink-0",
                       theme.ring,
                     )}
                   >
@@ -200,13 +203,13 @@ export default function Judgment() {
                   <div className="min-w-0 flex-1">
                     <h2
                       className={cn(
-                        "text-lg font-display font-bold",
+                        "text-2xl font-display font-bold",
                         theme.text,
                       )}
                     >
                       {isTr ? option.nameTr : option.nameEn}
                     </h2>
-                    <p className="text-xs text-muted-foreground leading-relaxed">
+                    <p className="text-sm text-muted-foreground leading-relaxed mt-0.5">
                       {isTr ? option.blurbTr : option.blurbEn}
                     </p>
                   </div>
