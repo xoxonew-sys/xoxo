@@ -13,30 +13,7 @@ export default function Home() {
   const { credits } = useCredits();
 
   return (
-    <div className="h-full flex flex-col px-6 safe-top safe-bottom">
-      {/* Ust cubuk: oturum durumu. Dil dugmesi App.tsx'te global. */}
-      <header className="flex items-center justify-end py-4">
-
-        {!isLoading &&
-          (isAuthenticated ? (
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => setLocation("/profile")}
-                className="p-2 rounded-full glass-panel text-muted-foreground hover:text-foreground"
-                aria-label="Profil"
-                data-testid="profile-button"
-              >
-                {user?.avatarUrl ? (
-                  <img src={user.avatarUrl} alt="" className="w-5 h-5 rounded-full object-cover" />
-                ) : (
-                  <User className="w-4 h-4" />
-                )}
-              </button>
-            </div>
-          ) : null)}
-      </header>
-
+    <div className="h-full flex flex-col px-6 safe-bottom">
       {/* Orta blok */}
       <div className="flex-1 flex flex-col items-center justify-center gap-9">
         <motion.div

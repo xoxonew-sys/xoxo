@@ -87,7 +87,7 @@ export default function Judgment() {
         : "Which mode?";
 
   return (
-    <div className="h-full flex flex-col px-5 py-6 safe-top safe-bottom">
+    <div className="h-full flex flex-col px-5 py-6 safe-bottom">
       <header className="flex items-center gap-3 mb-8 flex-shrink-0">
         <button
           type="button"

@@ -350,7 +350,7 @@ export default function XRoom() {
   }
 
   return (
-    <div className="h-full flex flex-col px-5 py-6 safe-top safe-bottom">
+    <div className="h-full flex flex-col px-5 py-6 safe-bottom">
       {/* ---------- SON 10 SANIYE: tam ekran geri sayim ---------- */}
       <AnimatePresence>
         {counting && (

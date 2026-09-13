@@ -146,7 +146,7 @@ export default function Login() {
   };
 
   return (
-    <div className="h-full flex flex-col px-5 py-6 safe-top safe-bottom">
+    <div className="h-full flex flex-col px-5 py-6 safe-bottom">
       <header className="flex items-center gap-3 mb-8">
         <button
           type="button"

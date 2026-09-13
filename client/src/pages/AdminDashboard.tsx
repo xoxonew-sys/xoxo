@@ -272,7 +272,7 @@ export default function AdminDashboard() {
     s ? new Date(s).toLocaleDateString("tr-TR", { day: "2-digit", month: "2-digit", year: "2-digit" }) : "—";
 
   return (
-    <div className="min-h-full flex flex-col px-4 py-4 safe-top safe-bottom">
+    <div className="min-h-full flex flex-col px-4 py-4 safe-bottom">
       <header className="flex items-center justify-between mb-4 flex-shrink-0">
         <h1 className="text-xl font-display font-bold">Yönetim paneli</h1>
         <div className="flex items-center gap-1">

@@ -73,7 +73,7 @@ export default function Pricing() {
   };
 
   return (
-    <div className="h-full overflow-y-auto px-5 py-6 safe-top safe-bottom">
+    <div className="h-full overflow-y-auto px-5 py-6 safe-bottom">
       <header className="flex items-center gap-3 mb-6">
         <button
           type="button"

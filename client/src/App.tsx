@@ -56,11 +56,13 @@ function Protected({ component: Component }: { component: React.ComponentType<an
 }
 
 /**
- * Sag ust cubuk - her sayfada gorunur: dil degistirme ve ayarlar.
+ * Ust cubuk - her sayfada gorunur: kredi, ayarlar, dil.
  *
- * Tek bir "fixed" kapsayici icinde duruyorlar; ayri ayri sabitlenselerdi
- * ust uste binerlerdi. App.tsx'te tek yerde oldugu icin yeni sayfa
- * eklendiginde ayrica bir sey yapmaya gerek kalmiyor.
+ * SABIT DEGIL, AKISTA. Onceden "fixed top-3 right-3" idi ve sayfa
+ * basliklarinin uzerine biniyordu ("Kiminle konusmak istersin?" yazisi
+ * ikonlarin altinda kaliyordu). Dikey siralamak sorunu cozmez, sadece
+ * tasir - bu sefer sohbet balonlarinin ustunu kapatir. Akista bir satir
+ * olunca icerik her zaman altindan baslar ve hicbir yerde cakisma olmaz.
  */
 function TopBar() {
   const { language, setLanguage } = useLanguage();
@@ -69,7 +71,7 @@ function TopBar() {
   const [, setLocation] = useLocation();
 
   return (
-    <div className="fixed top-3 right-3 z-50 flex items-center gap-2">
+    <div className="flex items-center justify-end gap-2 px-3 pt-3 pb-1 flex-shrink-0 safe-top">
       <button
         type="button"
         onClick={() => setLanguage(language === "tr" ? "en" : "tr")}
