@@ -84,11 +84,15 @@ export default function Home() {
           className="text-center space-y-3"
         >
           {/* Kaynak logo-3d.png 1024x1024 / ~1.1 MB. Burada kullanilan
-              logo.webp ondan uretildi (bkz. scripts/generate-logo-assets.mjs):
-              256px, ~6 KB. Kaynagi dogrudan baglamayin - acilis ekranina
-              1.1 MB'lik bir gorsel koymak tum JS paketinin on katidir. */}
+              logo-v2.webp ondan uretildi: dis cerceve kirpildi, koseler
+              yuvarlatildi ve disari SAYDAM birakildi - kare kose fon
+              gorselinin uzerinde blok gibi duruyordu.
+
+              Dosya adi v2: ayni adla uzerine yazinca tarayici ve
+              Cloudflare eski dosyayi onbellekten veriyor, degisiklik
+              gorunmuyor. Ad degisince URL de degisiyor. */}
           <img
-            src="/logo.webp"
+            src="/logo-v2.webp"
             alt=""
             width={128}
             height={128}
