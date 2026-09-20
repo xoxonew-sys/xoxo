@@ -18,45 +18,50 @@ export default function Home() {
       {/* ---------- Karakter fonu ----------
           Solda Snake (erkek), sagda Angel (kadin).
 
-          Kullanilan dosyalar -character.webp (800x1200). Bunlar aylardir
-          uretiliyor ama hicbir ekranda cagrilmiyordu - dikey oranlari
-          tam olarak bu ise uygun; avatar-1 dosyalari 512x512 kare oldugu
-          icin kenarda boy olarak durmazdi.
+          TAM YUKSEKLIK: onceki surumde alt %62'yi kapliyordu ve ust
+          kisim bos kaliyordu. Artik ekranin tamamini kapliyorlar.
 
-          Yazilari kapatmamasi icin uc katman: dusuk opaklik, ice dogru
-          soluk maske (metnin durdugu orta seride tamamen kayboluyor) ve
-          ustte karartma. pointer-events-none: tiklamalar dugmelere gider. */}
+          Dosyalar home-angel.webp / home-snake.webp - avatar klasorundeki
+          -character.webp'lerden AYRI. Sebep: oradaki angel-character
+          baska bir kisi; bu ikisi dogrudan istenen gorsellerden uretildi
+          (700x1045, ~43 KB).
+
+          Yazilari kapatmamasi icin uc katman:
+            1. %38 opaklik
+            2. ice dogru solan maske - metnin durdugu orta serit temiz
+            3. dikey karartma - logo ustte, dugmeler altta okunur kalsin
+          pointer-events-none: tiklamalar dugmelere gider. */}
       <div aria-hidden className="absolute inset-0 overflow-hidden pointer-events-none select-none">
         <img
-          src="/avatars/snake-male-character.webp"
+          src="/avatars/home-snake.webp"
           alt=""
           loading="lazy"
-          className="absolute left-0 bottom-0 h-[62%] w-auto max-w-[46%] object-cover object-right opacity-40"
+          className="absolute left-0 top-0 h-full w-auto max-w-[52%] object-cover object-right opacity-[0.38]"
           style={{
             maskImage:
-              "linear-gradient(to right, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.5) 55%, transparent 100%)",
+              "linear-gradient(to right, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.45) 60%, transparent 100%)",
             WebkitMaskImage:
-              "linear-gradient(to right, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.5) 55%, transparent 100%)",
+              "linear-gradient(to right, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.45) 60%, transparent 100%)",
           }}
         />
         <img
-          src="/avatars/angel-character.webp"
+          src="/avatars/home-angel.webp"
           alt=""
           loading="lazy"
-          className="absolute right-0 bottom-0 h-[62%] w-auto max-w-[46%] object-cover object-left opacity-40"
+          className="absolute right-0 top-0 h-full w-auto max-w-[52%] object-cover object-left opacity-[0.38]"
           style={{
             maskImage:
-              "linear-gradient(to left, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.5) 55%, transparent 100%)",
+              "linear-gradient(to left, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.45) 60%, transparent 100%)",
             WebkitMaskImage:
-              "linear-gradient(to left, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.5) 55%, transparent 100%)",
+              "linear-gradient(to left, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.45) 60%, transparent 100%)",
           }}
         />
-        {/* Ustten karartma: logo ve baslik alani temiz kalsin */}
+        {/* Dikey karartma: ust ve alt uclarda metin okunur kalsin */}
         <div
           className="absolute inset-0"
           style={{
             background:
-              "linear-gradient(to bottom, hsl(var(--background)) 0%, transparent 35%, transparent 100%)",
+              "linear-gradient(to bottom, hsl(var(--background)) 0%, transparent 22%, transparent 74%, hsl(var(--background)) 100%)",
           }}
         />
       </div>
