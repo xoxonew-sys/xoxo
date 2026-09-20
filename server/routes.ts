@@ -1450,6 +1450,20 @@ export async function registerRoutes(
       }
 
       const { avatarUrl, avatarPreset } = req.body;
+
+      /* Avatar data URL olarak geliyor ve users tablosunda metin kolonunda
+         duruyor. Istemci 256px'e kucultup sikistiriyor (~30 KB), ama
+         istemciye guvenilmez: dogrudan API'ye buyuk bir gorsel
+         gonderilebilir ve satir sisebilir. 300 KB ustu reddediliyor. */
+      if (typeof avatarUrl === "string" && avatarUrl.length > 0) {
+        if (!/^data:image\/(png|jpeg|jpg|webp);base64,/.test(avatarUrl)) {
+          return res.status(400).json({ message: "Geçersiz görsel biçimi" });
+        }
+        if (avatarUrl.length > 300_000) {
+          return res.status(413).json({ message: "Görsel çok büyük" });
+        }
+      }
+
       await storage.updateUserAvatar(userId, avatarUrl || null, avatarPreset || null);
 
       const user = await storage.getUserById(userId);

@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useLocation } from "wouter";
-import { ArrowLeft, LogOut, Trash2, Zap } from "lucide-react";
+import { ArrowLeft, LogOut, Trash2, Zap, Camera, X } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useCredits } from "@/contexts/CreditContext";
@@ -19,6 +19,95 @@ export default function Profile() {
 
   const [name, setName] = useState(user?.displayName ?? "");
   const [busy, setBusy] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [photo, setPhoto] = useState<string | null>(user?.avatarUrl ?? null);
+
+  /**
+   * Secilen gorseli 256px kareye kucultup JPEG'e cevirir.
+   * Sebep: avatar veritabaninda metin kolonunda data URL olarak duruyor.
+   * Ham telefon fotografi 3-5 MB; kucultmeden gonderirsek satir siser ve
+   * her kullanici listesi sorgusu agirlasir. 256px JPEG ~30 KB.
+   */
+  const shrink = (file: File): Promise<string> =>
+    new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onerror = () => reject(new Error("read"));
+      reader.onload = () => {
+        const img = new Image();
+        img.onerror = () => reject(new Error("decode"));
+        img.onload = () => {
+          const SIZE = 256;
+          const canvas = document.createElement("canvas");
+          canvas.width = SIZE;
+          canvas.height = SIZE;
+          const ctx = canvas.getContext("2d");
+          if (!ctx) return reject(new Error("canvas"));
+          // Kisa kenardan kare kirp - yuz ortada kalsin
+          const side = Math.min(img.width, img.height);
+          ctx.drawImage(
+            img,
+            (img.width - side) / 2,
+            (img.height - side) / 2,
+            side,
+            side,
+            0,
+            0,
+            SIZE,
+            SIZE,
+          );
+          resolve(canvas.toDataURL("image/jpeg", 0.85));
+        };
+        img.src = String(reader.result);
+      };
+      reader.readAsDataURL(file);
+    });
+
+  const pickPhoto = async (file: File | undefined) => {
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      toast({ title: t("profile.photo.only_image"), variant: "destructive" });
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast({ title: t("profile.photo.too_large"), variant: "destructive" });
+      return;
+    }
+    setBusy(true);
+    try {
+      const dataUrl = await shrink(file);
+      const res = await fetch("/api/auth/avatar", {
+        method: "PATCH",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ avatarUrl: dataUrl }),
+      });
+      if (!res.ok) throw new Error((await res.json()).message);
+      setPhoto(dataUrl);
+      toast({ title: t("profile.saved"), variant: "success" });
+    } catch (err: any) {
+      toast({ title: err?.message || t("profile.photo.failed"), variant: "destructive" });
+    } finally {
+      setBusy(false);
+      if (fileRef.current) fileRef.current.value = "";
+    }
+  };
+
+  const removePhoto = async () => {
+    setBusy(true);
+    try {
+      await fetch("/api/auth/avatar", {
+        method: "PATCH",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ avatarUrl: null }),
+      });
+      setPhoto(null);
+    } catch {
+      toast({ title: t("profile.photo.failed"), variant: "destructive" });
+    } finally {
+      setBusy(false);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -92,6 +181,64 @@ export default function Profile() {
           {isPremium && <p className="text-[10px] text-secondary">{t("profile.premium_badge")}</p>}
         </div>
       </div>
+
+      {/* Profil fotografi - odalarda ve sohbetlerde gorunur */}
+      <section className="mb-5">
+        <label className="text-xs uppercase tracking-wider text-muted-foreground">
+          {t("profile.photo")}
+        </label>
+        <div className="flex items-center gap-4 mt-2">
+          <button
+            type="button"
+            onClick={() => fileRef.current?.click()}
+            disabled={busy}
+            className="relative w-20 h-20 rounded-full overflow-hidden glass-panel flex items-center justify-center flex-shrink-0 disabled:opacity-50"
+            data-testid="profile-photo-button"
+          >
+            {photo ? (
+              <img src={photo} alt="" className="w-full h-full object-cover" />
+            ) : (
+              <Camera className="w-6 h-6 text-muted-foreground" />
+            )}
+          </button>
+
+          <div className="min-w-0 flex-1">
+            <div className="flex gap-2 flex-wrap">
+              <button
+                type="button"
+                onClick={() => fileRef.current?.click()}
+                disabled={busy}
+                className="px-3 py-1.5 rounded-full text-xs glass-panel disabled:opacity-50"
+              >
+                {t("profile.photo.upload")}
+              </button>
+              {photo && (
+                <button
+                  type="button"
+                  onClick={removePhoto}
+                  disabled={busy}
+                  className="px-3 py-1.5 rounded-full text-xs glass-panel disabled:opacity-50 flex items-center gap-1"
+                >
+                  <X className="w-3 h-3" />
+                  {t("profile.photo.remove")}
+                </button>
+              )}
+            </div>
+            <p className="text-[11px] text-muted-foreground mt-2 leading-relaxed">
+              {t("profile.photo.hint")}
+            </p>
+          </div>
+        </div>
+
+        <input
+          ref={fileRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={(e) => pickPhoto(e.target.files?.[0])}
+          data-testid="profile-photo-input"
+        />
+      </section>
 
       <section className="space-y-2 mb-5">
         <label className="text-xs uppercase tracking-wider text-muted-foreground">

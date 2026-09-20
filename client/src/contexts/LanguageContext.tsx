@@ -109,6 +109,13 @@ const translations: Record<Language, Record<string, string>> = {
     "pricing.footer": "Ödemeler Stripe üzerinden alınır. Premium tek seferlik bir ödemedir, otomatik yenilenmez — iptal edilecek bir abonelik yok.",
 
     /* profil / ayarlar */
+    "profile.photo": "Profil fotoğrafın",
+    "profile.photo.upload": "Fotoğraf yükle",
+    "profile.photo.remove": "Kaldır",
+    "profile.photo.hint": "Odalarda ve sohbetlerde bu görsel görünür.",
+    "profile.photo.too_large": "Görsel çok büyük (en fazla 5 MB)",
+    "profile.photo.only_image": "Sadece resim dosyası yükleyebilirsin",
+    "profile.photo.failed": "Fotoğraf yüklenemedi",
     "profile.title": "Profil",
     "profile.display_name": "Görünen ad",
     "profile.save": "Kaydet",
@@ -192,6 +199,13 @@ const translations: Record<Language, Record<string, string>> = {
     "pricing.footer": "Payments are handled by Stripe. Premium is a one-time payment and never auto-renews — there is no subscription to cancel.",
 
     /* profile / settings */
+    "profile.photo": "Your photo",
+    "profile.photo.upload": "Upload photo",
+    "profile.photo.remove": "Remove",
+    "profile.photo.hint": "This image shows in rooms and chats.",
+    "profile.photo.too_large": "Image too large (max 5 MB)",
+    "profile.photo.only_image": "Image files only",
+    "profile.photo.failed": "Could not upload the photo",
     "profile.title": "Profile",
     "profile.display_name": "Display name",
     "profile.save": "Save",
