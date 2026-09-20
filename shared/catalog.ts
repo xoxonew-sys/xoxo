@@ -77,7 +77,7 @@ export interface PremiumPlan {
 }
 
 export const PREMIUM_PLANS: readonly PremiumPlan[] = [
-  { id: "monthly", priceInCents: 499, days: 30, credits: 0 },
+  { id: "monthly", priceInCents: 999, days: 30, credits: 300 },
 ] as const;
 
 /** routes.ts'in premium verirken kullandığı süre. */

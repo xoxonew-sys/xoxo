@@ -2079,7 +2079,7 @@ export async function registerRoutes(
             currency: CURRENCY,
             product_data: {
               name: `XOXO ${planName}`,
-              description: `Snake karakteri, tüm avatarlar, seste sıra önceliği - mesaj kredisi içermez`
+              description: `Sınırsız yazılı mesaj, 300 sesli yanıt, Snake karakteri, tüm avatarlar`
             },
             unit_amount: plan.priceInCents
           },

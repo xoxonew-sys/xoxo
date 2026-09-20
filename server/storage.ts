@@ -436,7 +436,27 @@ export const storage = {
   },
 
   async getAllPayments() {
-    return db.select().from(payments).orderBy(desc(payments.createdAt));
+    /* LEFT JOIN: hesabi silinmis kullanicinin odemesi de listede kalmali.
+       payments.user_ref ON DELETE SET NULL, yani kisi baglantisi kopar
+       ama mali kayit durur (VUK 5 yil, TTK 10 yil). */
+    return db
+      .select({
+        id: payments.id,
+        userId: payments.userId,
+        userRef: payments.userRef,
+        userEmail: users.email,
+        userName: users.displayName,
+        stripeSessionId: payments.stripeSessionId,
+        amount: payments.amount,
+        currency: payments.currency,
+        productType: payments.productType,
+        creditsAmount: payments.creditsAmount,
+        status: payments.status,
+        createdAt: payments.createdAt,
+      })
+      .from(payments)
+      .leftJoin(users, eq(users.id, payments.userRef))
+      .orderBy(desc(payments.createdAt));
   },
 
   async getRevenueStats(): Promise<{

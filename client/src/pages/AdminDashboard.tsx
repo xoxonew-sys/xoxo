@@ -265,8 +265,20 @@ export default function AdminDashboard() {
     );
   });
 
-  const money = (n: number | undefined) =>
-    typeof n === "number" ? `₺${n.toLocaleString("tr-TR", { minimumFractionDigits: 2 })}` : "—";
+  /* payments.amount SENT cinsinden saklaniyor (semada yazili).
+     499 = 4.99. Para birimi satirin kendi currency alanindan okunur;
+     sabit ₺ yazmak USD odemeyi TL gibi gosteriyordu. */
+  const money = (cents: number | undefined, currency = "usd") => {
+    if (typeof cents !== "number") return "—";
+    try {
+      return new Intl.NumberFormat(currency === "try" ? "tr-TR" : "en-US", {
+        style: "currency",
+        currency: currency.toUpperCase(),
+      }).format(cents / 100);
+    } catch {
+      return `${(cents / 100).toFixed(2)} ${currency.toUpperCase()}`;
+    }
+  };
 
   const date = (s: string | null | undefined) =>
     s ? new Date(s).toLocaleDateString("tr-TR", { day: "2-digit", month: "2-digit", year: "2-digit" }) : "—";
@@ -391,13 +403,23 @@ export default function AdminDashboard() {
             payments.map((p: any) => (
               <div key={p.id} className="glass-panel rounded-2xl p-3 flex items-center gap-3">
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm truncate">{p.userEmail ?? p.email ?? "—"}</p>
+                  <p className="text-sm truncate">
+                    {p.userEmail ?? (p.userId ? `#${p.userId}` : "—")}
+                  </p>
                   <p className="text-xs text-muted-foreground">
-                    {p.itemName ?? p.productName ?? "—"} · {date(p.createdAt)}
+                    {p.productType === "subscription"
+                      ? "Premium"
+                      : p.creditsAmount
+                        ? `${p.creditsAmount} kredi`
+                        : "—"}
+                    {" · "}
+                    {p.status === "completed" ? "tamamlandı" : p.status}
+                    {" · "}
+                    {date(p.createdAt)}
                   </p>
                 </div>
                 <span className="text-sm font-bold text-primary flex-shrink-0">
-                  {money(Number(p.amount))}
+                  {money(Number(p.amount), p.currency)}
                 </span>
               </div>
             ))
