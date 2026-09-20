@@ -70,12 +70,21 @@ function TopBar() {
   const { credits } = useCredits();
   const [, setLocation] = useLocation();
 
+  /* Kirmizi neon cerceve - uc dugmede de ayni.
+     Tek yerde tanimli: renk veya siddet degisecekse burasi. */
+  const neon = {
+    border: "1.5px solid #ff2d55",
+    boxShadow: "0 0 8px #ff2d55, 0 0 20px rgba(255,45,85,0.55)",
+    background: "rgba(10,5,16,0.75)",
+  } as const;
+
   return (
-    <div className="flex items-center justify-end gap-2 px-3 pt-3 pb-1 flex-shrink-0 safe-top">
+    <div className="flex items-center justify-end gap-2.5 px-3 pt-3 pb-1.5 flex-shrink-0 safe-top">
       <button
         type="button"
         onClick={() => setLanguage(language === "tr" ? "en" : "tr")}
-        className="px-3 py-1.5 rounded-full glass-panel text-[11px] font-mono uppercase tracking-widest text-muted-foreground hover:text-foreground"
+        className="px-4 py-2 rounded-full text-sm font-mono font-bold uppercase tracking-widest text-white backdrop-blur-xl transition-all duration-150 active:scale-95"
+        style={neon}
         aria-label={language === "tr" ? "Switch to English" : "Türkçeye geç"}
         data-testid="language-toggle"
       >
@@ -88,11 +97,12 @@ function TopBar() {
         <button
           type="button"
           onClick={() => setLocation("/pricing")}
-          className="flex items-center gap-1 px-3 py-1.5 rounded-full glass-panel text-xs font-medium text-primary"
+          className="flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-bold text-white backdrop-blur-xl transition-all duration-150 active:scale-95"
+          style={neon}
           aria-label={language === "tr" ? "X-Kredi" : "Credits"}
           data-testid="credits-badge"
         >
-          <Zap className="w-3.5 h-3.5" />
+          <Zap className="w-4 h-4 text-primary" />
           {credits}
         </button>
       )}
@@ -103,11 +113,12 @@ function TopBar() {
         <button
           type="button"
           onClick={() => setLocation("/profile")}
-          className="p-2 rounded-full glass-panel text-muted-foreground hover:text-foreground"
+          className="p-2.5 rounded-full text-white backdrop-blur-xl transition-all duration-150 active:scale-95"
+          style={neon}
           aria-label={language === "tr" ? "Ayarlar" : "Settings"}
           data-testid="settings-button"
         >
-          <Settings className="w-4 h-4" />
+          <Settings className="w-5 h-5" />
         </button>
       )}
     </div>
