@@ -672,7 +672,31 @@ export default function Chat() {
       </div>
 
       {/* Messages Area */}
-      <main className="flex-1 overflow-y-auto mb-4 space-y-4 min-h-0">
+      <main className="relative flex-1 overflow-y-auto mb-4 space-y-4 min-h-0">
+        {/* Avatar arka plani: sohbet alaninin tamamini kaplar.
+            sticky + h-0 ile akista yer KAPLAMAZ, sayfa kaydirilinca
+            yerinde durur. pointer-events-none: tiklamalar mesajlara
+            gider. Alt kenarda maske var, yoksa gorsel girdi cubuguna
+            dogru sert bir cizgiyle bitiyor. */}
+        <div
+          aria-hidden
+          className="sticky top-0 h-0 z-0 pointer-events-none select-none"
+        >
+          <div className="absolute inset-x-0 top-0 h-[70vh] overflow-hidden">
+            <img
+              src={avatarImage}
+              alt=""
+              className="w-full h-full object-cover opacity-[0.13]"
+              style={{
+                maskImage:
+                  "linear-gradient(to bottom, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.5) 55%, transparent 100%)",
+                WebkitMaskImage:
+                  "linear-gradient(to bottom, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.5) 55%, transparent 100%)",
+              }}
+            />
+          </div>
+        </div>
+
         {/* ZERO-TEXT VOICE INTERFACE - Centered full-screen voice experience */}
         {showVisualizer && (
           <div className="flex items-center justify-center h-full">
@@ -707,20 +731,15 @@ export default function Chat() {
         {/* TEXT MODE - Traditional chat bubbles */}
         {showText && (
           <>
+            {/* Kucuk yuvarlak avatar kaldirildi: ayni gorsel artik
+                arka planda tam boy duruyor, ikisi birden fazlaydi. */}
             {messages.length === 0 && !isLoading && (
-              <div className="flex items-center justify-center h-full">
-                <div className="text-center py-12 space-y-4">
-                  <div className={cn(
-                    "w-24 h-24 rounded-full overflow-hidden mx-auto ring-4",
-                    theme.border.replace("border-", "ring-"),
-                    "opacity-50"
-                  )}>
-                    <img src={avatarImage} alt={t(theme.nameKey)} className="w-full h-full object-cover" />
-                  </div>
-                  <p className="font-body text-muted-foreground text-lg">
+              <div className="relative z-10 flex items-center justify-center h-full">
+                <div className="text-center py-12 space-y-3 px-8">
+                  <p className="font-display font-bold text-2xl text-foreground">
                     {t("chat.empty_title")}
                   </p>
-                  <p className="font-body text-muted-foreground/50 text-sm">
+                  <p className="font-body text-muted-foreground/70 text-sm leading-relaxed">
                     {t("chat.empty_subtitle")}
                   </p>
                 </div>
@@ -731,6 +750,7 @@ export default function Chat() {
               {messages.map((message, index) => (
                 <motion.div
                   key={message.id}
+                  style={{ position: "relative", zIndex: 10 }}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -20 }}
