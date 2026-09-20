@@ -17,6 +17,7 @@ const Chat = lazy(() => import("@/pages/Chat"));
 const Home = lazy(() => import("@/pages/Home"));
 const Judgment = lazy(() => import("@/pages/Judgment"));
 const XRoom = lazy(() => import("@/pages/XRoom"));
+const PaymentSuccess = lazy(() => import("@/pages/PaymentSuccess"));
 const Login = lazy(() => import("@/pages/Login"));
 const Profile = lazy(() => import("@/pages/Profile"));
 const Pricing = lazy(() => import("@/pages/Pricing"));
@@ -206,6 +207,11 @@ export default function App() {
                         <Protected component={Profile} />
                       </Route>
                       <Route path="/pricing" component={Pricing} />
+                      {/* Odeme donusu. Krediyi yukleyen verify-session'i
+                          cagiran TEK yer burasi - webhook yok. Rota
+                          eksikken odeme aliniyor ama kullanici 404
+                          goruyor ve kredi hic yuklenmiyordu. */}
+                      <Route path="/payment-success" component={PaymentSuccess} />
                       {/* Yasal metin. Iki yol ayni sayfayi acar:
                           /privacy magaza formlarinda, /kvkk yerel kullanimda. */}
                       <Route path="/privacy" component={Privacy} />
