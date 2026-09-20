@@ -686,12 +686,12 @@ export default function Chat() {
             <img
               src={avatarImage}
               alt=""
-              className="w-full h-full object-cover opacity-[0.13]"
+              className="w-full h-full object-cover opacity-30"
               style={{
                 maskImage:
-                  "linear-gradient(to bottom, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.5) 55%, transparent 100%)",
+                  "linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.85) 45%, rgba(0,0,0,0.35) 80%, transparent 100%)",
                 WebkitMaskImage:
-                  "linear-gradient(to bottom, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.5) 55%, transparent 100%)",
+                  "linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.85) 45%, rgba(0,0,0,0.35) 80%, transparent 100%)",
               }}
             />
           </div>

@@ -46,6 +46,32 @@ interface Member {
 }
 
 /** Cihaz başına sabit kimlik — sunucu üyeleri bununla ayırt ediyor */
+
+/**
+ * Sayac rakam rengi: kalan DAKIKAYA gore degisir.
+ * Sari (bol zaman) -> turuncu -> mercan -> kirmizi (son dakika).
+ * Cerceve her zaman kirmizi neon; degisen sadece rakamlar - boylece
+ * kullanici renge bakarak "ne kadar kaldi" sorusunu okumadan anlar.
+ */
+function digitColor(secondsLeft: number): string {
+  const mins = Math.ceil(secondsLeft / 60);
+  if (secondsLeft <= 60) return "#ff2d55"; // son dakika: kirmizi
+  if (mins <= 2) return "#ff5f4d";
+  if (mins <= 3) return "#ff8a3d";
+  if (mins <= 5) return "#ffb02e";
+  if (mins <= 10) return "#ffd028";
+  return "#ffe14d";                        // baslangic: sari
+}
+
+
+/** Takma addan sabit bir renk uretir - ayni kisi hep ayni renkte gorunur. */
+function nickColor(nickname: string): string {
+  const palette = ["#ff3fa4", "#4dd4ff", "#a78bfa", "#34d399", "#fbbf24", "#fb7185"];
+  let sum = 0;
+  for (let i = 0; i < nickname.length; i++) sum += nickname.charCodeAt(i);
+  return palette[sum % palette.length];
+}
+
 function getMemberId(): string {
   const KEY = "xoxo_member_id";
   let id = window.localStorage.getItem(KEY);
@@ -112,7 +138,7 @@ export default function XRoom() {
   /* patlama efekti bitince imha ekrani */
   useEffect(() => {
     if (phase !== "blast") return;
-    const id = setTimeout(() => setPhase("dead"), 1600);
+    const id = setTimeout(() => setPhase("dead"), 2100);
     return () => clearTimeout(id);
   }, [phase]);
 
@@ -273,41 +299,78 @@ export default function XRoom() {
      PATLAMA — beyaz flas, sonra dagilan parcalar
      ============================================================ */
   if (phase === "blast") {
-    const shards = Array.from({ length: 18 });
+    const shards = Array.from({ length: 46 });
     return (
-      <div className="fixed inset-0 z-[100] bg-black overflow-hidden">
+      <motion.div
+        // Ekran sarsintisi: patlamanin agirligini veren sey bu.
+        animate={{ x: [0, -14, 12, -8, 6, -3, 0], y: [0, 9, -11, 7, -4, 2, 0] }}
+        transition={{ duration: 0.65, ease: "easeOut" }}
+        className="fixed inset-0 z-[100] bg-black overflow-hidden"
+      >
+        {/* Beyaz flas - iki kademeli, ilki sert */}
         <motion.div
           initial={{ opacity: 1 }}
-          animate={{ opacity: 0 }}
-          transition={{ duration: 0.35 }}
+          animate={{ opacity: [1, 0.15, 0.6, 0] }}
+          transition={{ duration: 0.55, times: [0, 0.25, 0.4, 1] }}
           className="absolute inset-0 bg-white"
         />
+
+        {/* Merkez kuresi */}
         <motion.div
           initial={{ scale: 0, opacity: 1 }}
-          animate={{ scale: 6, opacity: 0 }}
-          transition={{ duration: 1.1, ease: "easeOut" }}
-          className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-40 h-40 rounded-full"
-          style={{ background: "radial-gradient(circle,#fff 0%,#ff2d55 45%,transparent 70%)" }}
+          animate={{ scale: 9, opacity: 0 }}
+          transition={{ duration: 1.3, ease: "easeOut" }}
+          className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 rounded-full"
+          style={{ background: "radial-gradient(circle,#fff 0%,#ffd028 22%,#ff2d55 55%,transparent 72%)" }}
         />
+
+        {/* Sok dalgasi halkasi */}
+        <motion.div
+          initial={{ scale: 0.2, opacity: 0.9 }}
+          animate={{ scale: 7, opacity: 0 }}
+          transition={{ duration: 1.1, ease: "easeOut", delay: 0.06 }}
+          className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-56 h-56 rounded-full"
+          style={{ border: "3px solid rgba(255,255,255,0.85)" }}
+        />
+
+        {/* Savrulan parcalar - 46 adet, farkli boy ve hizda */}
         {shards.map((_, i) => {
-          const angle = (i / shards.length) * Math.PI * 2;
+          const angle = (i / shards.length) * Math.PI * 2 + Math.random() * 0.3;
+          const dist = 320 + Math.random() * 420;
+          const len = 10 + Math.random() * 26;
+          const hot = i % 3 === 0;
           return (
             <motion.span
               key={i}
-              initial={{ x: 0, y: 0, opacity: 1, rotate: 0 }}
+              initial={{ x: 0, y: 0, opacity: 1, rotate: 0, scale: 1 }}
               animate={{
-                x: Math.cos(angle) * (220 + Math.random() * 180),
-                y: Math.sin(angle) * (220 + Math.random() * 180),
+                x: Math.cos(angle) * dist,
+                y: Math.sin(angle) * dist,
                 opacity: 0,
-                rotate: Math.random() * 540 - 270,
+                rotate: Math.random() * 900 - 450,
+                scale: 0.3,
               }}
-              transition={{ duration: 1.2, ease: "easeOut" }}
-              className="absolute left-1/2 top-1/2 w-3 h-8"
-              style={{ background: "#ff2d55", boxShadow: "0 0 18px rgba(255,45,85,0.9)" }}
+              transition={{ duration: 0.9 + Math.random() * 0.7, ease: "easeOut" }}
+              className="absolute left-1/2 top-1/2"
+              style={{
+                width: `${3 + Math.random() * 3}px`,
+                height: `${len}px`,
+                background: hot ? "#ffd028" : "#ff2d55",
+                boxShadow: `0 0 16px ${hot ? "#ffd028" : "#ff2d55"}`,
+              }}
             />
           );
         })}
-      </div>
+
+        {/* Kizil kalinti - ekran tamamen sonmeden once */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: [0, 0.45, 0] }}
+          transition={{ duration: 1.5, times: [0, 0.3, 1] }}
+          className="absolute inset-0"
+          style={{ background: "radial-gradient(circle,rgba(255,45,85,0.5) 0%,transparent 65%)" }}
+        />
+      </motion.div>
     );
   }
 
@@ -415,23 +478,26 @@ export default function XRoom() {
       {step === "chat" && (
         <div className="flex justify-center mb-4 flex-shrink-0">
           <motion.div
-            animate={counting ? { scale: [1, 1.06, 1] } : {}}
+            animate={counting ? { scale: [1, 1.08, 1] } : {}}
             transition={{ duration: 0.7, repeat: counting ? Infinity : 0 }}
             className="relative px-7 py-3 rounded-2xl"
             style={{
               background: "#0a0510",
-              border: `2px solid ${remaining <= 60 ? "#ff2d55" : "#ff3fa4"}`,
-              boxShadow: `0 0 24px ${remaining <= 60 ? "rgba(255,45,85,0.75)" : "rgba(255,63,164,0.55)"}, inset 0 0 18px rgba(0,0,0,0.9)`,
+              // Cerceve DAIMA kirmizi neon - odanin kendini imha edecegini
+              // baslangictan itibaren hatirlatir.
+              border: "2px solid #ff2d55",
+              boxShadow:
+                "0 0 10px #ff2d55, 0 0 26px rgba(255,45,85,0.75), inset 0 0 20px rgba(0,0,0,0.9)",
             }}
             data-testid="xroom-timer"
           >
             <span
-              className="font-mono font-bold tabular-nums"
+              className="font-mono font-bold tabular-nums transition-colors duration-700"
               style={{
-                fontSize: "22px",
+                fontSize: "24px",
                 letterSpacing: "3px",
-                color: remaining <= 60 ? "#ff5c7a" : "#ff6ec7",
-                textShadow: `0 0 12px ${remaining <= 60 ? "#ff2d55" : "#ff3fa4"}, 0 0 28px ${remaining <= 60 ? "rgba(255,45,85,0.7)" : "rgba(255,63,164,0.6)"}`,
+                color: digitColor(remaining),
+                textShadow: `0 0 12px ${digitColor(remaining)}, 0 0 30px ${digitColor(remaining)}88`,
               }}
             >
               {mmss(remaining)}
@@ -666,14 +732,32 @@ export default function XRoom() {
               {messages.map((m) => {
                 const mine = m.memberId === memberId;
                 const isAi = m.messageType === "ai" || m.memberId === "ai";
+                const color = isAi ? "#a78bfa" : nickColor(m.nickname);
                 return (
                   <div
                     key={m.id}
-                    className={cn("flex gap-2 group", mine && "flex-row-reverse")}
+                    className={cn("flex gap-2 group items-end", mine && "flex-row-reverse")}
                   >
+                    {/* Kim yazdi: kucuk avatar. Gorsel yoksa takma adin bas
+                        harfi; renk addan turetiliyor, yani ayni kisi her
+                        mesajda ayni renkte gorunur. */}
+                    <div
+                      className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0 flex items-center justify-center text-xs font-bold border"
+                      style={{ background: `${color}22`, color, borderColor: color }}
+                      title={m.nickname}
+                    >
+                      {m.avatarUrl ? (
+                        <img src={m.avatarUrl} alt="" className="w-full h-full object-cover" />
+                      ) : isAi ? (
+                        "AI"
+                      ) : (
+                        m.nickname.slice(0, 1).toUpperCase()
+                      )}
+                    </div>
+
                     <div
                       className={cn(
-                        "max-w-[78%] rounded-2xl px-4 py-2.5",
+                        "max-w-[72%] rounded-2xl px-4 py-2.5",
                         isAi
                           ? "bg-accent/15 ring-1 ring-accent/40"
                           : mine
@@ -681,17 +765,12 @@ export default function XRoom() {
                             : "glass-panel",
                       )}
                     >
-                      {!mine && (
-                        <p
-                          className={cn(
-                            "text-[11px] mb-0.5",
-                            isAi ? "text-accent" : "text-muted-foreground",
-                          )}
-                        >
-                          {m.nickname}
-                          {isAi && " (AI)"}
-                        </p>
-                      )}
+                      {/* Kendi mesajinda da ad yaziliyor: odada birden fazla
+                          kisi var ve kimin ne dedigi net olmali. */}
+                      <p className="text-[11px] mb-0.5 font-medium" style={{ color }}>
+                        {m.nickname}
+                        {isAi && " (AI)"}
+                      </p>
                       <p className="text-sm leading-relaxed whitespace-pre-wrap">{m.content}</p>
                     </div>
 
