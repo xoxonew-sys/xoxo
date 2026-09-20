@@ -13,9 +13,55 @@ export default function Home() {
   const { credits } = useCredits();
 
   return (
-    <div className="h-full flex flex-col px-6 safe-bottom">
+    <div className="relative h-full flex flex-col px-6 safe-bottom">
       {/* Orta blok */}
-      <div className="flex-1 flex flex-col items-center justify-center gap-9">
+      {/* ---------- Karakter fonu ----------
+          Solda Snake (erkek), sagda Angel (kadin).
+
+          Kullanilan dosyalar -character.webp (800x1200). Bunlar aylardir
+          uretiliyor ama hicbir ekranda cagrilmiyordu - dikey oranlari
+          tam olarak bu ise uygun; avatar-1 dosyalari 512x512 kare oldugu
+          icin kenarda boy olarak durmazdi.
+
+          Yazilari kapatmamasi icin uc katman: dusuk opaklik, ice dogru
+          soluk maske (metnin durdugu orta seride tamamen kayboluyor) ve
+          ustte karartma. pointer-events-none: tiklamalar dugmelere gider. */}
+      <div aria-hidden className="absolute inset-0 overflow-hidden pointer-events-none select-none">
+        <img
+          src="/avatars/snake-male-character.webp"
+          alt=""
+          loading="lazy"
+          className="absolute left-0 bottom-0 h-[62%] w-auto max-w-[46%] object-cover object-right opacity-40"
+          style={{
+            maskImage:
+              "linear-gradient(to right, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.5) 55%, transparent 100%)",
+            WebkitMaskImage:
+              "linear-gradient(to right, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.5) 55%, transparent 100%)",
+          }}
+        />
+        <img
+          src="/avatars/angel-character.webp"
+          alt=""
+          loading="lazy"
+          className="absolute right-0 bottom-0 h-[62%] w-auto max-w-[46%] object-cover object-left opacity-40"
+          style={{
+            maskImage:
+              "linear-gradient(to left, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.5) 55%, transparent 100%)",
+            WebkitMaskImage:
+              "linear-gradient(to left, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.5) 55%, transparent 100%)",
+          }}
+        />
+        {/* Ustten karartma: logo ve baslik alani temiz kalsin */}
+        <div
+          className="absolute inset-0"
+          style={{
+            background:
+              "linear-gradient(to bottom, hsl(var(--background)) 0%, transparent 35%, transparent 100%)",
+          }}
+        />
+      </div>
+
+      <div className="relative z-10 flex-1 flex flex-col items-center justify-center gap-9">
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
@@ -93,7 +139,7 @@ export default function Home() {
         </motion.div>
       </div>
 
-      <footer className="py-4 text-center">
+      <footer className="relative z-10 py-4 text-center">
         <button
           type="button"
           onClick={() => setLocation("/pricing")}
