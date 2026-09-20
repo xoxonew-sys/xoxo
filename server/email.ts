@@ -105,3 +105,37 @@ export async function sendReportEmail(params: {
 
   return send(to, `XOXO — X-Room şikayeti (${params.roomCode})`, html, "room_report");
 }
+
+/* ---------------- Davet odulu bildirimi ---------------- */
+
+/**
+ * Davet eden kisiye "davetin kabul edildi" maili.
+ *
+ * Davet edilen kisi dogrulama aninda uygulamayi zaten acik tutuyor ve
+ * bildirimi hemen goruyor; davet eden ise gunlerce girmeyebilir.
+ * Mail o boslugu kapatiyor.
+ */
+export async function sendReferralRewardEmail(
+  to: string,
+  reward: number,
+  remaining: number,
+) {
+  const html =
+    `<!DOCTYPE html><html><body style="margin:0;padding:32px;background:#0b0410;font-family:system-ui,sans-serif">` +
+    `<div style="max-width:480px;margin:0 auto;background:#160a20;border:1px solid #3b1a4d;border-radius:20px;padding:32px;text-align:center">` +
+    `<p style="margin:0 0 8px;color:#ff3fa4;font-size:13px;letter-spacing:3px;text-transform:uppercase">XOXO</p>` +
+    `<h2 style="margin:0 0 12px;color:#fff;font-size:22px">Davetin kabul edildi</h2>` +
+    `<p style="margin:0 0 24px;color:#b9a3c9;font-size:14px;line-height:1.6">` +
+    `Paylaştığın kodla biri XOXO'ya katıldı. Hesabına <b style="color:#ff3fa4">${reward} X-Kredi</b> eklendi.` +
+    `</p>` +
+    `<div style="background:rgba(255,63,164,0.1);border:1px solid rgba(255,63,164,0.4);border-radius:14px;padding:16px;margin-bottom:24px">` +
+    `<p style="margin:0;color:#b9a3c9;font-size:13px">` +
+    (remaining > 0
+      ? `Kalan davet hakkın: <b style="color:#fff">${remaining}</b>`
+      : `Davet hakkını tamamen kullandın.`) +
+    `</p></div>` +
+    `<a href="https://xoxo-apps.com" style="display:inline-block;background:#ff3fa4;color:#fff;text-decoration:none;padding:12px 28px;border-radius:999px;font-size:14px;font-weight:600">Uygulamayı aç</a>` +
+    `</div></body></html>`;
+
+  return send(to, "XOXO — Davetin kabul edildi, kredilerin hazır", html, "referral_reward");
+}

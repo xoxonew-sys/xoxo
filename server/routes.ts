@@ -21,7 +21,7 @@ import { db } from "./db";
 import { eq, sql, and, or, gt, isNull } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
-import { generateOTP, getOTPExpiry, sendVerificationEmail, sendPasswordResetEmail, sendReportEmail } from "./email";
+import { generateOTP, getOTPExpiry, sendVerificationEmail, sendPasswordResetEmail, sendReportEmail, sendReferralRewardEmail } from "./email";
 import { otpMatches } from "./otp";
 import { otpVerifyLimiter, otpRequestLimiter, loginLimiter } from "./rateLimit";
 import {
@@ -948,12 +948,31 @@ async function grantReferralRewards(newUserId: number): Promise<number> {
     // Ust sinir: davet edilen yine de odulunu alir, davet eden almaz.
     if (referrer.count >= MAX_REFERRALS) {
       await storage.addXCredits(newUserId, REFERRED_REWARD);
+      await db
+        .update(users)
+        .set({
+          pendingNotice:
+            `Davet kodu kullandın — ${REFERRED_REWARD} X-Kredi hediye kazandın.`,
+        })
+        .where(eq(users.id, newUserId));
       console.log(`[REFERRAL] user=${newUserId} odul aldi; davet eden ${referrer.id} sinira ulasmis`);
       return REFERRED_REWARD;
     }
 
     await storage.addXCredits(newUserId, REFERRED_REWARD);
     await storage.addXCredits(referrer.id, REFERRER_REWARD);
+
+    // Davet edilene de bildirim: 150 kredi gorup 50'sinin nereden
+    // geldigini bilmemeli.
+    await db
+      .update(users)
+      .set({
+        pendingNotice:
+          `Davet kodu kullandın — ${REFERRED_REWARD} X-Kredi hediye kazandın.`,
+      })
+      .where(eq(users.id, newUserId));
+
+    const remaining = MAX_REFERRALS - (referrer.count + 1);
 
     await db
       .update(users)
@@ -963,6 +982,22 @@ async function grantReferralRewards(newUserId: number): Promise<number> {
           `Davetinle biri katıldı — hesabına ${REFERRER_REWARD} X-Kredi eklendi.`,
       })
       .where(eq(users.id, referrer.id));
+
+    /* Davet edene ayrica mail.
+       Uygulamayi gunlerce acmayabilir; o zamana kadar odulu
+       kazandigini bilmezse tekrar davet etmeye tesvik olmaz.
+       Mail basarisiz olsa bile uygulama ici bildirim duruyor. */
+    const [referrerRow] = await db
+      .select({ email: users.email })
+      .from(users)
+      .where(eq(users.id, referrer.id))
+      .limit(1);
+
+    if (referrerRow?.email) {
+      sendReferralRewardEmail(referrerRow.email, REFERRER_REWARD, remaining).catch((err) =>
+        console.error("[REFERRAL] Odul maili gonderilemedi:", err),
+      );
+    }
 
     console.log(
       `[REFERRAL] user=${newUserId} (+${REFERRED_REWARD}) <- davet eden ${referrer.id} (+${REFERRER_REWARD}), toplam ${referrer.count + 1}`,
