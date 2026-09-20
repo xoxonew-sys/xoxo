@@ -870,6 +870,110 @@ async function triggerAutoAiResponse(room: { id: number; code: string; aiMode: n
 const XROOM_ENABLED = process.env.XROOM_ENABLED === "true";
 const XROOM_PATHS = /^\/api\/(xroom|room-cost|x-credits\/use-for-room)(\/|$)/;
 
+
+/* ============================================================
+   DAVET SISTEMI
+   ============================================================ */
+
+/** Davet eden kac kredi alir. */
+const REFERRER_REWARD = 100;
+/** Davet edilen kac kredi alir. */
+const REFERRED_REWARD = 50;
+/** Kisi basina odullendirilen en fazla davet sayisi. */
+const MAX_REFERRALS = 10;
+
+/** Karistirilmasi kolay karakterler yok: 0/O, 1/I/l. */
+const REFERRAL_ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
+
+function generateReferralCode(len = 7): string {
+  let out = "";
+  for (let i = 0; i < len; i++) {
+    out += REFERRAL_ALPHABET[Math.floor(Math.random() * REFERRAL_ALPHABET.length)];
+  }
+  return out;
+}
+
+/** Kullanicinin kodu yoksa uretir ve kaydeder. */
+async function ensureReferralCode(userId: number): Promise<string> {
+  const [existing] = await db
+    .select({ code: users.referralCode })
+    .from(users)
+    .where(eq(users.id, userId))
+    .limit(1);
+
+  if (existing?.code) return existing.code;
+
+  for (let attempt = 0; attempt < 8; attempt++) {
+    const code = generateReferralCode();
+    try {
+      await db.update(users).set({ referralCode: code }).where(eq(users.id, userId));
+      return code;
+    } catch (err) {
+      // Benzersiz indeks catismasi - yeniden dene
+      if (!String((err as Error).message).includes("duplicate")) throw err;
+    }
+  }
+  throw new Error("Davet kodu üretilemedi");
+}
+
+/**
+ * Davet odullerini dagitir. verify-otp icinden, dogrulama BASARILI
+ * olduktan sonra cagrilir.
+ *
+ * Hata durumunda sessizce gecer: odul verilemese bile kayit gecerli
+ * kalmali, kullanici disarida birakilmamali.
+ */
+async function grantReferralRewards(newUserId: number): Promise<number> {
+  try {
+    const [newUser] = await db
+      .select({ referredBy: users.referredBy, email: users.email })
+      .from(users)
+      .where(eq(users.id, newUserId))
+      .limit(1);
+
+    if (!newUser?.referredBy) return 0;
+
+    const [referrer] = await db
+      .select({
+        id: users.id,
+        count: users.referralCount,
+        credits: users.credits,
+      })
+      .from(users)
+      .where(eq(users.id, newUser.referredBy))
+      .limit(1);
+
+    if (!referrer) return 0;
+
+    // Ust sinir: davet edilen yine de odulunu alir, davet eden almaz.
+    if (referrer.count >= MAX_REFERRALS) {
+      await storage.addXCredits(newUserId, REFERRED_REWARD);
+      console.log(`[REFERRAL] user=${newUserId} odul aldi; davet eden ${referrer.id} sinira ulasmis`);
+      return REFERRED_REWARD;
+    }
+
+    await storage.addXCredits(newUserId, REFERRED_REWARD);
+    await storage.addXCredits(referrer.id, REFERRER_REWARD);
+
+    await db
+      .update(users)
+      .set({
+        referralCount: referrer.count + 1,
+        pendingNotice:
+          `Davetinle biri katıldı — hesabına ${REFERRER_REWARD} X-Kredi eklendi.`,
+      })
+      .where(eq(users.id, referrer.id));
+
+    console.log(
+      `[REFERRAL] user=${newUserId} (+${REFERRED_REWARD}) <- davet eden ${referrer.id} (+${REFERRER_REWARD}), toplam ${referrer.count + 1}`,
+    );
+    return REFERRED_REWARD;
+  } catch (err) {
+    console.error("[REFERRAL] Odul dagitimi basarisiz:", err);
+    return 0;
+  }
+}
+
 export async function registerRoutes(
   httpServer: Server,
   app: Express
@@ -923,6 +1027,21 @@ export async function registerRoutes(
       }
 
       // Hash password
+      /* Davet kodu - istege bagli.
+         Gecersiz kod kaydi ENGELLEMEZ: kullanici yanlis yazdi diye
+         uygulamaya girememeli, sadece odul verilmez. */
+      let referrerId: number | null = null;
+      const rawCode = String(req.body?.referralCode ?? "").trim().toUpperCase();
+      if (rawCode) {
+        const [ref] = await db
+          .select({ id: users.id })
+          .from(users)
+          .where(eq(users.referralCode, rawCode))
+          .limit(1);
+        if (ref) referrerId = ref.id;
+        else console.log(`[REFERRAL] Gecersiz kod denendi: ${rawCode}`);
+      }
+
       const passwordHash = await bcrypt.hash(data.password, 12);
 
       // Generate OTP
@@ -937,6 +1056,10 @@ export async function registerRoutes(
         email: data.email,
         gender: data.gender,
         avatarUrl: data.avatarUrl || null,
+        // Davet kodu gecerliyse davet edeni bagla. Odul BURADA DEGIL,
+        // e-posta dogrulandiktan sonra verilir (verify-otp) - kayit
+        // dogrulanmamis adresle tekrar tekrar cagrilabiliyor.
+        referredBy: referrerId,
         avatarPreset: data.avatarPreset || null,
       });
 
@@ -1031,6 +1154,10 @@ export async function registerRoutes(
        * users.credits sutunu zaten var ve 0 varsayilaniyla geliyor
        * (shared/schema.ts).
        */
+      /* Davet odulu. Uyelik hediyesinden ONCE calisir ki loglarda
+         sira net olsun; ikisi de ayni islemde eklenir. */
+      const referralBonus = await grantReferralRewards(user.id);
+
       const SIGNUP_CREDIT_GRANT = 100;
       const grant = await storage.addXCredits(user.id, SIGNUP_CREDIT_GRANT);
       if (!grant.success) {
@@ -2965,6 +3092,56 @@ Kullanıcının sorusu: "${message}"
     } catch (error) {
       console.error("[ADMIN] Ban guncellenemedi:", error);
       res.status(500).json({ message: "Güncellenemedi" });
+    }
+  });
+
+  /* ------------------------------------------------------------
+     DAVET
+     ------------------------------------------------------------ */
+
+  /** Kendi davet kodum ve durumum. */
+  app.get("/api/referral", requireAuth, async (req, res) => {
+    try {
+      const userId = Number((req.session as any).userId);
+      const code = await ensureReferralCode(userId);
+
+      const [me] = await db
+        .select({ count: users.referralCount })
+        .from(users)
+        .where(eq(users.id, userId))
+        .limit(1);
+
+      res.json({
+        code,
+        used: me?.count ?? 0,
+        max: MAX_REFERRALS,
+        remaining: Math.max(0, MAX_REFERRALS - (me?.count ?? 0)),
+        referrerReward: REFERRER_REWARD,
+        referredReward: REFERRED_REWARD,
+      });
+    } catch (error) {
+      console.error("[REFERRAL] Kod alinamadi:", error);
+      res.status(500).json({ message: "Davet kodu alınamadı" });
+    }
+  });
+
+  /** Bekleyen bildirimi oku ve temizle. */
+  app.post("/api/notice/consume", requireAuth, async (req, res) => {
+    try {
+      const userId = Number((req.session as any).userId);
+      const [me] = await db
+        .select({ notice: users.pendingNotice })
+        .from(users)
+        .where(eq(users.id, userId))
+        .limit(1);
+
+      if (me?.notice) {
+        await db.update(users).set({ pendingNotice: null }).where(eq(users.id, userId));
+      }
+      res.json({ notice: me?.notice ?? null });
+    } catch (error) {
+      console.error("[NOTICE] Okunamadi:", error);
+      res.status(500).json({ notice: null });
     }
   });
 

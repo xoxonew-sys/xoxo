@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect } from "react";
+import { lazy, Suspense, useEffect, useRef } from "react";
 import { Route, Switch, useLocation } from "wouter";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "framer-motion";
@@ -65,6 +65,48 @@ function Protected({ component: Component }: { component: React.ComponentType<an
  * tasir - bu sefer sohbet balonlarinin ustunu kapatir. Akista bir satir
  * olunca icerik her zaman altindan baslar ve hicbir yerde cakisma olmaz.
  */
+
+/**
+ * Bekleyen bildirim gostericisi.
+ *
+ * Davet eden kisi, davet ettigi kullanici dogrulama yaptiginda
+ * cevrimici olmayabilir. Sunucu o an users.pending_notice alanina
+ * yaziyor; burasi uygulama acilisinda bir kez okuyup temizliyor.
+ *
+ * Kredinin NEDEN arttigini soylemek onemli: sessizce artan bakiye
+ * kullaniciya bir sey ifade etmiyor, davet etmeye de tesvik etmiyor.
+ */
+function PendingNotice() {
+  const { isAuthenticated } = useAuth();
+  const { refreshCredits } = useCredits();
+  const { toast } = useToast();
+  const shownRef = useRef(false);
+
+  useEffect(() => {
+    if (!isAuthenticated || shownRef.current) return;
+    shownRef.current = true;
+
+    (async () => {
+      try {
+        const res = await fetch("/api/notice/consume", {
+          method: "POST",
+          credentials: "include",
+        });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (data.notice) {
+          toast({ title: data.notice, variant: "success" });
+          refreshCredits?.();
+        }
+      } catch {
+        /* bildirim gosterilemedi - uygulamanin geri kalani etkilenmez */
+      }
+    })();
+  }, [isAuthenticated, refreshCredits, toast]);
+
+  return null;
+}
+
 function TopBar() {
   const { language, setLanguage } = useLanguage();
   const { isAuthenticated } = useAuth();
@@ -190,6 +232,7 @@ export default function App() {
                     telefonda hicbir sey degismez. */}
                 <div className="h-full w-full max-w-md mx-auto flex flex-col">
                   <TopBar />
+                  <PendingNotice />
                   <Suspense fallback={<Loading />}>
                     <Switch>
                       <Route path="/" component={Home} />

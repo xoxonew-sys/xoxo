@@ -22,7 +22,7 @@ interface AuthContextValue {
   isLoading: boolean;
   isAuthenticated: boolean;
   login: (identifier: string, password: string, rememberMe?: boolean) => Promise<AuthUser>;
-  register: (data: RegisterInput) => Promise<void>;
+  register: (data: RegisterInput & { referralCode?: string }) => Promise<void>;
   verifyOtp: (email: string, otpCode: string) => Promise<void>;
   resendOtp: (email: string) => Promise<void>;
   logout: () => Promise<void>;

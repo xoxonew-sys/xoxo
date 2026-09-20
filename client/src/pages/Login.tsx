@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Mail, Lock, User } from "lucide-react";
+import { ArrowLeft, Mail, Lock, User, Gift } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useToast } from "@/hooks/use-toast";
@@ -47,6 +47,13 @@ export default function Login() {
   const [otpCode, setOtpCode] = useState("");
   const [gender, setGender] = useState<"male" | "female">("female");
 
+  /* Davet kodu. URL'de ?ref=ABC123 varsa otomatik dolar - paylasilan
+     baglantiya tiklayan kullanici elle yazmak zorunda kalmasin. */
+  const [referralCode, setReferralCode] = useState(() => {
+    const p = new URLSearchParams(window.location.search);
+    return (p.get("ref") || "").toUpperCase();
+  });
+
   const fail = (err: unknown) =>
     toast({
       title: t("chat.error"),
@@ -77,7 +84,7 @@ export default function Login() {
   const handleRegister = async () => {
     setBusy(true);
     try {
-      await register({ username, email, password, gender });
+      await register({ username, email, password, gender, referralCode: referralCode.trim() || undefined });
       setMode("otp");
       toast({
         title: t("auth.toast.code_sent"),
@@ -227,6 +234,16 @@ export default function Login() {
                   value={password}
                   autoComplete="new-password"
                   onChange={(e) => setPassword(e.target.value)}
+                />
+
+                {/* Davet kodu - istege bagli. Gecersiz kod kaydi
+                    engellemez, sadece odul verilmez. */}
+                <Field
+                  icon={Gift}
+                  placeholder={t("auth.referral_code")}
+                  value={referralCode}
+                  onChange={(e) => setReferralCode(e.target.value.toUpperCase())}
+                  maxLength={12}
                 />
 
                 <div className="flex gap-2 pt-1">

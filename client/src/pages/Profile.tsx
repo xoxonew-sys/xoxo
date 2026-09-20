@@ -1,6 +1,6 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useLocation } from "wouter";
-import { ArrowLeft, LogOut, Trash2, Zap, Camera, X } from "lucide-react";
+import { ArrowLeft, LogOut, Trash2, Zap, Camera, X, Gift, Copy, Check } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useCredits } from "@/contexts/CreditContext";
@@ -21,6 +21,59 @@ export default function Profile() {
   const [busy, setBusy] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const [photo, setPhoto] = useState<string | null>(user?.avatarUrl ?? null);
+
+  /* Davet kodu. Sunucu kodu ilk istekte uretiyor (ensureReferralCode),
+     bu yuzden kayit aninda kod olmayan eski kullanicilar da burayi
+     acinca kodunu almis oluyor. */
+  const [referral, setReferral] = useState<{
+    code: string;
+    used: number;
+    max: number;
+    remaining: number;
+    referrerReward: number;
+    referredReward: number;
+  } | null>(null);
+  const [codeCopied, setCodeCopied] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch("/api/referral", { credentials: "include" });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!cancelled) setReferral(data);
+      } catch {
+        /* davet bolumu gorunmez, sayfanin geri kalani calisir */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const copyCode = () => {
+    if (!referral) return;
+    navigator.clipboard.writeText(referral.code);
+    setCodeCopied(true);
+    toast({ title: t("referral.copied"), variant: "success" });
+    setTimeout(() => setCodeCopied(false), 2000);
+  };
+
+  const shareCode = async () => {
+    if (!referral) return;
+    const text = t("referral.share_text") + referral.code;
+    if (navigator.share) {
+      try {
+        await navigator.share({ text, url: "https://xoxo-apps.com" });
+        return;
+      } catch {
+        /* kullanici vazgecti ya da desteklenmiyor - panoya dus */
+      }
+    }
+    navigator.clipboard.writeText(`${text}\nhttps://xoxo-apps.com`);
+    toast({ title: t("referral.copied"), variant: "success" });
+  };
 
   /**
    * Secilen gorseli 256px kareye kucultup JPEG'e cevirir.
@@ -256,6 +309,56 @@ export default function Profile() {
           </NeonButton>
         </div>
       </section>
+
+      {/* Arkadasini getir */}
+      {referral && (
+        <section className="mb-5">
+          <label className="text-xs uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+            <Gift className="w-3.5 h-3.5" />
+            {t("referral.title")}
+          </label>
+
+          <div className="glass-panel rounded-2xl p-4 mt-2">
+            <p className="text-xs text-muted-foreground leading-relaxed mb-3">
+              {t("referral.hint")}
+            </p>
+
+            <button
+              type="button"
+              onClick={copyCode}
+              className="w-full rounded-xl px-4 py-3 flex items-center justify-between mb-2"
+              style={{
+                background: "rgba(255,63,164,0.1)",
+                border: "1.5px solid rgba(255,63,164,0.5)",
+              }}
+              data-testid="referral-code"
+            >
+              <span className="text-[11px] uppercase tracking-wider text-muted-foreground">
+                {t("referral.code")}
+              </span>
+              <span className="flex items-center gap-2 font-mono text-lg font-bold tracking-[0.2em] text-primary">
+                {referral.code}
+                {codeCopied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+              </span>
+            </button>
+
+            <button
+              type="button"
+              onClick={shareCode}
+              className="w-full glass-panel rounded-xl py-2.5 text-sm"
+              data-testid="referral-share"
+            >
+              {t("referral.share")}
+            </button>
+
+            <p className="text-[11px] text-muted-foreground/70 mt-3 text-center">
+              {referral.remaining > 0
+                ? `${referral.used} ${t("referral.used")} · ${referral.remaining} ${t("referral.remaining")}`
+                : t("referral.exhausted")}
+            </p>
+          </div>
+        </section>
+      )}
 
       <section className="space-y-2 mb-5">
         <label className="text-xs uppercase tracking-wider text-muted-foreground">

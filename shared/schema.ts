@@ -30,6 +30,20 @@ export const users = pgTable(
     avatarPreset: text("avatar_preset"),
 
     credits: integer("credits").notNull().default(0), // X-Kredi bakiyesi
+
+    /* ---- Davet sistemi ---- */
+    /** Bu kullanicinin paylastigi kod. Benzersiz. */
+    referralCode: text("referral_code"),
+    /** Bu kullaniciyi davet eden kisi. Hesap silinirse bag kopar, kayit kalir. */
+    referredBy: integer("referred_by"),
+    /** Kac kisiyi getirdi - 10 ust siniri icin. */
+    referralCount: integer("referral_count").notNull().default(0),
+    /**
+     * Bir sonraki acilista gosterilecek bildirim.
+     * Davet eden kisi, davet ettigi kisi dogrulama yaptiginda cevrimici
+     * olmayabilir; kredi sessizce eklenirse neden arttigini anlamaz.
+     */
+    pendingNotice: text("pending_notice"),
     /**
      * KULLANMAYIN - premium erişimi artık premiumUntil'den türetilir.
      * Sütun duruyor çünkü düşürmek üretim verisi üzerinde bir migration
