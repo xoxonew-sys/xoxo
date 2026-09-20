@@ -2191,6 +2191,10 @@ export async function registerRoutes(
         // Record payment
         await storage.recordPayment({
           userId,
+          // userRef gercek iliski; userId metin kolonu eski kayitlarla
+          // uyum icin duruyor. Admin paneli e-postayi userRef uzerinden
+          // aliyor, bos kalirsa satirda "#6" gorunuyor.
+          userRef: Number(userId),
           stripeSessionId: session.id,
           stripePaymentIntentId: session.payment_intent as string,
           amount: session.amount_total || 0,
@@ -2212,6 +2216,7 @@ export async function registerRoutes(
 
         await storage.recordPayment({
           userId,
+          userRef: Number(userId),
           stripeSessionId: session.id,
           stripePaymentIntentId: session.payment_intent as string,
           amount: session.amount_total || 0,
