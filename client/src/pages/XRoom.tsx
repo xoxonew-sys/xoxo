@@ -199,6 +199,8 @@ export default function XRoom() {
         durationMinutes: duration,
         nickname: nickname.trim(),
         memberId,
+        // Ayarlar'dan yuklenen fotograf odada da gorunsun
+        avatarUrl: user?.avatarUrl || undefined,
         aiMode,
         aiGender,
       });
@@ -225,6 +227,7 @@ export default function XRoom() {
         code: c,
         nickname: nickname.trim(),
         memberId,
+        avatarUrl: user?.avatarUrl || undefined,
       });
       const res = await fetch(`/api/xroom/${c}`, { credentials: "include" });
       const data = await res.json();
@@ -251,6 +254,7 @@ export default function XRoom() {
         memberId,
         content: text,
         messageType: "text",
+        avatarUrl: user?.avatarUrl || undefined,
         language,
       });
       poll();
