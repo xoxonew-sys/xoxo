@@ -122,7 +122,7 @@ function TopBar() {
   } as const;
 
   return (
-    <div className="flex items-center justify-end gap-2.5 px-3 pt-3 pb-1.5 flex-shrink-0 safe-top">
+    <div className="relative z-20 flex items-center justify-end gap-2.5 px-3 pt-3 pb-1.5 flex-shrink-0 safe-top">
       <button
         type="button"
         onClick={() => setLanguage(language === "tr" ? "en" : "tr")}

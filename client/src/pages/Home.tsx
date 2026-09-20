@@ -31,7 +31,17 @@ export default function Home() {
             2. ice dogru solan maske - metnin durdugu orta serit temiz
             3. dikey karartma - logo ustte, dugmeler altta okunur kalsin
           pointer-events-none: tiklamalar dugmelere gider. */}
-      <div aria-hidden className="absolute inset-0 overflow-hidden pointer-events-none select-none">
+      <div
+        aria-hidden
+        className="absolute inset-x-0 bottom-0 overflow-hidden pointer-events-none select-none"
+        style={{
+          /* Ust cubugun ARKASINA uzat: cubuk kendi zemini olmadigi icin
+             gorseller oradan da gorunur ve ekran tek parca durur.
+             56px = cubugun yuksekligi (pt-3 + pb-1.5 + dugme).
+             env(): centikli telefonlarda guvenli alan da hesaba katilir. */
+          top: "calc(-1 * (56px + env(safe-area-inset-top, 0px)))",
+        }}
+      >
         <img
           src="/avatars/home-snake.webp"
           alt=""
@@ -61,7 +71,7 @@ export default function Home() {
           className="absolute inset-0"
           style={{
             background:
-              "linear-gradient(to bottom, hsl(var(--background)) 0%, transparent 22%, transparent 74%, hsl(var(--background)) 100%)",
+              "linear-gradient(to bottom, rgba(11,4,16,0.72) 0%, rgba(11,4,16,0.35) 10%, transparent 26%, transparent 72%, hsl(var(--background)) 100%)",
           }}
         />
       </div>
