@@ -198,6 +198,11 @@ export const roomMessages = pgTable(
     nickname: text("nickname").notNull(),
     content: text("content").notNull(),
     messageType: text("message_type").notNull().default("text"), // text|ai|voice|image|system
+    /* Gonderen kisinin profil fotografi (data URL).
+       Mesajda SAKLANIYOR, uyeden okunmuyor: oda suresi dolunca uye
+       satirlari silinir ama mesaj listesi akisi sirasinda gecmise
+       bakildiginda avatar kaybolmasin. */
+    avatarUrl: text("avatar_url"),
     mediaUrl: text("media_url"),
     createdAt: timestamp("created_at").notNull().defaultNow(),
   },
