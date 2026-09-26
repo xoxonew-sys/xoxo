@@ -298,64 +298,66 @@ interface LanguageContextValue {
 
 const LanguageContext = createContext<LanguageContextValue | null>(null);
 
-const STORAGE_KEY = "xoxo_language";
+/**
+ * Dil secimi kaydi.
+ *
+ * ANAHTAR DEGISTI (xoxo_language -> xoxo_language_choice):
+ * Eski surum, tarayici dilinden TAHMIN ettigi dili de bu anahtara
+ * yaziyordu. Sonuc: Turkce telefonda uygulama bir kez acildiginda "tr"
+ * kalici hale geliyor, kullanici hic secmemis olsa bile. Yeni anahtara
+ * yalnizca kullanicinin TR/EN dugmesiyle yaptigi ACIK secim yazilir.
+ * Eski anahtar okunmaz ve silinir.
+ */
+const STORAGE_KEY = "xoxo_language_choice";
+const LEGACY_STORAGE_KEY = "xoxo_language";
+
+/** Sunucu API mesajlarini bu cerezden okuyup ceviriyor (server/i18n-messages.ts). */
+const LANG_COOKIE = "xoxo_lang";
 
 /**
- * Ilk acilis dili: Turkiye'den gelen ziyaretciye Turkce, diger herkese
- * Ingilizce.
+ * Ilk acilis dili: kullanicinin acik secimi, yoksa HER ZAMAN Ingilizce.
  *
- * NEDEN IP DEGIL, TARAYICI DILI:
- * IP'den ulke bakmak (a) VPN arkasinda yanlis sonuc verir, (b) IP
- * KVKK kapsaminda kisisel veridir ve ucuncu bir servise sorulmasi
- * aydinlatma metnine yurt disi aktarim beyani eklemeyi gerektirirdi -
- * hepsi yalnizca bir dil varsayilani icin. Tarayici dili bu isi
- * veri islemeden ve ek bir saglayici olmadan yapar.
- *
- * Sinyal olarak tarayici dili ustelik daha DOGRU: kisiyle birlikte
- * seyahat eder. Yurt disindaki bir Turk yine Turkce gorur, Istanbul'daki
- * bir yabanci yine Ingilizce.
- *
- * navigator.languages (cogul) kullaniliyor: kullanici birden fazla dil
- * tanimlamis olabilir ve sadece navigator.language'a bakmak ikinci
- * tercihleri gormezden gelir. Accept-Language basligi da tam olarak bu
- * listeden uretilir - sunucuda okumak icin SSR gerekirdi, bu uygulama
- * ise statik servis ediliyor (bkz. server/vite.ts serveStatic).
- *
- * Sira: kaydedilmis secim -> tarayici dili -> en
+ * Karar (26 Eylul 2026): uygulama global bir urun olarak konumlaniyor,
+ * vitrin dili Ingilizce. Turkce isteyen ust cubuktaki TR/EN dugmesiyle
+ * gecer ve secimi hatirlanir.
  */
 function detectInitialLanguage(): Language {
   if (typeof window === "undefined") return "en";
-
-  // Kullanicinin acik secimi her seyi ezer.
-  const saved = window.localStorage.getItem(STORAGE_KEY);
-  if (saved === "tr" || saved === "en") return saved;
-
-  const preferred = navigator.languages?.length
-    ? navigator.languages
-    : [navigator.language];
-
-  for (const tag of preferred) {
-    if (typeof tag !== "string") continue;
-    // "tr", "tr-TR", "tr-CY" hepsi Turkce sayilir; "tr" ile baslayan
-    // baska bir dil kodu yok, bu yuzden prefix kontrolu guvenli.
-    if (tag.toLowerCase().startsWith("tr")) return "tr";
-    if (tag.toLowerCase().startsWith("en")) return "en";
+  try {
+    window.localStorage.removeItem(LEGACY_STORAGE_KEY);
+    const saved = window.localStorage.getItem(STORAGE_KEY);
+    if (saved === "tr" || saved === "en") return saved;
+  } catch {
+    /* localStorage kapaliysa varsayilana dus */
   }
-
   return "en";
+}
+
+function writeLangCookie(lang: Language) {
+  const oneYear = 60 * 60 * 24 * 365;
+  document.cookie = LANG_COOKIE + "=" + lang + "; path=/; max-age=" + oneYear + "; SameSite=Lax";
 }
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
   const [language, setLanguageState] = useState<Language>(detectInitialLanguage);
 
+  // Tahmini dil KAYDEDILMEZ; sadece sayfa dili ve sunucu cerezi guncellenir.
   useEffect(() => {
-    window.localStorage.setItem(STORAGE_KEY, language);
     document.documentElement.lang = language;
+    writeLangCookie(language);
   }, [language]);
 
-  const setLanguage = (lang: Language) => setLanguageState(lang);
+  /** Yalnizca kullanicinin acik secimi kalici olarak kaydedilir. */
+  const setLanguage = (lang: Language) => {
+    try {
+      window.localStorage.setItem(STORAGE_KEY, lang);
+    } catch {
+      /* yoksay */
+    }
+    setLanguageState(lang);
+  };
 
-  /** Anahtar bulunamazsa anahtarın kendisini döndürür — ekran hiçbir zaman boş kalmaz. */
+  /** Anahtar bulunamazsa anahtarin kendisini dondurur - ekran hicbir zaman bos kalmaz. */
   const t = (key: string) => translations[language][key] ?? key;
 
   return (

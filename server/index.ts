@@ -7,6 +7,7 @@ import { registerRoutes } from "./routes";
 import { pool } from "./db";
 import { setupVite, serveStatic } from "./vite";
 import { startRetentionJobs } from "./retention";
+import { translateApiMessages } from "./i18n-messages";
 
 const app = express();
 const httpServer = createServer(app);
@@ -24,6 +25,7 @@ app.use(express.urlencoded({ extended: false, limit: "12mb" }));
 
 /* Railway proxy arkasında çalışır; secure cookie'ler için şart */
 app.set("trust proxy", 1);
+app.use(translateApiMessages); // API mesajlarini istemci diline cevirir
 
 /* ------------------------------------------------------------
    Oturum — PostgreSQL'de saklanır.
