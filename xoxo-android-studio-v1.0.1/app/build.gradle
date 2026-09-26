@@ -4,18 +4,55 @@ plugins {
 
 android {
     namespace 'com.xoxo.gossipai'
-    compileSdk 34
+    compileSdk 36
 
     defaultConfig {
         applicationId "com.xoxo.gossipai"
-        minSdk 19
-        targetSdk 34
-        versionCode 2
-        versionName "1.0.1"
+
+        // androidbrowserhelper 2.6+ minimum 21 istiyor.
+        // API 19 (KitKat) payi bugun ihmal edilebilir seviyede.
+        minSdk 21
+        targetSdk 36
+
+        // Play'deki son surum 7 (1.0.6). versionCode HER yuklemede
+        // artmak zorunda, esit veya kucuk olursa Play reddeder.
+        // 1.0.7: Google Play Faturalandirma (uygulama ici satin alma)
+        versionCode 8
+        versionName "1.0.7"
+    }
+
+    /*
+     * Imza yapilandirmasi.
+     *
+     * Sifreler bu dosyada DEGIL, gradle.properties icinde duruyor ve
+     * gradle.properties .gitignore'da. Sebep: build.gradle repoya
+     * gidiyor; sifre buraya yazilirsa GitHub'a dusr.
+     *
+     * gradle.properties icerigi (proje kokunde, commit EDILMEZ):
+     *   XOXO_STORE_FILE=C:\\Projelerim\\keys\\xoxo-upload.jks
+     *   XOXO_STORE_PASSWORD=...
+     *   XOXO_KEY_ALIAS=xoxo
+     *   XOXO_KEY_PASSWORD=...
+     *
+     * Degiskenler tanimli degilse imzasiz derlenir; boylece baska bir
+     * makinede proje en azindan acilir.
+     */
+    signingConfigs {
+        release {
+            if (project.hasProperty('XOXO_STORE_FILE')) {
+                storeFile file(XOXO_STORE_FILE)
+                storePassword XOXO_STORE_PASSWORD
+                keyAlias XOXO_KEY_ALIAS
+                keyPassword XOXO_KEY_PASSWORD
+            }
+        }
     }
 
     buildTypes {
         release {
+            if (project.hasProperty('XOXO_STORE_FILE')) {
+                signingConfig signingConfigs.release
+            }
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
@@ -28,5 +65,22 @@ android {
 }
 
 dependencies {
-    implementation 'com.google.androidbrowserhelper:androidbrowserhelper:2.5.0'
+    /*
+     * 2.5.0 -> 2.6.2
+     *
+     * Play Console'daki "ucтan uca ekran" uyarilari Android 15'in
+     * edge-to-edge zorunlulugundan geliyor. Yeni surum TWA kabugunda
+     * bunu kendisi hallediyor; eski surumde sistem cubuklari altinda
+     * icerik kaliyor.
+     */
+    implementation 'com.google.androidbrowserhelper:androidbrowserhelper:2.6.2'
+
+    /*
+     * Google Play Faturalandirma - TWA icinde uygulama ici satin alma.
+     * Web tarafi Digital Goods API + Payment Request ile konusur
+     * (client/src/lib/play-billing.ts). BILLING iznini de bu getirir;
+     * Play Console bu izni tasiyan bir paket yuklenmeden urun
+     * olusturmaya izin vermez.
+     */
+    implementation 'com.google.androidbrowserhelper:billing:1.2.0'
 }

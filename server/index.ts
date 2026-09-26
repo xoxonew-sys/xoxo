@@ -7,6 +7,7 @@ import { registerRoutes } from "./routes";
 import { pool } from "./db";
 import { setupVite, serveStatic } from "./vite";
 import { startRetentionJobs } from "./retention";
+import { registerPlayBillingRoutes } from "./play-billing";
 import { registerSttRoute } from "./stt";
 import { translateApiMessages } from "./i18n-messages";
 
@@ -64,6 +65,8 @@ app.use(
    Veritabanına da dokunur ki bağlantı koptuysa fark edilsin.
    ------------------------------------------------------------ */
 registerSttRoute(app); // bas-konus-birak kaydini yaziya cevirir
+
+registerPlayBillingRoutes(app); // Google Play uygulama ici satin alma
 
 app.get("/api/health", (_req, res) => {
   res.json({ status: "ok", timestamp: new Date().toISOString() });

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorAccent">#a855f7</color>
+    <color name="colorBackground">#0a0a0f</color>
+    <color name="colorPrimary">#ec4899</color>
+    <color name="colorPrimaryDark">#c026d3</color>
+    <color name="ic_launcher_background">#170627</color>
+    <string name="app_name">XOXO</string>
+    <string name="asset_statements">
+        [{
+            \"relation\": [\"delegate_permission/common.handle_all_urls\"],
+            \"target\": {
+                \"namespace\": \"web\",
+                \"site\": \"https://xoxo-apps.com\"
+            }
+        }]
+    </string>
+    <style name="Theme.XOXO" parent="android:Theme.NoTitleBar">
+        <item name="android:windowBackground">@color/colorBackground</item>
+        <item name="android:statusBarColor">@color/colorPrimary</item>
+    </style>
+</resources>

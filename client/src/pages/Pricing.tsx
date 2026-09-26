@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import { ArrowLeft, Check, Zap } from "lucide-react";
 import { CREDIT_PACKS, PREMIUM_PLANS, formatPrice } from "@shared/catalog";
@@ -8,6 +8,12 @@ import { useCredits } from "@/contexts/CreditContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useToast } from "@/hooks/use-toast";
 import { NeonButton } from "@/components/NeonButton";
+import {
+  getPlayService, purchaseWithPlay, restorePendingPurchases, formatPlayPrice,
+} from "@/lib/play-billing";
+
+/** Play Console'daki urun kimlikleri - server/play-billing.ts ile ayni. */
+const playItemIdForPlan = (planId: string) => "premium_" + planId;
 
 /**
  * Paket listesi ve fiyatlar shared/catalog.ts'ten gelir; burada sadece
@@ -37,14 +43,100 @@ function savingVsBase(pack: { id: string; credits: number; priceInCents: number 
 export default function Pricing() {
   const [, setLocation] = useLocation();
   const { isAuthenticated } = useAuth();
-  const { credits, isPremium } = useCredits();
-  const { t } = useLanguage();
+  const { credits, isPremium, refreshCredits } = useCredits() as ReturnType<typeof useCredits> & {
+    refreshCredits?: () => void;
+  };
+  const { t, language } = useLanguage();
   const { toast } = useToast();
   const [pending, setPending] = useState<string | null>(null);
 
-  // Uygulama kanalında bu sayfa satış yapmaz; bakiye gösterir ve satın
-  // almanın web sitesinde olduğunu söyler. Bağlantı yok — bkz. lib/channel.ts.
+  /*
+   * Uygulama kanalinda (Play'den yuklenen TWA) satis GOOGLE PLAY
+   * FATURALANDIRMA ile yapilir - Play politikasi dijital urunler icin
+   * bunu sart kosuyor, Stripe burada acilmaz (sunucu da reddeder).
+   *
+   * Play servisi acilamazsa (eski uygulama surumu, billing modulu
+   * olmayan paket) eski davranisa donulur: bakiye + "web sitesinde" notu.
+   */
   const appChannel = isAppChannel();
+  const [playMode, setPlayMode] = useState<"loading" | "play" | "unavailable">(
+    appChannel ? "loading" : "unavailable",
+  );
+  const [playPrices, setPlayPrices] = useState<Record<string, string>>({});
+  const locale = language === "tr" ? "tr-TR" : "en-US";
+
+  useEffect(() => {
+    if (!appChannel) return;
+    let cancelled = false;
+    (async () => {
+      const service = await getPlayService();
+      if (!service) {
+        if (!cancelled) setPlayMode("unavailable");
+        return;
+      }
+      try {
+        const ids = [
+          ...CREDIT_PACKS.map((pack) => pack.id),
+          ...PREMIUM_PLANS.map((plan) => playItemIdForPlan(plan.id)),
+        ];
+        const details = await service.getDetails(ids);
+        if (cancelled) return;
+        const prices: Record<string, string> = {};
+        for (const item of details) prices[item.itemId] = formatPlayPrice(item.price, locale);
+        setPlayPrices(prices);
+        setPlayMode("play");
+      } catch (err) {
+        console.warn("[PLAY] Ürün bilgileri alınamadı:", err);
+        if (!cancelled) setPlayMode("unavailable");
+        return;
+      }
+      // Yarim kalmis satin almalar (odeme alindi, dogrulama yapilamadi)
+      if (isAuthenticated) {
+        const restored = await restorePendingPurchases();
+        if (restored > 0 && !cancelled) {
+          refreshCredits?.();
+          toast({
+            title: language === "tr" ? "Bekleyen satın alman tamamlandı" : "Your pending purchase is complete",
+            variant: "success",
+          });
+        }
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [appChannel, isAuthenticated, locale]);
+
+  const buyWithPlay = async (itemId: string) => {
+    if (!isAuthenticated) {
+      setLocation("/login");
+      return;
+    }
+    setPending(itemId);
+    try {
+      const result = await purchaseWithPlay(itemId);
+      if (result?.success) {
+        refreshCredits?.();
+        toast({
+          title:
+            result.type === "credits"
+              ? (language === "tr" ? "Kredilerin yüklendi" : "Credits added") + (result.amount ? " +" + result.amount : "")
+              : language === "tr" ? "Premium aktif" : "Premium is active",
+          variant: "success",
+        });
+      }
+    } catch (err) {
+      toast({
+        title: t("chat.error"),
+        description: err instanceof Error ? err.message : "",
+        variant: "destructive",
+      });
+    } finally {
+      setPending(null);
+    }
+  };
+
+  const playActive = appChannel && playMode === "play";
 
   const checkout = async (endpoint: string, body: Record<string, unknown>, key: string) => {
     if (!isAuthenticated) {
@@ -91,7 +183,11 @@ export default function Pricing() {
         )}
       </header>
 
-      {appChannel ? (
+      {appChannel && playMode === "loading" ? (
+        <div className="flex justify-center py-16">
+          <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+        </div>
+      ) : appChannel && playMode === "unavailable" ? (
         <div className="glass-panel-strong rounded-2xl p-5" data-testid="web-only-notice">
           <p className="text-xs uppercase tracking-wide text-muted-foreground mb-1">
             {t("channel.web_only.balance")}
@@ -127,7 +223,11 @@ export default function Pricing() {
                 key={pack.id}
                 type="button"
                 disabled={pending !== null}
-                onClick={() => checkout("/api/stripe/checkout/credits", { packId: pack.id }, pack.id)}
+                onClick={() =>
+                  playActive
+                    ? buyWithPlay(pack.id)
+                    : checkout("/api/stripe/checkout/credits", { packId: pack.id }, pack.id)
+                }
                 className="w-full glass-panel rounded-2xl p-4 flex items-center justify-between text-left active:scale-[0.99] transition-transform disabled:opacity-50"
                 data-testid={`credit-pack-${pack.credits}`}
               >
@@ -136,7 +236,7 @@ export default function Pricing() {
                     {pack.credits} {t("pricing.pack.credits")}
                     {pack.popular && (
                       <span className="text-[10px] uppercase px-1.5 py-0.5 rounded bg-primary/20 text-primary">
-                        popüler
+                        {language === "tr" ? "popüler" : "popular"}
                       </span>
                     )}
                   </p>
@@ -145,14 +245,22 @@ export default function Pricing() {
                       fiyata bakan kullanici 500'un 100'den pahali oldugunu
                       gorup kucugu seciyor. Kredi basina fark ancak boyle
                       anlasiliyor. */}
-                  <p className="text-[11px] text-muted-foreground/70 mt-1">
-                    {t("pricing.pack.unit")} {formatPrice(pack.priceInCents / pack.credits)}
-                    {savingVsBase(pack) > 0 ? ` · %${savingVsBase(pack)} ${t("pricing.pack.saving")}` : ""}
-                  </p>
+                  {playActive ? (
+                    savingVsBase(pack) > 0 && (
+                      <p className="text-[11px] text-muted-foreground/70 mt-1">
+                        %{savingVsBase(pack)} {t("pricing.pack.saving")}
+                      </p>
+                    )
+                  ) : (
+                    <p className="text-[11px] text-muted-foreground/70 mt-1">
+                      {t("pricing.pack.unit")} {formatPrice(pack.priceInCents / pack.credits)}
+                      {savingVsBase(pack) > 0 ? ` · %${savingVsBase(pack)} ${t("pricing.pack.saving")}` : ""}
+                    </p>
+                  )}
                 </div>
                 <span className="text-right flex-shrink-0 ml-3">
                   <span className="block font-display font-bold text-primary text-lg">
-                    {formatPrice(pack.priceInCents)}
+                    {playActive ? playPrices[pack.id] ?? "…" : formatPrice(pack.priceInCents)}
                   </span>
                   <span className="block text-[11px] text-muted-foreground">
                     {pending === pack.id ? "..." : t("pricing.pack.buy")}
@@ -202,17 +310,22 @@ export default function Pricing() {
                 variant="secondary"
                 fullWidth
                 size="lg"
-                isLoading={pending === plan.id}
+                isLoading={pending === plan.id || pending === playItemIdForPlan(plan.id)}
                 disabled={pending !== null}
                 onClick={() =>
-                  checkout("/api/stripe/checkout/subscription", { planId: plan.id }, plan.id)
+                  playActive
+                    ? buyWithPlay(playItemIdForPlan(plan.id))
+                    : checkout("/api/stripe/checkout/subscription", { planId: plan.id }, plan.id)
                 }
                 data-testid={`premium-plan-${plan.id}`}
               >
                 {/* Aktifken de alınabilir: satın alma pencereyi uzatır. */}
                 {isPremium ? t("premium.cta.extend") : t("premium.cta.upgrade")}
                 {" — "}
-                {formatPrice(plan.priceInCents)} / {t(PLAN_LABEL_KEYS[plan.id]).toLowerCase()}
+                {playActive
+                  ? playPrices[playItemIdForPlan(plan.id)] ?? "…"
+                  : formatPrice(plan.priceInCents)}{" "}
+                / {t(PLAN_LABEL_KEYS[plan.id]).toLowerCase()}
               </NeonButton>
             ))}
           </div>
