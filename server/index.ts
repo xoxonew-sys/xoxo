@@ -41,6 +41,7 @@ app.use(
       pool,
       tableName: "user_sessions",
       createTableIfMissing: true,
+      pruneSessionInterval: 60 * 60 * 24, // 24 saatte bir temizle, Neon'u surekli uyandirmasin
     }),
     secret: process.env.SESSION_SECRET,
     resave: false,
