@@ -276,7 +276,7 @@ export default function Chat() {
   useEffect(() => {
     if (textareaRef.current) {
       textareaRef.current.style.height = "auto";
-      textareaRef.current.style.height = Math.min(textareaRef.current.scrollHeight, 150) + "px";
+      textareaRef.current.style.height = Math.min(textareaRef.current.scrollHeight, 112) // max-h-28 = en fazla ~4 satir + "px";
     }
   }, [content]);
 
@@ -893,7 +893,7 @@ export default function Chat() {
       >
         {/* WHATSAPP-STYLE INPUT BAR - Mobile responsive */}
         {/* Left: White rounded container with emoji, message, clip, camera */}
-        <div className="flex-1 min-w-0 flex items-center bg-white dark:bg-zinc-800 rounded-full px-1.5 sm:px-2 py-1 gap-0.5 sm:gap-1">
+        <div className="flex-1 min-w-0 flex items-end bg-white dark:bg-zinc-800 rounded-3xl px-1.5 sm:px-2 py-1 gap-0.5 sm:gap-1">
           {/* 1. EMOJI - Far left */}
           <EmojiPicker onEmojiSelect={(emoji) => setContent(prev => prev + emoji)} />
           
@@ -904,7 +904,7 @@ export default function Chat() {
             onChange={(e) => setContent(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder={isListening ? t("chat.listening") : isTranscribing ? "…" : t("chat.placeholder")}
-            className="flex-1 min-w-0 bg-transparent text-zinc-800 dark:text-white px-1 sm:px-2 py-2 text-sm sm:text-base font-body focus:outline-none resize-none h-10 max-h-10 overflow-hidden placeholder:text-zinc-400"
+            className="flex-1 min-w-0 bg-transparent text-zinc-800 dark:text-white px-1 sm:px-2 py-2 text-sm sm:text-base font-body focus:outline-none resize-none min-h-10 max-h-28 overflow-y-auto leading-snug placeholder:text-zinc-400"
             disabled={isLoading}
             rows={1}
           />

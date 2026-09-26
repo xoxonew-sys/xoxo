@@ -10,6 +10,12 @@
  *   2. ElevenLabs Scribe (TTS icin zaten kullanilan anahtar; yedek)
  * Biri calismazsa digeri denenir; ikisi de duserse 502.
  *
+ * ONIZLEME (partial: true): kayit surerken istemci her 1,5 sn'de o ana
+ * kadarki sesi gonderir. Onizlemeler loglanmaz; tam ceviri loglanir.
+ *
+ * OpenAI anahtari reddedilirse (401/403) 10 dk boyunca hic denenmez,
+ * dogrudan ElevenLabs'e gidilir - her istekte bosuna bekleme olmasin.
+ *
  * Kredi burada DUSMEZ: sesli mesaj gonderildiginde mevcut
  * /api/message-credits/use akisi zaten ucretlendiriyor.
  */
@@ -25,9 +31,12 @@ function extensionFor(mimeType: string): string {
   return "webm";
 }
 
+let openAiDisabledUntil = 0;
+
 async function transcribeWithOpenAI(audio: Buffer, mimeType: string, lang: "tr" | "en"): Promise<string> {
   const apiKey = process.env.AI_INTEGRATIONS_OPENAI_API_KEY || process.env.OPENAI_API_KEY;
   if (!apiKey) throw new Error("OpenAI anahtari yok");
+  if (Date.now() < openAiDisabledUntil) throw new Error("OpenAI gecici olarak devre disi");
   const baseUrl = (process.env.AI_INTEGRATIONS_OPENAI_BASE_URL || "https://api.openai.com/v1").replace(/\/$/, "");
 
   const form = new FormData();
@@ -41,6 +50,7 @@ async function transcribeWithOpenAI(audio: Buffer, mimeType: string, lang: "tr" 
     body: form,
     signal: AbortSignal.timeout(20_000),
   });
+  if (res.status === 401 || res.status === 403) openAiDisabledUntil = Date.now() + 10 * 60 * 1000;
   if (!res.ok) throw new Error("OpenAI " + res.status + ": " + (await res.text()).slice(0, 200));
   const data: any = await res.json();
   return String(data.text ?? "");
@@ -83,26 +93,28 @@ export function registerSttRoute(app: Express): void {
     }
 
     const lang: "tr" | "en" = language === "en" ? "en" : "tr";
+    const partial = req.body?.partial === true;
     const type =
       typeof mimeType === "string" && mimeType ? mimeType.split(";")[0] : "audio/webm";
 
     const started = Date.now();
     try {
       const text = await transcribeWithOpenAI(buffer, type, lang);
-      console.log("[STT] openai " + (Date.now() - started) + "ms, " + buffer.length + " bayt");
+      if (!partial) console.log("[STT] openai " + (Date.now() - started) + "ms, " + buffer.length + " bayt");
       return res.json({ text: text.trim() });
     } catch (err) {
-      console.error("[STT] OpenAI başarısız, ElevenLabs deneniyor:", err);
+      if (!partial) console.error("[STT] OpenAI başarısız, ElevenLabs deneniyor:", err);
     }
 
     try {
       const text = await transcribeWithElevenLabs(buffer, type, lang);
-      console.log("[STT] elevenlabs " + (Date.now() - started) + "ms, " + buffer.length + " bayt");
+      if (!partial) console.log("[STT] elevenlabs " + (Date.now() - started) + "ms, " + buffer.length + " bayt");
       return res.json({ text: text.trim() });
     } catch (err) {
-      console.error("[STT] ElevenLabs de başarısız:", err);
+      if (!partial) console.error("[STT] ElevenLabs de başarısız:", err);
     }
 
+    if (partial) return res.json({ text: "" });
     return res.status(502).json({ message: "Ses yazıya çevrilemedi" });
   });
 }

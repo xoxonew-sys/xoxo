@@ -14,6 +14,12 @@ import { useState, useRef, useCallback, useEffect } from "react";
    Mikrofon son kullanimdan sonra 45 sn acik tutulur; art arda basislarda
    izin/acilis beklemesi olmaz, sonra kapatilir (mikrofon gostergesi soner).
 
+   CANLI ONIZLEME: kayit surerken her 1,5 sn'de o ana kadarki ses
+   /api/stt'ye "partial" olarak gider, donen metin kutuya yazilir.
+   Tarayici tanimasini paralel calistirmak yerine bu yol secildi: Android'de
+   ikisi ayni anda mikrofonu tuttugunda biri sessiz kaliyor. Birakinca
+   son (tam) ceviri gonderilir; o dusmusse son onizleme metni kullanilir.
+
    Disari acilan arayuz eskisiyle ayni + iki ek:
      stopAndTranscribe(): Promise<string>  - kaydi bitir, metni dondur
      isTranscribing                          - metin bekleniyor
@@ -57,6 +63,9 @@ export function dedupeRepeats(text: string): string {
    ------------------------------------------------------------ */
 const MIC_KEEP_WARM_MS = 45_000;
 const MIN_RECORDING_MS = 400;
+const PARTIAL_EVERY_MS = 1_500;
+/** Bu sureden sonra onizleme durur (maliyet); birakinca tam ceviri yine yapilir. */
+const PARTIAL_MAX_MS = 45_000;
 
 function pickMimeType(): string {
   if (typeof MediaRecorder === "undefined" || !MediaRecorder.isTypeSupported) return "";
@@ -92,6 +101,11 @@ export function useSpeechRecognition(language: Language = "tr") {
   const wantRecordingRef = useRef(false);
   const startPromiseRef = useRef<Promise<void> | null>(null);
   const releaseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const partialTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const partialBusyRef = useRef(false);
+  const lastPartialRef = useRef("");
+  /** Her kayit yeni bir oturum; eski oturumdan gec gelen cevaplar yok sayilir. */
+  const sessionRef = useRef(0);
 
   const isSupported =
     typeof window !== "undefined" &&
@@ -124,6 +138,29 @@ export function useSpeechRecognition(language: Language = "tr") {
     return stream;
   }, []);
 
+  const stopPartials = useCallback(() => {
+    if (partialTimerRef.current) {
+      clearInterval(partialTimerRef.current);
+      partialTimerRef.current = null;
+    }
+  }, []);
+
+  const requestTranscript = useCallback(
+    async (blob: Blob, partial: boolean): Promise<string> => {
+      const audio = await blobToBase64(blob);
+      const res = await fetch("/api/stt", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ audio, mimeType: blob.type, language, partial }),
+      });
+      if (!res.ok) throw new Error("STT " + res.status);
+      const data = await res.json();
+      return dedupeRepeats(String(data.text ?? "").trim());
+    },
+    [language],
+  );
+
   const startListening = useCallback(() => {
     if (!isSupported) {
       setError("unsupported");
@@ -132,7 +169,9 @@ export function useSpeechRecognition(language: Language = "tr") {
     setError(null);
     setTranscript("");
     chunksRef.current = [];
+    lastPartialRef.current = "";
     wantRecordingRef.current = true;
+    const session = ++sessionRef.current;
     // Gorsel geri bildirim ANINDA - mikrofon hazirlanirken bile.
     setIsListening(true);
 
@@ -152,6 +191,29 @@ export function useSpeechRecognition(language: Language = "tr") {
         recorderRef.current = recorder;
         startedAtRef.current = Date.now();
         recorder.start(250);
+
+        // Canli onizleme
+        stopPartials();
+        partialTimerRef.current = setInterval(async () => {
+          if (partialBusyRef.current) return;
+          if (session !== sessionRef.current || !wantRecordingRef.current) return;
+          if (Date.now() - startedAtRef.current > PARTIAL_MAX_MS) return;
+          const blob = new Blob(chunksRef.current, { type: recorder.mimeType || "audio/webm" });
+          if (blob.size < 4000) return;
+
+          partialBusyRef.current = true;
+          try {
+            const text = await requestTranscript(blob, true);
+            if (text && session === sessionRef.current && wantRecordingRef.current) {
+              lastPartialRef.current = text;
+              setTranscript(text);
+            }
+          } catch {
+            /* onizleme dustu; tam ceviri birakinca yine yapilacak */
+          } finally {
+            partialBusyRef.current = false;
+          }
+        }, PARTIAL_EVERY_MS);
       } catch (err: any) {
         console.error("[VOICE] Mikrofon açılamadı:", err);
         wantRecordingRef.current = false;
@@ -159,13 +221,15 @@ export function useSpeechRecognition(language: Language = "tr") {
         setError(err?.name === "NotAllowedError" ? "not-allowed" : "audio-capture");
       }
     })();
-  }, [isSupported, getStream, scheduleRelease]);
+  }, [isSupported, getStream, scheduleRelease, stopPartials, requestTranscript]);
 
   /** Kaydi bitirir, cope atmaz; metni dondurur. Bos donerse gonderilecek bir sey yok. */
   const stopAndTranscribe = useCallback(async (): Promise<string> => {
     wantRecordingRef.current = false;
+    stopPartials();
     await startPromiseRef.current?.catch(() => undefined);
     setIsListening(false);
+    sessionRef.current += 1; // gec gelen onizlemeleri gecersiz kil
 
     const recorder = recorderRef.current;
     recorderRef.current = null;
@@ -188,30 +252,24 @@ export function useSpeechRecognition(language: Language = "tr") {
 
     setIsTranscribing(true);
     try {
-      const audio = await blobToBase64(blob);
-      const res = await fetch("/api/stt", {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ audio, mimeType: blob.type, language }),
-      });
-      if (!res.ok) throw new Error("STT " + res.status);
-      const data = await res.json();
-      const text = dedupeRepeats(String(data.text ?? "").trim());
+      const text = (await requestTranscript(blob, false)) || lastPartialRef.current;
       setTranscript(text);
       return text;
     } catch (err) {
       console.error("[VOICE] Yazıya çevrilemedi:", err);
+      if (lastPartialRef.current) return lastPartialRef.current;
       setError("network");
       return "";
     } finally {
       setIsTranscribing(false);
     }
-  }, [language, scheduleRelease]);
+  }, [scheduleRelease, stopPartials, requestTranscript]);
 
   /** Kaydi iptal eder, metin uretmez. */
   const stopListening = useCallback(() => {
     wantRecordingRef.current = false;
+    stopPartials();
+    sessionRef.current += 1;
     const recorder = recorderRef.current;
     recorderRef.current = null;
     if (recorder && recorder.state !== "inactive") {
@@ -225,7 +283,7 @@ export function useSpeechRecognition(language: Language = "tr") {
     chunksRef.current = [];
     setIsListening(false);
     scheduleRelease();
-  }, [scheduleRelease]);
+  }, [scheduleRelease, stopPartials]);
 
   const resetTranscript = useCallback(() => setTranscript(""), []);
 
@@ -233,6 +291,7 @@ export function useSpeechRecognition(language: Language = "tr") {
     return () => {
       wantRecordingRef.current = false;
       if (releaseTimerRef.current) clearTimeout(releaseTimerRef.current);
+      if (partialTimerRef.current) clearInterval(partialTimerRef.current);
       try {
         if (recorderRef.current?.state !== "inactive") recorderRef.current?.stop();
       } catch {
