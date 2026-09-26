@@ -7,6 +7,7 @@ import { registerRoutes } from "./routes";
 import { pool } from "./db";
 import { setupVite, serveStatic } from "./vite";
 import { startRetentionJobs } from "./retention";
+import { registerSttRoute } from "./stt";
 import { translateApiMessages } from "./i18n-messages";
 
 const app = express();
@@ -62,6 +63,8 @@ app.use(
    Sağlık kontrolü — railway.json bu adrese bakıyor.
    Veritabanına da dokunur ki bağlantı koptuysa fark edilsin.
    ------------------------------------------------------------ */
+registerSttRoute(app); // bas-konus-birak kaydini yaziya cevirir
+
 app.get("/api/health", (_req, res) => {
   res.json({ status: "ok", timestamp: new Date().toISOString() });
 });

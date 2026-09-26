@@ -109,6 +109,10 @@ const PAIRS: Array<[string, string]> = [
   ["Bildirim kaydedilemedi", "Couldn't submit your report."],
   ["Krediniz 10 ve altında olduğunda 5 dakikadan uzun oda oluşturamazsınız.", "With 10 credits or fewer you can only create rooms up to 5 minutes."],
   ["Süre gerekli", "Duration is required."],
+
+  /* sesli mesaj */
+  ["Ses kaydı çok uzun", "Your recording is too long."],
+  ["Ses yazıya çevrilemedi", "We couldn't catch that. Please try again."],
   ["Geçersiz süre", "Invalid duration."],
 
   /* Ingilizce yazilmis olanlar - Turkce kullaniciya cevrilir */

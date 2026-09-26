@@ -146,6 +146,8 @@ export default function Chat() {
     isSupported: speechSupported, 
     startListening, 
     stopListening,
+    stopAndTranscribe,
+    isTranscribing,
     resetTranscript 
   } = useSpeechRecognition(language);
   
@@ -309,31 +311,20 @@ export default function Chat() {
     
     if (!isListening) return;
     
-    stopListening();
-    
-    // FIX: Konuşma tanıma sonuçları buton bırakıldıktan SONRA gelir.
-    // Eski kod 150ms bekleyip bayat "content" state'ine bakıyordu ->
-    // transkript henüz gelmemiş oluyordu ve mesaj hiç gönderilmiyordu.
-    // Yeni: 500ms bekle + her zaman güncel olan contentRef'ten oku.
-    setTimeout(() => {
-      const finalText = contentRef.current.trim();
-      if (finalText) {
-        handleSubmit(true, finalText); // Mark as voice input + güncel metni geçir
-      }
-    }, 500);
+    // Kayit basar basmaz basladi; birakinca sunucu yaziya ceviriyor.
+    const text = await stopAndTranscribe();
+    if (text) {
+      handleSubmit(true, text);
+    }
   };
 
   // Legacy toggle for backward compatibility (used in ZeroTextVoiceInterface)
   const handleVoiceToggle = async () => {
     if (isListening) {
-      stopListening();
-      // FIX: bayat state yerine ref'ten oku, süreyi artır
-      setTimeout(() => {
-        const finalText = contentRef.current.trim();
-        if (finalText) {
-          handleSubmit(true, finalText);
-        }
-      }, 500);
+      const text = await stopAndTranscribe();
+      if (text) {
+        handleSubmit(true, text);
+      }
     } else {
       if (!isPremium && !isGodMode && !isAdmin && credits < 1) {
         toast({
@@ -912,7 +903,7 @@ export default function Chat() {
             value={content}
             onChange={(e) => setContent(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder={isListening ? t("chat.listening") : "Mesaj"}
+            placeholder={isListening ? t("chat.listening") : isTranscribing ? "…" : t("chat.placeholder")}
             className="flex-1 min-w-0 bg-transparent text-zinc-800 dark:text-white px-1 sm:px-2 py-2 text-sm sm:text-base font-body focus:outline-none resize-none h-10 max-h-10 overflow-hidden placeholder:text-zinc-400"
             disabled={isLoading}
             rows={1}

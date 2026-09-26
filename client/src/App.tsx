@@ -11,6 +11,7 @@ import { VoiceModeProvider } from "@/contexts/VoiceModeContext";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { Settings, Zap } from "lucide-react";
+import { RouteBackdrop } from "@/components/RouteBackdrop";
 
 /* Sohbet ekranı ağır (ses + görsel yükleme) — ayrı parçaya alındı */
 const Chat = lazy(() => import("@/pages/Chat"));
@@ -169,12 +170,15 @@ function TopBar() {
 }
 
 function NotFound() {
+  const { language } = useLanguage();
   return (
     <div className="h-full flex flex-col items-center justify-center gap-3 px-6 text-center">
       <h1 className="text-4xl font-display font-bold text-primary">404</h1>
-      <p className="text-sm text-muted-foreground">Aradığın sayfa burada değil.</p>
+      <p className="text-sm text-muted-foreground">
+        {language === "tr" ? "Aradığın sayfa burada değil." : "This page doesn't exist."}
+      </p>
       <a href="/" className="text-sm text-secondary underline underline-offset-4">
-        Ana sayfaya dön
+        {language === "tr" ? "Ana sayfaya dön" : "Back to home"}
       </a>
     </div>
   );
@@ -230,7 +234,10 @@ export default function App() {
                     saga hizali icerik (fiyat, kredi, sayac) ekranin
                     disinda kaliyordu. max-w-md mobil sutunu ortalar;
                     telefonda hicbir sey degismez. */}
-                <div className="h-full w-full max-w-md mx-auto flex flex-col">
+                {/* Sayfa fonu: tam ekran, icerigin ARKASINDA (z-0).
+                    Icerik sutunu relative z-10 ile ustte kalir. */}
+                <RouteBackdrop />
+                <div className="relative z-10 h-full w-full max-w-md mx-auto flex flex-col">
                   <TopBar />
                   <PendingNotice />
                   <Suspense fallback={<Loading />}>
