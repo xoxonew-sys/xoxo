@@ -12,8 +12,13 @@ import {
   getPlayService, purchaseWithPlay, restorePendingPurchases, formatPlayPrice,
 } from "@/lib/play-billing";
 
-/** Play Console'daki urun kimlikleri - server/play-billing.ts ile ayni. */
-const playItemIdForPlan = (planId: string) => "premium_" + planId;
+/**
+ * Play Console'daki Premium urun kimlikleri - server/play-billing.ts ile ayni.
+ * "premium_monthly" kimligi Play'de yanlislikla ABONELIK olarak acildi ve
+ * kimlikler tekrar kullanilamiyor; tek seferlik 30 gunluk Premium bu adla.
+ */
+const PLAY_PREMIUM_IDS: Record<string, string> = { monthly: "premium_30days" };
+const playItemIdForPlan = (planId: string) => PLAY_PREMIUM_IDS[planId] ?? "premium_" + planId;
 
 /**
  * Paket listesi ve fiyatlar shared/catalog.ts'ten gelir; burada sadece
@@ -63,6 +68,15 @@ export default function Pricing() {
     appChannel ? "loading" : "unavailable",
   );
   const [playPrices, setPlayPrices] = useState<Record<string, string>>({});
+  /**
+   * Play servisi neden acilamadi - yedek kartta kucuk gri satir olarak
+   * gorunur. Kullaniciya anlam ifade etmez, destek/hata ayiklama icin:
+   *   no-api      : window.getDigitalGoodsService yok (eski uygulama/Chrome)
+   *   no-service  : API var ama Play servisi acilmadi
+   *   no-items    : servis acildi, urunler bos dondu (urunler yayilmadi / kimlik hatali)
+   *   details:<x> : urun bilgisi istegi hata verdi
+   */
+  const [playReason, setPlayReason] = useState<string>("");
   const locale = language === "tr" ? "tr-TR" : "en-US";
 
   useEffect(() => {
@@ -71,7 +85,10 @@ export default function Pricing() {
     (async () => {
       const service = await getPlayService();
       if (!service) {
-        if (!cancelled) setPlayMode("unavailable");
+        if (!cancelled) {
+          setPlayReason("getDigitalGoodsService" in window ? "no-service" : "no-api");
+          setPlayMode("unavailable");
+        }
         return;
       }
       try {
@@ -81,13 +98,21 @@ export default function Pricing() {
         ];
         const details = await service.getDetails(ids);
         if (cancelled) return;
+        if (!details || details.length === 0) {
+          setPlayReason("no-items");
+          setPlayMode("unavailable");
+          return;
+        }
         const prices: Record<string, string> = {};
         for (const item of details) prices[item.itemId] = formatPlayPrice(item.price, locale);
         setPlayPrices(prices);
         setPlayMode("play");
       } catch (err) {
         console.warn("[PLAY] Ürün bilgileri alınamadı:", err);
-        if (!cancelled) setPlayMode("unavailable");
+        if (!cancelled) {
+          setPlayReason("details:" + (err instanceof Error ? err.name || err.message : "error"));
+          setPlayMode("unavailable");
+        }
         return;
       }
       // Yarim kalmis satin almalar (odeme alindi, dogrulama yapilamadi)
@@ -214,6 +239,11 @@ export default function Pricing() {
           <p className="mt-3 select-all font-display font-bold tracking-wide text-foreground">
             {PURCHASE_DOMAIN}
           </p>
+          {appChannel && playReason && (
+            <p className="mt-4 text-[10px] font-mono text-muted-foreground/50" data-testid="play-reason">
+              play: {playReason}
+            </p>
+          )}
         </div>
       ) : (
         <>
