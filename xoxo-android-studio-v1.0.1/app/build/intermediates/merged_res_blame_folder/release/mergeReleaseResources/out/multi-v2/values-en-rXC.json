@@ -4,7 +4,7 @@
             "outputFile": "com.xoxo.gossipai.app-mergeReleaseResources-2:/values-en-rXC/values-en-rXC.xml",
             "map": [
                 {
-                    "source": "C:\\Users\\Mehmet AVCI\\.gradle\\caches\\8.13\\transforms\\6af072dbc436edc992660eb4782cdea0\\transformed\\browser-1.9.0-alpha04\\res\\values-en-rXC\\values-en-rXC.xml",
+                    "source": "C:\\Users\\Mehmet AVCI\\.gradle\\caches\\8.13\\transforms\\5cda877e6355bc188eaf431129b07267\\transformed\\browser-1.10.0\\res\\values-en-rXC\\values-en-rXC.xml",
                     "from": {
                         "startLines": "2,3,4,5",
                         "startColumns": "4,4,4,4",

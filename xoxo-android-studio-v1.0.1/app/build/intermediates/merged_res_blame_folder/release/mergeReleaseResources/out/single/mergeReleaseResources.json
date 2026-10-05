@@ -1,15 +1,15 @@
 [
     {
-        "merged": "C:\\Users\\Mehmet AVCI\\.gradle\\daemon\\8.13\\com.xoxo.gossipai.app-release-4:\\mipmap-xhdpi_ic_launcher.png.flat",
-        "source": "C:\\Users\\Mehmet AVCI\\.gradle\\daemon\\8.13\\com.xoxo.gossipai.app-main-5:\\mipmap-xhdpi\\ic_launcher.png"
-    },
-    {
         "merged": "com.xoxo.gossipai.app-release-4:/mipmap-xxhdpi_ic_launcher_foreground.webp.flat",
         "source": "com.xoxo.gossipai.app-main-5:/mipmap-xxhdpi/ic_launcher_foreground.webp"
     },
     {
-        "merged": "C:\\Users\\Mehmet AVCI\\.gradle\\daemon\\8.13\\com.xoxo.gossipai.app-release-4:\\mipmap-xxxhdpi_ic_launcher.png.flat",
-        "source": "C:\\Users\\Mehmet AVCI\\.gradle\\daemon\\8.13\\com.xoxo.gossipai.app-main-5:\\mipmap-xxxhdpi\\ic_launcher.png"
+        "merged": "com.xoxo.gossipai.app-release-4:/mipmap-anydpi-v26_ic_launcher_round.xml.flat",
+        "source": "com.xoxo.gossipai.app-main-5:/mipmap-anydpi-v26/ic_launcher_round.xml"
+    },
+    {
+        "merged": "com.xoxo.gossipai.app-release-4:/mipmap-xxxhdpi_ic_launcher_foreground.webp.flat",
+        "source": "com.xoxo.gossipai.app-main-5:/mipmap-xxxhdpi/ic_launcher_foreground.webp"
     },
     {
         "merged": "com.xoxo.gossipai.app-release-4:/mipmap-hdpi_ic_launcher_round.webp.flat",
@@ -24,20 +24,12 @@
         "source": "com.xoxo.gossipai.app-main-5:/mipmap-xxhdpi/ic_launcher_round.webp"
     },
     {
-        "merged": "C:\\Users\\Mehmet AVCI\\.gradle\\daemon\\8.13\\com.xoxo.gossipai.app-release-4:\\mipmap-xxxhdpi_ic_launcher_round.png.flat",
-        "source": "C:\\Users\\Mehmet AVCI\\.gradle\\daemon\\8.13\\com.xoxo.gossipai.app-main-5:\\mipmap-xxxhdpi\\ic_launcher_round.png"
-    },
-    {
-        "merged": "C:\\Users\\Mehmet AVCI\\.gradle\\daemon\\8.13\\com.xoxo.gossipai.app-release-4:\\mipmap-hdpi_ic_launcher.png.flat",
-        "source": "C:\\Users\\Mehmet AVCI\\.gradle\\daemon\\8.13\\com.xoxo.gossipai.app-main-5:\\mipmap-hdpi\\ic_launcher.png"
+        "merged": "com.xoxo.gossipai.app-release-4:/mipmap-hdpi_ic_launcher.webp.flat",
+        "source": "com.xoxo.gossipai.app-main-5:/mipmap-hdpi/ic_launcher.webp"
     },
     {
         "merged": "com.xoxo.gossipai.app-release-4:/mipmap-mdpi_ic_launcher_round.webp.flat",
         "source": "com.xoxo.gossipai.app-main-5:/mipmap-mdpi/ic_launcher_round.webp"
-    },
-    {
-        "merged": "C:\\Users\\Mehmet AVCI\\.gradle\\daemon\\8.13\\com.xoxo.gossipai.app-release-4:\\mipmap-mdpi_ic_launcher_round.png.flat",
-        "source": "C:\\Users\\Mehmet AVCI\\.gradle\\daemon\\8.13\\com.xoxo.gossipai.app-main-5:\\mipmap-mdpi\\ic_launcher_round.png"
     },
     {
         "merged": "com.xoxo.gossipai.app-release-4:/mipmap-mdpi_ic_launcher.webp.flat",
@@ -48,52 +40,12 @@
         "source": "com.xoxo.gossipai.app-main-5:/mipmap-xxhdpi/ic_launcher.webp"
     },
     {
-        "merged": "C:\\Users\\Mehmet AVCI\\.gradle\\daemon\\8.13\\com.xoxo.gossipai.app-release-4:\\mipmap-hdpi_ic_launcher_round.png.flat",
-        "source": "C:\\Users\\Mehmet AVCI\\.gradle\\daemon\\8.13\\com.xoxo.gossipai.app-main-5:\\mipmap-hdpi\\ic_launcher_round.png"
-    },
-    {
-        "merged": "com.xoxo.gossipai.app-release-4:/mipmap-xxxhdpi_ic_launcher_round.webp.flat",
-        "source": "com.xoxo.gossipai.app-main-5:/mipmap-xxxhdpi/ic_launcher_round.webp"
-    },
-    {
-        "merged": "com.xoxo.gossipai.app-release-4:/mipmap-xhdpi_ic_launcher_foreground.webp.flat",
-        "source": "com.xoxo.gossipai.app-main-5:/mipmap-xhdpi/ic_launcher_foreground.webp"
-    },
-    {
-        "merged": "com.xoxo.gossipai.app-release-4:/mipmap-anydpi-v26_ic_launcher_round.xml.flat",
-        "source": "com.xoxo.gossipai.app-main-5:/mipmap-anydpi-v26/ic_launcher_round.xml"
-    },
-    {
-        "merged": "com.xoxo.gossipai.app-release-4:/mipmap-xxxhdpi_ic_launcher_foreground.webp.flat",
-        "source": "com.xoxo.gossipai.app-main-5:/mipmap-xxxhdpi/ic_launcher_foreground.webp"
-    },
-    {
-        "merged": "C:\\Users\\Mehmet AVCI\\.gradle\\daemon\\8.13\\com.xoxo.gossipai.app-release-4:\\mipmap-xxhdpi_ic_launcher_round.png.flat",
-        "source": "C:\\Users\\Mehmet AVCI\\.gradle\\daemon\\8.13\\com.xoxo.gossipai.app-main-5:\\mipmap-xxhdpi\\ic_launcher_round.png"
-    },
-    {
-        "merged": "C:\\Users\\Mehmet AVCI\\.gradle\\daemon\\8.13\\com.xoxo.gossipai.app-release-4:\\mipmap-xxhdpi_ic_launcher.png.flat",
-        "source": "C:\\Users\\Mehmet AVCI\\.gradle\\daemon\\8.13\\com.xoxo.gossipai.app-main-5:\\mipmap-xxhdpi\\ic_launcher.png"
-    },
-    {
-        "merged": "com.xoxo.gossipai.app-release-4:/mipmap-hdpi_ic_launcher.webp.flat",
-        "source": "com.xoxo.gossipai.app-main-5:/mipmap-hdpi/ic_launcher.webp"
-    },
-    {
-        "merged": "C:\\Users\\Mehmet AVCI\\.gradle\\daemon\\8.13\\com.xoxo.gossipai.app-release-4:\\mipmap-mdpi_ic_launcher.png.flat",
-        "source": "C:\\Users\\Mehmet AVCI\\.gradle\\daemon\\8.13\\com.xoxo.gossipai.app-main-5:\\mipmap-mdpi\\ic_launcher.png"
-    },
-    {
         "merged": "com.xoxo.gossipai.app-release-4:/mipmap-xhdpi_ic_launcher.webp.flat",
         "source": "com.xoxo.gossipai.app-main-5:/mipmap-xhdpi/ic_launcher.webp"
     },
     {
         "merged": "com.xoxo.gossipai.app-release-4:/mipmap-anydpi-v26_ic_launcher.xml.flat",
         "source": "com.xoxo.gossipai.app-main-5:/mipmap-anydpi-v26/ic_launcher.xml"
-    },
-    {
-        "merged": "C:\\Users\\Mehmet AVCI\\.gradle\\daemon\\8.13\\com.xoxo.gossipai.app-release-4:\\mipmap-xhdpi_ic_launcher_round.png.flat",
-        "source": "C:\\Users\\Mehmet AVCI\\.gradle\\daemon\\8.13\\com.xoxo.gossipai.app-main-5:\\mipmap-xhdpi\\ic_launcher_round.png"
     },
     {
         "merged": "com.xoxo.gossipai.app-release-4:/mipmap-xhdpi_ic_launcher_round.webp.flat",
@@ -106,5 +58,13 @@
     {
         "merged": "com.xoxo.gossipai.app-release-4:/mipmap-hdpi_ic_launcher_foreground.webp.flat",
         "source": "com.xoxo.gossipai.app-main-5:/mipmap-hdpi/ic_launcher_foreground.webp"
+    },
+    {
+        "merged": "com.xoxo.gossipai.app-release-4:/mipmap-xxxhdpi_ic_launcher_round.webp.flat",
+        "source": "com.xoxo.gossipai.app-main-5:/mipmap-xxxhdpi/ic_launcher_round.webp"
+    },
+    {
+        "merged": "com.xoxo.gossipai.app-release-4:/mipmap-xhdpi_ic_launcher_foreground.webp.flat",
+        "source": "com.xoxo.gossipai.app-main-5:/mipmap-xhdpi/ic_launcher_foreground.webp"
     }
 ]

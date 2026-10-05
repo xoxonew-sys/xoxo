@@ -9,9 +9,10 @@ android {
     defaultConfig {
         applicationId "com.xoxo.gossipai"
 
-        // androidbrowserhelper 2.6+ minimum 21 istiyor.
-        // API 19 (KitKat) payi bugun ihmal edilebilir seviyede.
-        minSdk 21
+        // billing:1.2.0 (Google Play Faturalandirma) minimum 23 istiyor.
+        // Android 5.x (API 21-22) payi ihmal edilebilir; bu cihazlar
+        // mevcut surumde kalir, yeni guncellemeyi almaz.
+        minSdk 23
         targetSdk 36
 
         // Play'deki son surum 7 (1.0.6). versionCode HER yuklemede

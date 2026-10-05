@@ -274,11 +274,24 @@ export default function Chat() {
 
   // Auto-resize textarea
   useEffect(() => {
-    if (textareaRef.current) {
-      textareaRef.current.style.height = "auto";
-      textareaRef.current.style.height = Math.min(textareaRef.current.scrollHeight, 112) // max-h-28 = en fazla ~4 satir + "px";
-    }
+    const ta = textareaRef.current;
+    if (!ta) return;
+    const MAX_H = 144; // max-h-36 = ~7 satir, sonrasi kutu icinde kayar
+    ta.style.height = "auto";
+    const full = ta.scrollHeight;
+    const h = Math.max(40, Math.min(full, MAX_H));
+    ta.style.height = h + "px";
+    ta.style.overflowY = full > MAX_H ? "auto" : "hidden";
+    // Alt cubuk: tek satirda 80px, kutu buyudukce ayni oranda buyur
+    document.documentElement.style.setProperty("--chat-bar-h", (80 + (h - 40)) + "px");
   }, [content]);
+
+  // Sohbetten cikinca degiskeni temizle
+  useEffect(() => {
+    return () => {
+      document.documentElement.style.removeProperty("--chat-bar-h");
+    };
+  }, []);
 
   // WHATSAPP-STYLE PUSH-TO-TALK: Hold to record, release to send
   const handleVoiceStart = async (e: React.MouseEvent | React.TouchEvent) => {
@@ -599,7 +612,7 @@ export default function Chat() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col p-4 md:p-6 max-w-4xl mx-auto pb-20">
+    <div className="min-h-screen flex flex-col p-4 md:p-6 max-w-4xl mx-auto pb-20" style={{ paddingBottom: 'var(--chat-bar-h, 80px)' }}>
       {/* Header */}
       <header className="flex items-center justify-between mb-4 flex-shrink-0">
         <button 
@@ -881,10 +894,12 @@ export default function Chat() {
           left: 0,
           right: 0,
           bottom: 0,
-          height: '80px', // ÇİVİLENDİ - TİTREME ENGELLENDİ
+          minHeight: '80px', // tek satirda 80px sabit; uzun yazida buyur
+          paddingTop: '16px',
+          paddingBottom: '16px',
           zIndex: 9998,
           display: 'flex',
-          alignItems: 'center',
+          alignItems: 'flex-end',
           paddingLeft: '16px',
           paddingRight: '16px',
           gap: '8px',
@@ -904,7 +919,7 @@ export default function Chat() {
             onChange={(e) => setContent(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder={isListening ? t("chat.listening") : isTranscribing ? "…" : t("chat.placeholder")}
-            className="flex-1 min-w-0 bg-transparent text-zinc-800 dark:text-white px-1 sm:px-2 py-2 text-sm sm:text-base font-body focus:outline-none resize-none min-h-10 max-h-28 overflow-y-auto leading-snug placeholder:text-zinc-400"
+            className="flex-1 min-w-0 bg-transparent text-zinc-800 dark:text-white px-1 sm:px-2 py-2 text-sm sm:text-base font-body focus:outline-none resize-none min-h-10 max-h-36 overflow-y-auto leading-snug placeholder:text-zinc-400"
             disabled={isLoading}
             rows={1}
           />
@@ -947,7 +962,7 @@ export default function Chat() {
             onClick={selectedImage ? handleImageSubmit : () => handleSubmit(false)}
             disabled={isLoading || isUploadingImage}
             className={cn(
-              "flex items-center justify-center rounded-full flex-shrink-0 transition-all w-10 h-10 sm:w-12 sm:h-12",
+              "flex items-center justify-center rounded-full flex-shrink-0 transition-all w-10 h-10 sm:w-12 sm:h-12 mb-1 sm:mb-0",
               level === 1 ? "bg-secondary text-white" : 
               level === 3 ? "bg-accent text-white" : 
               "bg-primary text-white"
@@ -972,7 +987,7 @@ export default function Chat() {
                 : "Hold to talk, release to send"
             }
             className={cn(
-              "flex items-center justify-center rounded-full flex-shrink-0 select-none touch-none transition-all w-10 h-10 sm:w-12 sm:h-12",
+              "flex items-center justify-center rounded-full flex-shrink-0 select-none touch-none transition-all w-10 h-10 sm:w-12 sm:h-12 mb-1 sm:mb-0",
               !speechSupported
                 ? "bg-zinc-400 text-white/50 cursor-not-allowed"
                 : isListening 
@@ -999,7 +1014,7 @@ export default function Chat() {
       {imagePreview && (
         <div 
           className="glass-panel rounded-2xl p-2 flex items-center gap-2"
-          style={{ position: 'fixed', bottom: '90px', left: '16px', right: '16px', zIndex: 9997 }}
+          style={{ position: 'fixed', bottom: 'calc(var(--chat-bar-h, 80px) + 10px)', left: '16px', right: '16px', zIndex: 9997 }}
         >
           <div className="relative">
             <img 
@@ -1026,7 +1041,7 @@ export default function Chat() {
       {isListening && (
         <div 
           className="text-center text-sm text-red-400 animate-pulse font-body glass-panel rounded-full px-4 py-2"
-          style={{ position: 'fixed', bottom: '90px', left: '50%', transform: 'translateX(-50%)', zIndex: 9997 }}
+          style={{ position: 'fixed', bottom: 'calc(var(--chat-bar-h, 80px) + 10px)', left: '50%', transform: 'translateX(-50%)', zIndex: 9997 }}
         >
           {t("chat.continue_speaking")}
         </div>
@@ -1035,7 +1050,7 @@ export default function Chat() {
       {speechError && (
         <div 
           className="text-center text-sm text-yellow-400 font-body glass-panel rounded-full px-4 py-2"
-          style={{ position: 'fixed', bottom: '90px', left: '50%', transform: 'translateX(-50%)', zIndex: 9997 }}
+          style={{ position: 'fixed', bottom: 'calc(var(--chat-bar-h, 80px) + 10px)', left: '50%', transform: 'translateX(-50%)', zIndex: 9997 }}
         >
           {speechError === "not-allowed" 
             ? t("chat.mic_permission")

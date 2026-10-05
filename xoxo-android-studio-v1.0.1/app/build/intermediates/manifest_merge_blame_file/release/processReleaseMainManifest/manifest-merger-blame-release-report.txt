@@ -1,11 +1,11 @@
 1<?xml version="1.0" encoding="utf-8"?>
 2<manifest xmlns:android="http://schemas.android.com/apk/res/android"
 3    package="com.xoxo.gossipai"
-4    android:versionCode="7"
-5    android:versionName="1.0.6" >
+4    android:versionCode="8"
+5    android:versionName="1.0.7" >
 6
 7    <uses-sdk
-8        android:minSdkVersion="21"
+8        android:minSdkVersion="23"
 9        android:targetSdkVersion="36" />
 10
 11    <queries>
@@ -24,218 +24,366 @@
 17-->C:\Projelerim\xoxo\xoxo-android-studio-v1.0.1\app\src\main\AndroidManifest.xml:60:17-62:46
 17-->C:\Projelerim\xoxo\xoxo-android-studio-v1.0.1\app\src\main\AndroidManifest.xml:62:21-43
 18        </intent>
-19    </queries>
-20
-21    <permission
-21-->[androidx.core:core:1.13.0] C:\Users\Mehmet AVCI\.gradle\caches\8.13\transforms\0a442df3b823586b7b45366d3f7198cf\transformed\core-1.13.0\AndroidManifest.xml:22:5-24:47
-22        android:name="com.xoxo.gossipai.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"
-22-->[androidx.core:core:1.13.0] C:\Users\Mehmet AVCI\.gradle\caches\8.13\transforms\0a442df3b823586b7b45366d3f7198cf\transformed\core-1.13.0\AndroidManifest.xml:23:9-81
-23        android:protectionLevel="signature" />
-23-->[androidx.core:core:1.13.0] C:\Users\Mehmet AVCI\.gradle\caches\8.13\transforms\0a442df3b823586b7b45366d3f7198cf\transformed\core-1.13.0\AndroidManifest.xml:24:9-44
-24
-25    <uses-permission android:name="com.xoxo.gossipai.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION" />
-25-->[androidx.core:core:1.13.0] C:\Users\Mehmet AVCI\.gradle\caches\8.13\transforms\0a442df3b823586b7b45366d3f7198cf\transformed\core-1.13.0\AndroidManifest.xml:26:5-97
-25-->[androidx.core:core:1.13.0] C:\Users\Mehmet AVCI\.gradle\caches\8.13\transforms\0a442df3b823586b7b45366d3f7198cf\transformed\core-1.13.0\AndroidManifest.xml:26:22-94
+19        <intent>
+19-->[com.android.billingclient:billing:8.3.0] C:\Users\Mehmet AVCI\.gradle\caches\8.13\transforms\d1a450d32c02785f66c85c972d0a91fa\transformed\jetified-billing-8.3.0\AndroidManifest.xml:13:9-15:18
+20            <action android:name="com.android.vending.billing.InAppBillingService.BIND" />
+20-->[com.android.billingclient:billing:8.3.0] C:\Users\Mehmet AVCI\.gradle\caches\8.13\transforms\d1a450d32c02785f66c85c972d0a91fa\transformed\jetified-billing-8.3.0\AndroidManifest.xml:14:13-91
+20-->[com.android.billingclient:billing:8.3.0] C:\Users\Mehmet AVCI\.gradle\caches\8.13\transforms\d1a450d32c02785f66c85c972d0a91fa\transformed\jetified-billing-8.3.0\AndroidManifest.xml:14:21-88
+21        </intent>
+22        <intent>
+22-->[com.android.billingclient:billing:8.3.0] C:\Users\Mehmet AVCI\.gradle\caches\8.13\transforms\d1a450d32c02785f66c85c972d0a91fa\transformed\jetified-billing-8.3.0\AndroidManifest.xml:16:9-18:18
+23            <action android:name="com.google.android.apps.play.billingtestcompanion.BillingOverrideService.BIND" />
+23-->[com.android.billingclient:billing:8.3.0] C:\Users\Mehmet AVCI\.gradle\caches\8.13\transforms\d1a450d32c02785f66c85c972d0a91fa\transformed\jetified-billing-8.3.0\AndroidManifest.xml:17:13-116
+23-->[com.android.billingclient:billing:8.3.0] C:\Users\Mehmet AVCI\.gradle\caches\8.13\transforms\d1a450d32c02785f66c85c972d0a91fa\transformed\jetified-billing-8.3.0\AndroidManifest.xml:17:21-113
+24        </intent>
+25    </queries>
 26
-27    <application
-27-->C:\Projelerim\xoxo\xoxo-android-studio-v1.0.1\app\src\main\AndroidManifest.xml:4:5-76:19
-28        android:allowBackup="true"
-28-->C:\Projelerim\xoxo\xoxo-android-studio-v1.0.1\app\src\main\AndroidManifest.xml:5:9-35
-29        android:appComponentFactory="androidx.core.app.CoreComponentFactory"
-29-->[androidx.core:core:1.13.0] C:\Users\Mehmet AVCI\.gradle\caches\8.13\transforms\0a442df3b823586b7b45366d3f7198cf\transformed\core-1.13.0\AndroidManifest.xml:28:18-86
-30        android:extractNativeLibs="true"
-31        android:icon="@mipmap/ic_launcher"
-31-->C:\Projelerim\xoxo\xoxo-android-studio-v1.0.1\app\src\main\AndroidManifest.xml:6:9-43
-32        android:label="@string/app_name"
-32-->C:\Projelerim\xoxo\xoxo-android-studio-v1.0.1\app\src\main\AndroidManifest.xml:7:9-41
-33        android:roundIcon="@mipmap/ic_launcher_round"
-33-->C:\Projelerim\xoxo\xoxo-android-studio-v1.0.1\app\src\main\AndroidManifest.xml:8:9-54
-34        android:supportsRtl="true"
-34-->C:\Projelerim\xoxo\xoxo-android-studio-v1.0.1\app\src\main\AndroidManifest.xml:9:9-35
-35        android:theme="@style/Theme.XOXO" >
-35-->C:\Projelerim\xoxo\xoxo-android-studio-v1.0.1\app\src\main\AndroidManifest.xml:10:9-42
-36        <meta-data
-36-->C:\Projelerim\xoxo\xoxo-android-studio-v1.0.1\app\src\main\AndroidManifest.xml:12:9-14:59
-37            android:name="asset_statements"
-37-->C:\Projelerim\xoxo\xoxo-android-studio-v1.0.1\app\src\main\AndroidManifest.xml:13:13-44
-38            android:resource="@string/asset_statements" />
-38-->C:\Projelerim\xoxo\xoxo-android-studio-v1.0.1\app\src\main\AndroidManifest.xml:14:13-56
-39
-40        <activity
-40-->C:\Projelerim\xoxo\xoxo-android-studio-v1.0.1\app\src\main\AndroidManifest.xml:16:9-64:20
-41            android:name="com.google.androidbrowserhelper.trusted.LauncherActivity"
-41-->C:\Projelerim\xoxo\xoxo-android-studio-v1.0.1\app\src\main\AndroidManifest.xml:17:13-84
-42            android:exported="true"
-42-->C:\Projelerim\xoxo\xoxo-android-studio-v1.0.1\app\src\main\AndroidManifest.xml:18:13-36
-43            android:screenOrientation="portrait" >
-43-->C:\Projelerim\xoxo\xoxo-android-studio-v1.0.1\app\src\main\AndroidManifest.xml:19:13-49
-44
-45            <!-- Default URL to open -->
-46            <meta-data
-46-->C:\Projelerim\xoxo\xoxo-android-studio-v1.0.1\app\src\main\AndroidManifest.xml:22:13-24:58
-47                android:name="android.support.customtabs.trusted.DEFAULT_URL"
-47-->C:\Projelerim\xoxo\xoxo-android-studio-v1.0.1\app\src\main\AndroidManifest.xml:23:17-78
-48                android:value="https://xoxo-apps.com/" />
-48-->C:\Projelerim\xoxo\xoxo-android-studio-v1.0.1\app\src\main\AndroidManifest.xml:24:17-55
-49
-50            <!-- Status bar color -->
-51            <meta-data
-51-->C:\Projelerim\xoxo\xoxo-android-studio-v1.0.1\app\src\main\AndroidManifest.xml:27:13-29:58
-52                android:name="android.support.customtabs.trusted.STATUS_BAR_COLOR"
-52-->C:\Projelerim\xoxo\xoxo-android-studio-v1.0.1\app\src\main\AndroidManifest.xml:28:17-83
-53                android:resource="@color/colorPrimary" />
-53-->C:\Projelerim\xoxo\xoxo-android-studio-v1.0.1\app\src\main\AndroidManifest.xml:29:17-55
-54
-55            <!-- Navigation bar color -->
-56            <meta-data
-56-->C:\Projelerim\xoxo\xoxo-android-studio-v1.0.1\app\src\main\AndroidManifest.xml:32:13-34:58
-57                android:name="android.support.customtabs.trusted.NAVIGATION_BAR_COLOR"
-57-->C:\Projelerim\xoxo\xoxo-android-studio-v1.0.1\app\src\main\AndroidManifest.xml:33:17-87
-58                android:resource="@color/colorPrimary" />
-58-->C:\Projelerim\xoxo\xoxo-android-studio-v1.0.1\app\src\main\AndroidManifest.xml:34:17-55
-59
-60            <!-- Splash screen background color -->
-61            <meta-data
-61-->C:\Projelerim\xoxo\xoxo-android-studio-v1.0.1\app\src\main\AndroidManifest.xml:37:13-39:61
-62                android:name="android.support.customtabs.trusted.SPLASH_SCREEN_BACKGROUND_COLOR"
-62-->C:\Projelerim\xoxo\xoxo-android-studio-v1.0.1\app\src\main\AndroidManifest.xml:38:17-97
-63                android:resource="@color/colorBackground" />
-63-->C:\Projelerim\xoxo\xoxo-android-studio-v1.0.1\app\src\main\AndroidManifest.xml:39:17-58
-64
-65            <!-- Splash screen fade out duration -->
-66            <meta-data
-66-->C:\Projelerim\xoxo\xoxo-android-studio-v1.0.1\app\src\main\AndroidManifest.xml:42:13-44:39
-67                android:name="android.support.customtabs.trusted.SPLASH_SCREEN_FADE_OUT_DURATION"
-67-->C:\Projelerim\xoxo\xoxo-android-studio-v1.0.1\app\src\main\AndroidManifest.xml:43:17-98
-68                android:value="300" />
-68-->C:\Projelerim\xoxo\xoxo-android-studio-v1.0.1\app\src\main\AndroidManifest.xml:44:17-36
-69
-70            <!-- Fallback to Custom Tabs if TWA not supported -->
-71            <meta-data
-71-->C:\Projelerim\xoxo\xoxo-android-studio-v1.0.1\app\src\main\AndroidManifest.xml:47:13-49:46
-72                android:name="android.support.customtabs.trusted.FALLBACK_STRATEGY"
-72-->C:\Projelerim\xoxo\xoxo-android-studio-v1.0.1\app\src\main\AndroidManifest.xml:48:17-84
-73                android:value="customtabs" />
-73-->C:\Projelerim\xoxo\xoxo-android-studio-v1.0.1\app\src\main\AndroidManifest.xml:49:17-43
-74
-75            <intent-filter>
-75-->C:\Projelerim\xoxo\xoxo-android-studio-v1.0.1\app\src\main\AndroidManifest.xml:51:13-54:29
-76                <action android:name="android.intent.action.MAIN" />
-76-->C:\Projelerim\xoxo\xoxo-android-studio-v1.0.1\app\src\main\AndroidManifest.xml:52:17-69
-76-->C:\Projelerim\xoxo\xoxo-android-studio-v1.0.1\app\src\main\AndroidManifest.xml:52:25-66
-77
-78                <category android:name="android.intent.category.LAUNCHER" />
-78-->C:\Projelerim\xoxo\xoxo-android-studio-v1.0.1\app\src\main\AndroidManifest.xml:53:17-77
-78-->C:\Projelerim\xoxo\xoxo-android-studio-v1.0.1\app\src\main\AndroidManifest.xml:53:27-74
-79            </intent-filter>
-80            <intent-filter android:autoVerify="true" >
-80-->C:\Projelerim\xoxo\xoxo-android-studio-v1.0.1\app\src\main\AndroidManifest.xml:56:13-63:29
-80-->C:\Projelerim\xoxo\xoxo-android-studio-v1.0.1\app\src\main\AndroidManifest.xml:56:28-53
-81                <action android:name="android.intent.action.VIEW" />
-81-->C:\Projelerim\xoxo\xoxo-android-studio-v1.0.1\app\src\main\AndroidManifest.xml:57:17-69
-81-->C:\Projelerim\xoxo\xoxo-android-studio-v1.0.1\app\src\main\AndroidManifest.xml:57:25-66
-82
-83                <category android:name="android.intent.category.DEFAULT" />
-83-->C:\Projelerim\xoxo\xoxo-android-studio-v1.0.1\app\src\main\AndroidManifest.xml:58:17-76
-83-->C:\Projelerim\xoxo\xoxo-android-studio-v1.0.1\app\src\main\AndroidManifest.xml:58:27-73
-84                <category android:name="android.intent.category.BROWSABLE" />
-84-->C:\Projelerim\xoxo\xoxo-android-studio-v1.0.1\app\src\main\AndroidManifest.xml:59:17-78
-84-->C:\Projelerim\xoxo\xoxo-android-studio-v1.0.1\app\src\main\AndroidManifest.xml:59:27-75
+27    <uses-permission android:name="com.android.vending.BILLING" />
+27-->[com.android.billingclient:billing:8.3.0] C:\Users\Mehmet AVCI\.gradle\caches\8.13\transforms\d1a450d32c02785f66c85c972d0a91fa\transformed\jetified-billing-8.3.0\AndroidManifest.xml:10:5-67
+27-->[com.android.billingclient:billing:8.3.0] C:\Users\Mehmet AVCI\.gradle\caches\8.13\transforms\d1a450d32c02785f66c85c972d0a91fa\transformed\jetified-billing-8.3.0\AndroidManifest.xml:10:22-64
+28
+29    <permission
+29-->[androidx.core:core:1.13.0] C:\Users\Mehmet AVCI\.gradle\caches\8.13\transforms\0a442df3b823586b7b45366d3f7198cf\transformed\core-1.13.0\AndroidManifest.xml:22:5-24:47
+30        android:name="com.xoxo.gossipai.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"
+30-->[androidx.core:core:1.13.0] C:\Users\Mehmet AVCI\.gradle\caches\8.13\transforms\0a442df3b823586b7b45366d3f7198cf\transformed\core-1.13.0\AndroidManifest.xml:23:9-81
+31        android:protectionLevel="signature" />
+31-->[androidx.core:core:1.13.0] C:\Users\Mehmet AVCI\.gradle\caches\8.13\transforms\0a442df3b823586b7b45366d3f7198cf\transformed\core-1.13.0\AndroidManifest.xml:24:9-44
+32
+33    <uses-permission android:name="com.xoxo.gossipai.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION" /> <!-- Although the *SdkVersion is captured in gradle build files, this is required for non gradle builds -->
+33-->[androidx.core:core:1.13.0] C:\Users\Mehmet AVCI\.gradle\caches\8.13\transforms\0a442df3b823586b7b45366d3f7198cf\transformed\core-1.13.0\AndroidManifest.xml:26:5-97
+33-->[androidx.core:core:1.13.0] C:\Users\Mehmet AVCI\.gradle\caches\8.13\transforms\0a442df3b823586b7b45366d3f7198cf\transformed\core-1.13.0\AndroidManifest.xml:26:22-94
+34    <!-- <uses-sdk android:minSdkVersion="14"/> -->
+35    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+35-->[com.google.android.datatransport:transport-backend-cct:3.1.8] C:\Users\Mehmet AVCI\.gradle\caches\8.13\transforms\ce0ef7a2ef2de1c3e9ddf70e857ccc25\transformed\jetified-transport-backend-cct-3.1.8\AndroidManifest.xml:24:5-79
+35-->[com.google.android.datatransport:transport-backend-cct:3.1.8] C:\Users\Mehmet AVCI\.gradle\caches\8.13\transforms\ce0ef7a2ef2de1c3e9ddf70e857ccc25\transformed\jetified-transport-backend-cct-3.1.8\AndroidManifest.xml:24:22-76
+36    <uses-permission android:name="android.permission.INTERNET" />
+36-->[com.google.android.datatransport:transport-backend-cct:3.1.8] C:\Users\Mehmet AVCI\.gradle\caches\8.13\transforms\ce0ef7a2ef2de1c3e9ddf70e857ccc25\transformed\jetified-transport-backend-cct-3.1.8\AndroidManifest.xml:25:5-67
+36-->[com.google.android.datatransport:transport-backend-cct:3.1.8] C:\Users\Mehmet AVCI\.gradle\caches\8.13\transforms\ce0ef7a2ef2de1c3e9ddf70e857ccc25\transformed\jetified-transport-backend-cct-3.1.8\AndroidManifest.xml:25:22-64
+37
+38    <application
+38-->C:\Projelerim\xoxo\xoxo-android-studio-v1.0.1\app\src\main\AndroidManifest.xml:4:5-104:19
+39        android:allowBackup="true"
+39-->C:\Projelerim\xoxo\xoxo-android-studio-v1.0.1\app\src\main\AndroidManifest.xml:5:9-35
+40        android:appComponentFactory="androidx.core.app.CoreComponentFactory"
+40-->[androidx.core:core:1.13.0] C:\Users\Mehmet AVCI\.gradle\caches\8.13\transforms\0a442df3b823586b7b45366d3f7198cf\transformed\core-1.13.0\AndroidManifest.xml:28:18-86
+41        android:extractNativeLibs="false"
+42        android:icon="@mipmap/ic_launcher"
+42-->C:\Projelerim\xoxo\xoxo-android-studio-v1.0.1\app\src\main\AndroidManifest.xml:6:9-43
+43        android:label="@string/app_name"
+43-->C:\Projelerim\xoxo\xoxo-android-studio-v1.0.1\app\src\main\AndroidManifest.xml:7:9-41
+44        android:roundIcon="@mipmap/ic_launcher_round"
+44-->C:\Projelerim\xoxo\xoxo-android-studio-v1.0.1\app\src\main\AndroidManifest.xml:8:9-54
+45        android:supportsRtl="true"
+45-->C:\Projelerim\xoxo\xoxo-android-studio-v1.0.1\app\src\main\AndroidManifest.xml:9:9-35
+46        android:theme="@style/Theme.XOXO" >
+46-->C:\Projelerim\xoxo\xoxo-android-studio-v1.0.1\app\src\main\AndroidManifest.xml:10:9-42
+47        <meta-data
+47-->C:\Projelerim\xoxo\xoxo-android-studio-v1.0.1\app\src\main\AndroidManifest.xml:12:9-14:59
+48            android:name="asset_statements"
+48-->C:\Projelerim\xoxo\xoxo-android-studio-v1.0.1\app\src\main\AndroidManifest.xml:13:13-44
+49            android:resource="@string/asset_statements" />
+49-->C:\Projelerim\xoxo\xoxo-android-studio-v1.0.1\app\src\main\AndroidManifest.xml:14:13-56
+50
+51        <activity
+51-->C:\Projelerim\xoxo\xoxo-android-studio-v1.0.1\app\src\main\AndroidManifest.xml:16:9-64:20
+52            android:name="com.google.androidbrowserhelper.trusted.LauncherActivity"
+52-->C:\Projelerim\xoxo\xoxo-android-studio-v1.0.1\app\src\main\AndroidManifest.xml:17:13-84
+53            android:exported="true"
+53-->C:\Projelerim\xoxo\xoxo-android-studio-v1.0.1\app\src\main\AndroidManifest.xml:18:13-36
+54            android:screenOrientation="portrait" >
+54-->C:\Projelerim\xoxo\xoxo-android-studio-v1.0.1\app\src\main\AndroidManifest.xml:19:13-49
+55
+56            <!-- Default URL to open -->
+57            <meta-data
+57-->C:\Projelerim\xoxo\xoxo-android-studio-v1.0.1\app\src\main\AndroidManifest.xml:22:13-24:58
+58                android:name="android.support.customtabs.trusted.DEFAULT_URL"
+58-->C:\Projelerim\xoxo\xoxo-android-studio-v1.0.1\app\src\main\AndroidManifest.xml:23:17-78
+59                android:value="https://xoxo-apps.com/" />
+59-->C:\Projelerim\xoxo\xoxo-android-studio-v1.0.1\app\src\main\AndroidManifest.xml:24:17-55
+60
+61            <!-- Status bar color -->
+62            <meta-data
+62-->C:\Projelerim\xoxo\xoxo-android-studio-v1.0.1\app\src\main\AndroidManifest.xml:27:13-29:58
+63                android:name="android.support.customtabs.trusted.STATUS_BAR_COLOR"
+63-->C:\Projelerim\xoxo\xoxo-android-studio-v1.0.1\app\src\main\AndroidManifest.xml:28:17-83
+64                android:resource="@color/colorPrimary" />
+64-->C:\Projelerim\xoxo\xoxo-android-studio-v1.0.1\app\src\main\AndroidManifest.xml:29:17-55
+65
+66            <!-- Navigation bar color -->
+67            <meta-data
+67-->C:\Projelerim\xoxo\xoxo-android-studio-v1.0.1\app\src\main\AndroidManifest.xml:32:13-34:58
+68                android:name="android.support.customtabs.trusted.NAVIGATION_BAR_COLOR"
+68-->C:\Projelerim\xoxo\xoxo-android-studio-v1.0.1\app\src\main\AndroidManifest.xml:33:17-87
+69                android:resource="@color/colorPrimary" />
+69-->C:\Projelerim\xoxo\xoxo-android-studio-v1.0.1\app\src\main\AndroidManifest.xml:34:17-55
+70
+71            <!-- Splash screen background color -->
+72            <meta-data
+72-->C:\Projelerim\xoxo\xoxo-android-studio-v1.0.1\app\src\main\AndroidManifest.xml:37:13-39:61
+73                android:name="android.support.customtabs.trusted.SPLASH_SCREEN_BACKGROUND_COLOR"
+73-->C:\Projelerim\xoxo\xoxo-android-studio-v1.0.1\app\src\main\AndroidManifest.xml:38:17-97
+74                android:resource="@color/colorBackground" />
+74-->C:\Projelerim\xoxo\xoxo-android-studio-v1.0.1\app\src\main\AndroidManifest.xml:39:17-58
+75
+76            <!-- Splash screen fade out duration -->
+77            <meta-data
+77-->C:\Projelerim\xoxo\xoxo-android-studio-v1.0.1\app\src\main\AndroidManifest.xml:42:13-44:39
+78                android:name="android.support.customtabs.trusted.SPLASH_SCREEN_FADE_OUT_DURATION"
+78-->C:\Projelerim\xoxo\xoxo-android-studio-v1.0.1\app\src\main\AndroidManifest.xml:43:17-98
+79                android:value="300" />
+79-->C:\Projelerim\xoxo\xoxo-android-studio-v1.0.1\app\src\main\AndroidManifest.xml:44:17-36
+80
+81            <!-- Fallback to Custom Tabs if TWA not supported -->
+82            <meta-data
+82-->C:\Projelerim\xoxo\xoxo-android-studio-v1.0.1\app\src\main\AndroidManifest.xml:47:13-49:46
+83                android:name="android.support.customtabs.trusted.FALLBACK_STRATEGY"
+83-->C:\Projelerim\xoxo\xoxo-android-studio-v1.0.1\app\src\main\AndroidManifest.xml:48:17-84
+84                android:value="customtabs" />
+84-->C:\Projelerim\xoxo\xoxo-android-studio-v1.0.1\app\src\main\AndroidManifest.xml:49:17-43
 85
-86                <data
-86-->C:\Projelerim\xoxo\xoxo-android-studio-v1.0.1\app\src\main\AndroidManifest.xml:60:17-62:46
-87                    android:host="xoxo-apps.com"
-87-->C:\Projelerim\xoxo\xoxo-android-studio-v1.0.1\app\src\main\AndroidManifest.xml:61:21-49
-88                    android:scheme="https" />
-88-->C:\Projelerim\xoxo\xoxo-android-studio-v1.0.1\app\src\main\AndroidManifest.xml:62:21-43
-89            </intent-filter>
-90        </activity>
-91
-92        <service
-92-->C:\Projelerim\xoxo\xoxo-android-studio-v1.0.1\app\src\main\AndroidManifest.xml:66:9-74:19
-93            android:name="com.google.androidbrowserhelper.trusted.DelegationService"
-93-->C:\Projelerim\xoxo\xoxo-android-studio-v1.0.1\app\src\main\AndroidManifest.xml:67:13-85
-94            android:enabled="true"
-94-->C:\Projelerim\xoxo\xoxo-android-studio-v1.0.1\app\src\main\AndroidManifest.xml:69:13-35
-95            android:exported="true" >
-95-->C:\Projelerim\xoxo\xoxo-android-studio-v1.0.1\app\src\main\AndroidManifest.xml:68:13-36
-96            <intent-filter>
-96-->C:\Projelerim\xoxo\xoxo-android-studio-v1.0.1\app\src\main\AndroidManifest.xml:70:13-73:29
-97                <action android:name="android.support.customtabs.trusted.TRUSTED_WEB_ACTIVITY_SERVICE" />
-97-->C:\Projelerim\xoxo\xoxo-android-studio-v1.0.1\app\src\main\AndroidManifest.xml:71:17-106
-97-->C:\Projelerim\xoxo\xoxo-android-studio-v1.0.1\app\src\main\AndroidManifest.xml:71:25-103
-98
-99                <category android:name="android.intent.category.DEFAULT" />
-99-->C:\Projelerim\xoxo\xoxo-android-studio-v1.0.1\app\src\main\AndroidManifest.xml:58:17-76
-99-->C:\Projelerim\xoxo\xoxo-android-studio-v1.0.1\app\src\main\AndroidManifest.xml:58:27-73
+86            <intent-filter>
+86-->C:\Projelerim\xoxo\xoxo-android-studio-v1.0.1\app\src\main\AndroidManifest.xml:51:13-54:29
+87                <action android:name="android.intent.action.MAIN" />
+87-->C:\Projelerim\xoxo\xoxo-android-studio-v1.0.1\app\src\main\AndroidManifest.xml:52:17-69
+87-->C:\Projelerim\xoxo\xoxo-android-studio-v1.0.1\app\src\main\AndroidManifest.xml:52:25-66
+88
+89                <category android:name="android.intent.category.LAUNCHER" />
+89-->C:\Projelerim\xoxo\xoxo-android-studio-v1.0.1\app\src\main\AndroidManifest.xml:53:17-77
+89-->C:\Projelerim\xoxo\xoxo-android-studio-v1.0.1\app\src\main\AndroidManifest.xml:53:27-74
+90            </intent-filter>
+91            <intent-filter android:autoVerify="true" >
+91-->C:\Projelerim\xoxo\xoxo-android-studio-v1.0.1\app\src\main\AndroidManifest.xml:56:13-63:29
+91-->C:\Projelerim\xoxo\xoxo-android-studio-v1.0.1\app\src\main\AndroidManifest.xml:56:28-53
+92                <action android:name="android.intent.action.VIEW" />
+92-->C:\Projelerim\xoxo\xoxo-android-studio-v1.0.1\app\src\main\AndroidManifest.xml:57:17-69
+92-->C:\Projelerim\xoxo\xoxo-android-studio-v1.0.1\app\src\main\AndroidManifest.xml:57:25-66
+93
+94                <category android:name="android.intent.category.DEFAULT" />
+94-->C:\Projelerim\xoxo\xoxo-android-studio-v1.0.1\app\src\main\AndroidManifest.xml:58:17-76
+94-->C:\Projelerim\xoxo\xoxo-android-studio-v1.0.1\app\src\main\AndroidManifest.xml:58:27-73
+95                <category android:name="android.intent.category.BROWSABLE" />
+95-->C:\Projelerim\xoxo\xoxo-android-studio-v1.0.1\app\src\main\AndroidManifest.xml:59:17-78
+95-->C:\Projelerim\xoxo\xoxo-android-studio-v1.0.1\app\src\main\AndroidManifest.xml:59:27-75
+96
+97                <data
+97-->C:\Projelerim\xoxo\xoxo-android-studio-v1.0.1\app\src\main\AndroidManifest.xml:60:17-62:46
+98                    android:host="xoxo-apps.com"
+98-->C:\Projelerim\xoxo\xoxo-android-studio-v1.0.1\app\src\main\AndroidManifest.xml:61:21-49
+99                    android:scheme="https" />
+99-->C:\Projelerim\xoxo\xoxo-android-studio-v1.0.1\app\src\main\AndroidManifest.xml:62:21-43
 100            </intent-filter>
-101        </service>
+101        </activity>
 102
-103        <provider
-103-->[androidx.emoji2:emoji2:1.3.0] C:\Users\Mehmet AVCI\.gradle\caches\8.13\transforms\0cbe343614403bb23b063726add83b65\transformed\jetified-emoji2-1.3.0\AndroidManifest.xml:24:9-32:20
-104            android:name="androidx.startup.InitializationProvider"
-104-->[androidx.emoji2:emoji2:1.3.0] C:\Users\Mehmet AVCI\.gradle\caches\8.13\transforms\0cbe343614403bb23b063726add83b65\transformed\jetified-emoji2-1.3.0\AndroidManifest.xml:25:13-67
-105            android:authorities="com.xoxo.gossipai.androidx-startup"
-105-->[androidx.emoji2:emoji2:1.3.0] C:\Users\Mehmet AVCI\.gradle\caches\8.13\transforms\0cbe343614403bb23b063726add83b65\transformed\jetified-emoji2-1.3.0\AndroidManifest.xml:26:13-68
-106            android:exported="false" >
-106-->[androidx.emoji2:emoji2:1.3.0] C:\Users\Mehmet AVCI\.gradle\caches\8.13\transforms\0cbe343614403bb23b063726add83b65\transformed\jetified-emoji2-1.3.0\AndroidManifest.xml:27:13-37
-107            <meta-data
-107-->[androidx.emoji2:emoji2:1.3.0] C:\Users\Mehmet AVCI\.gradle\caches\8.13\transforms\0cbe343614403bb23b063726add83b65\transformed\jetified-emoji2-1.3.0\AndroidManifest.xml:29:13-31:52
-108                android:name="androidx.emoji2.text.EmojiCompatInitializer"
-108-->[androidx.emoji2:emoji2:1.3.0] C:\Users\Mehmet AVCI\.gradle\caches\8.13\transforms\0cbe343614403bb23b063726add83b65\transformed\jetified-emoji2-1.3.0\AndroidManifest.xml:30:17-75
-109                android:value="androidx.startup" />
-109-->[androidx.emoji2:emoji2:1.3.0] C:\Users\Mehmet AVCI\.gradle\caches\8.13\transforms\0cbe343614403bb23b063726add83b65\transformed\jetified-emoji2-1.3.0\AndroidManifest.xml:31:17-49
-110            <meta-data
-110-->[androidx.lifecycle:lifecycle-process:2.6.2] C:\Users\Mehmet AVCI\.gradle\caches\8.13\transforms\7f422d072582d65d4bebf07b8951c54d\transformed\jetified-lifecycle-process-2.6.2\AndroidManifest.xml:29:13-31:52
-111                android:name="androidx.lifecycle.ProcessLifecycleInitializer"
-111-->[androidx.lifecycle:lifecycle-process:2.6.2] C:\Users\Mehmet AVCI\.gradle\caches\8.13\transforms\7f422d072582d65d4bebf07b8951c54d\transformed\jetified-lifecycle-process-2.6.2\AndroidManifest.xml:30:17-78
-112                android:value="androidx.startup" />
-112-->[androidx.lifecycle:lifecycle-process:2.6.2] C:\Users\Mehmet AVCI\.gradle\caches\8.13\transforms\7f422d072582d65d4bebf07b8951c54d\transformed\jetified-lifecycle-process-2.6.2\AndroidManifest.xml:31:17-49
-113            <meta-data
-113-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\Mehmet AVCI\.gradle\caches\8.13\transforms\4406a9fbde36da215b72289a02691bd5\transformed\jetified-profileinstaller-1.3.1\AndroidManifest.xml:29:13-31:52
-114                android:name="androidx.profileinstaller.ProfileInstallerInitializer"
-114-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\Mehmet AVCI\.gradle\caches\8.13\transforms\4406a9fbde36da215b72289a02691bd5\transformed\jetified-profileinstaller-1.3.1\AndroidManifest.xml:30:17-85
-115                android:value="androidx.startup" />
-115-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\Mehmet AVCI\.gradle\caches\8.13\transforms\4406a9fbde36da215b72289a02691bd5\transformed\jetified-profileinstaller-1.3.1\AndroidManifest.xml:31:17-49
-116        </provider>
+103        <!--
+104             Varsayilan delegasyon servisi yerine kendi sinifimiz:
+105             Digital Goods API cagrilarini Play Billing'e iletir.
+106        -->
+107        <service
+107-->C:\Projelerim\xoxo\xoxo-android-studio-v1.0.1\app\src\main\AndroidManifest.xml:68:9-76:19
+108            android:name="com.xoxo.gossipai.DelegationService"
+108-->C:\Projelerim\xoxo\xoxo-android-studio-v1.0.1\app\src\main\AndroidManifest.xml:69:13-46
+109            android:enabled="true"
+109-->C:\Projelerim\xoxo\xoxo-android-studio-v1.0.1\app\src\main\AndroidManifest.xml:71:13-35
+110            android:exported="true" >
+110-->C:\Projelerim\xoxo\xoxo-android-studio-v1.0.1\app\src\main\AndroidManifest.xml:70:13-36
+111            <intent-filter>
+111-->C:\Projelerim\xoxo\xoxo-android-studio-v1.0.1\app\src\main\AndroidManifest.xml:72:13-75:29
+112                <action android:name="android.support.customtabs.trusted.TRUSTED_WEB_ACTIVITY_SERVICE" />
+112-->C:\Projelerim\xoxo\xoxo-android-studio-v1.0.1\app\src\main\AndroidManifest.xml:73:17-106
+112-->C:\Projelerim\xoxo\xoxo-android-studio-v1.0.1\app\src\main\AndroidManifest.xml:73:25-103
+113
+114                <category android:name="android.intent.category.DEFAULT" />
+114-->C:\Projelerim\xoxo\xoxo-android-studio-v1.0.1\app\src\main\AndroidManifest.xml:58:17-76
+114-->C:\Projelerim\xoxo\xoxo-android-studio-v1.0.1\app\src\main\AndroidManifest.xml:58:27-73
+115            </intent-filter>
+116        </service>
 117
-118        <receiver
-118-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\Mehmet AVCI\.gradle\caches\8.13\transforms\4406a9fbde36da215b72289a02691bd5\transformed\jetified-profileinstaller-1.3.1\AndroidManifest.xml:34:9-52:20
-119            android:name="androidx.profileinstaller.ProfileInstallReceiver"
-119-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\Mehmet AVCI\.gradle\caches\8.13\transforms\4406a9fbde36da215b72289a02691bd5\transformed\jetified-profileinstaller-1.3.1\AndroidManifest.xml:35:13-76
-120            android:directBootAware="false"
-120-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\Mehmet AVCI\.gradle\caches\8.13\transforms\4406a9fbde36da215b72289a02691bd5\transformed\jetified-profileinstaller-1.3.1\AndroidManifest.xml:36:13-44
-121            android:enabled="true"
-121-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\Mehmet AVCI\.gradle\caches\8.13\transforms\4406a9fbde36da215b72289a02691bd5\transformed\jetified-profileinstaller-1.3.1\AndroidManifest.xml:37:13-35
-122            android:exported="true"
-122-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\Mehmet AVCI\.gradle\caches\8.13\transforms\4406a9fbde36da215b72289a02691bd5\transformed\jetified-profileinstaller-1.3.1\AndroidManifest.xml:38:13-36
-123            android:permission="android.permission.DUMP" >
-123-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\Mehmet AVCI\.gradle\caches\8.13\transforms\4406a9fbde36da215b72289a02691bd5\transformed\jetified-profileinstaller-1.3.1\AndroidManifest.xml:39:13-57
-124            <intent-filter>
-124-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\Mehmet AVCI\.gradle\caches\8.13\transforms\4406a9fbde36da215b72289a02691bd5\transformed\jetified-profileinstaller-1.3.1\AndroidManifest.xml:40:13-42:29
-125                <action android:name="androidx.profileinstaller.action.INSTALL_PROFILE" />
-125-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\Mehmet AVCI\.gradle\caches\8.13\transforms\4406a9fbde36da215b72289a02691bd5\transformed\jetified-profileinstaller-1.3.1\AndroidManifest.xml:41:17-91
-125-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\Mehmet AVCI\.gradle\caches\8.13\transforms\4406a9fbde36da215b72289a02691bd5\transformed\jetified-profileinstaller-1.3.1\AndroidManifest.xml:41:25-88
-126            </intent-filter>
-127            <intent-filter>
-127-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\Mehmet AVCI\.gradle\caches\8.13\transforms\4406a9fbde36da215b72289a02691bd5\transformed\jetified-profileinstaller-1.3.1\AndroidManifest.xml:43:13-45:29
-128                <action android:name="androidx.profileinstaller.action.SKIP_FILE" />
-128-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\Mehmet AVCI\.gradle\caches\8.13\transforms\4406a9fbde36da215b72289a02691bd5\transformed\jetified-profileinstaller-1.3.1\AndroidManifest.xml:44:17-85
-128-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\Mehmet AVCI\.gradle\caches\8.13\transforms\4406a9fbde36da215b72289a02691bd5\transformed\jetified-profileinstaller-1.3.1\AndroidManifest.xml:44:25-82
-129            </intent-filter>
-130            <intent-filter>
-130-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\Mehmet AVCI\.gradle\caches\8.13\transforms\4406a9fbde36da215b72289a02691bd5\transformed\jetified-profileinstaller-1.3.1\AndroidManifest.xml:46:13-48:29
-131                <action android:name="androidx.profileinstaller.action.SAVE_PROFILE" />
-131-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\Mehmet AVCI\.gradle\caches\8.13\transforms\4406a9fbde36da215b72289a02691bd5\transformed\jetified-profileinstaller-1.3.1\AndroidManifest.xml:47:17-88
-131-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\Mehmet AVCI\.gradle\caches\8.13\transforms\4406a9fbde36da215b72289a02691bd5\transformed\jetified-profileinstaller-1.3.1\AndroidManifest.xml:47:25-85
-132            </intent-filter>
-133            <intent-filter>
-133-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\Mehmet AVCI\.gradle\caches\8.13\transforms\4406a9fbde36da215b72289a02691bd5\transformed\jetified-profileinstaller-1.3.1\AndroidManifest.xml:49:13-51:29
-134                <action android:name="androidx.profileinstaller.action.BENCHMARK_OPERATION" />
-134-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\Mehmet AVCI\.gradle\caches\8.13\transforms\4406a9fbde36da215b72289a02691bd5\transformed\jetified-profileinstaller-1.3.1\AndroidManifest.xml:50:17-95
-134-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\Mehmet AVCI\.gradle\caches\8.13\transforms\4406a9fbde36da215b72289a02691bd5\transformed\jetified-profileinstaller-1.3.1\AndroidManifest.xml:50:25-92
-135            </intent-filter>
-136        </receiver>
-137    </application>
-138
-139</manifest>
+118        <!--
+119             Google Play Faturalandirma: odeme akisini yuruten ekran.
+120             uiMode listede: karanlik tema degisiminde ekran yeniden
+121             olusup satin alma akisini ikinci kez baslatmasin.
+122        -->
+123        <activity
+123-->C:\Projelerim\xoxo\xoxo-android-studio-v1.0.1\app\src\main\AndroidManifest.xml:81:9-92:20
+124            android:name="com.google.androidbrowserhelper.playbilling.provider.PaymentActivity"
+124-->C:\Projelerim\xoxo\xoxo-android-studio-v1.0.1\app\src\main\AndroidManifest.xml:82:13-96
+125            android:configChanges="keyboardHidden|keyboard|orientation|screenLayout|screenSize|uiMode"
+125-->C:\Projelerim\xoxo\xoxo-android-studio-v1.0.1\app\src\main\AndroidManifest.xml:84:13-103
+126            android:exported="true"
+126-->C:\Projelerim\xoxo\xoxo-android-studio-v1.0.1\app\src\main\AndroidManifest.xml:85:13-36
+127            android:theme="@android:style/Theme.Translucent.NoTitleBar" >
+127-->C:\Projelerim\xoxo\xoxo-android-studio-v1.0.1\app\src\main\AndroidManifest.xml:83:13-72
+128            <intent-filter>
+128-->C:\Projelerim\xoxo\xoxo-android-studio-v1.0.1\app\src\main\AndroidManifest.xml:86:13-88:29
+129                <action android:name="org.chromium.intent.action.PAY" />
+129-->C:\Projelerim\xoxo\xoxo-android-studio-v1.0.1\app\src\main\AndroidManifest.xml:87:17-73
+129-->C:\Projelerim\xoxo\xoxo-android-studio-v1.0.1\app\src\main\AndroidManifest.xml:87:25-70
+130            </intent-filter>
+131
+132            <meta-data
+132-->C:\Projelerim\xoxo\xoxo-android-studio-v1.0.1\app\src\main\AndroidManifest.xml:89:13-91:67
+133                android:name="org.chromium.default_payment_method_name"
+133-->C:\Projelerim\xoxo\xoxo-android-studio-v1.0.1\app\src\main\AndroidManifest.xml:90:17-72
+134                android:value="https://play.google.com/billing" />
+134-->C:\Projelerim\xoxo\xoxo-android-studio-v1.0.1\app\src\main\AndroidManifest.xml:91:17-64
+135        </activity>
+136
+137        <!--
+138             Tarayicinin "bu uygulama odeme alabilir mi" sorusuna cevap verir.
+139             Cagiran tarafi calisma aninda kendisi dogrular.
+140        -->
+141        <service
+141-->C:\Projelerim\xoxo\xoxo-android-studio-v1.0.1\app\src\main\AndroidManifest.xml:96:9-102:19
+142            android:name="com.google.androidbrowserhelper.playbilling.provider.PaymentService"
+142-->C:\Projelerim\xoxo\xoxo-android-studio-v1.0.1\app\src\main\AndroidManifest.xml:97:13-95
+143            android:exported="true" >
+143-->C:\Projelerim\xoxo\xoxo-android-studio-v1.0.1\app\src\main\AndroidManifest.xml:98:13-36
+144            <intent-filter>
+144-->C:\Projelerim\xoxo\xoxo-android-studio-v1.0.1\app\src\main\AndroidManifest.xml:99:13-101:29
+145                <action android:name="org.chromium.intent.action.IS_READY_TO_PAY" />
+145-->C:\Projelerim\xoxo\xoxo-android-studio-v1.0.1\app\src\main\AndroidManifest.xml:100:17-85
+145-->C:\Projelerim\xoxo\xoxo-android-studio-v1.0.1\app\src\main\AndroidManifest.xml:100:25-82
+146            </intent-filter>
+147        </service>
+148
+149        <meta-data
+149-->[com.android.billingclient:billing:8.3.0] C:\Users\Mehmet AVCI\.gradle\caches\8.13\transforms\d1a450d32c02785f66c85c972d0a91fa\transformed\jetified-billing-8.3.0\AndroidManifest.xml:22:9-24:37
+150            android:name="com.google.android.play.billingclient.version"
+150-->[com.android.billingclient:billing:8.3.0] C:\Users\Mehmet AVCI\.gradle\caches\8.13\transforms\d1a450d32c02785f66c85c972d0a91fa\transformed\jetified-billing-8.3.0\AndroidManifest.xml:23:13-73
+151            android:value="8.3.0" />
+151-->[com.android.billingclient:billing:8.3.0] C:\Users\Mehmet AVCI\.gradle\caches\8.13\transforms\d1a450d32c02785f66c85c972d0a91fa\transformed\jetified-billing-8.3.0\AndroidManifest.xml:24:13-34
+152
+153        <activity
+153-->[com.android.billingclient:billing:8.3.0] C:\Users\Mehmet AVCI\.gradle\caches\8.13\transforms\d1a450d32c02785f66c85c972d0a91fa\transformed\jetified-billing-8.3.0\AndroidManifest.xml:26:9-30:75
+154            android:name="com.android.billingclient.api.ProxyBillingActivity"
+154-->[com.android.billingclient:billing:8.3.0] C:\Users\Mehmet AVCI\.gradle\caches\8.13\transforms\d1a450d32c02785f66c85c972d0a91fa\transformed\jetified-billing-8.3.0\AndroidManifest.xml:27:13-78
+155            android:configChanges="keyboard|keyboardHidden|screenLayout|screenSize|orientation"
+155-->[com.android.billingclient:billing:8.3.0] C:\Users\Mehmet AVCI\.gradle\caches\8.13\transforms\d1a450d32c02785f66c85c972d0a91fa\transformed\jetified-billing-8.3.0\AndroidManifest.xml:28:13-96
+156            android:exported="false"
+156-->[com.android.billingclient:billing:8.3.0] C:\Users\Mehmet AVCI\.gradle\caches\8.13\transforms\d1a450d32c02785f66c85c972d0a91fa\transformed\jetified-billing-8.3.0\AndroidManifest.xml:29:13-37
+157            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
+157-->[com.android.billingclient:billing:8.3.0] C:\Users\Mehmet AVCI\.gradle\caches\8.13\transforms\d1a450d32c02785f66c85c972d0a91fa\transformed\jetified-billing-8.3.0\AndroidManifest.xml:30:13-72
+158        <activity
+158-->[com.android.billingclient:billing:8.3.0] C:\Users\Mehmet AVCI\.gradle\caches\8.13\transforms\d1a450d32c02785f66c85c972d0a91fa\transformed\jetified-billing-8.3.0\AndroidManifest.xml:31:9-35:75
+159            android:name="com.android.billingclient.api.ProxyBillingActivityV2"
+159-->[com.android.billingclient:billing:8.3.0] C:\Users\Mehmet AVCI\.gradle\caches\8.13\transforms\d1a450d32c02785f66c85c972d0a91fa\transformed\jetified-billing-8.3.0\AndroidManifest.xml:32:13-80
+160            android:configChanges="keyboard|keyboardHidden|screenLayout|screenSize|orientation"
+160-->[com.android.billingclient:billing:8.3.0] C:\Users\Mehmet AVCI\.gradle\caches\8.13\transforms\d1a450d32c02785f66c85c972d0a91fa\transformed\jetified-billing-8.3.0\AndroidManifest.xml:33:13-96
+161            android:exported="false"
+161-->[com.android.billingclient:billing:8.3.0] C:\Users\Mehmet AVCI\.gradle\caches\8.13\transforms\d1a450d32c02785f66c85c972d0a91fa\transformed\jetified-billing-8.3.0\AndroidManifest.xml:34:13-37
+162            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
+162-->[com.android.billingclient:billing:8.3.0] C:\Users\Mehmet AVCI\.gradle\caches\8.13\transforms\d1a450d32c02785f66c85c972d0a91fa\transformed\jetified-billing-8.3.0\AndroidManifest.xml:35:13-72
+163        <activity
+163-->[com.google.android.gms:play-services-base:18.5.0] C:\Users\Mehmet AVCI\.gradle\caches\8.13\transforms\f37bd010c31c7ed200130b9fbabc6908\transformed\jetified-play-services-base-18.5.0\AndroidManifest.xml:5:9-173
+164            android:name="com.google.android.gms.common.api.GoogleApiActivity"
+164-->[com.google.android.gms:play-services-base:18.5.0] C:\Users\Mehmet AVCI\.gradle\caches\8.13\transforms\f37bd010c31c7ed200130b9fbabc6908\transformed\jetified-play-services-base-18.5.0\AndroidManifest.xml:5:19-85
+165            android:exported="false"
+165-->[com.google.android.gms:play-services-base:18.5.0] C:\Users\Mehmet AVCI\.gradle\caches\8.13\transforms\f37bd010c31c7ed200130b9fbabc6908\transformed\jetified-play-services-base-18.5.0\AndroidManifest.xml:5:146-170
+166            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
+166-->[com.google.android.gms:play-services-base:18.5.0] C:\Users\Mehmet AVCI\.gradle\caches\8.13\transforms\f37bd010c31c7ed200130b9fbabc6908\transformed\jetified-play-services-base-18.5.0\AndroidManifest.xml:5:86-145
+167
+168        <meta-data
+168-->[com.google.android.gms:play-services-basement:18.9.0] C:\Users\Mehmet AVCI\.gradle\caches\8.13\transforms\a6a613b78e3a0c674dd02013d2604b24\transformed\jetified-play-services-basement-18.9.0\AndroidManifest.xml:21:9-23:69
+169            android:name="com.google.android.gms.version"
+169-->[com.google.android.gms:play-services-basement:18.9.0] C:\Users\Mehmet AVCI\.gradle\caches\8.13\transforms\a6a613b78e3a0c674dd02013d2604b24\transformed\jetified-play-services-basement-18.9.0\AndroidManifest.xml:22:13-58
+170            android:value="@integer/google_play_services_version" />
+170-->[com.google.android.gms:play-services-basement:18.9.0] C:\Users\Mehmet AVCI\.gradle\caches\8.13\transforms\a6a613b78e3a0c674dd02013d2604b24\transformed\jetified-play-services-basement-18.9.0\AndroidManifest.xml:23:13-66
+171
+172        <provider
+172-->[androidx.emoji2:emoji2:1.3.0] C:\Users\Mehmet AVCI\.gradle\caches\8.13\transforms\0cbe343614403bb23b063726add83b65\transformed\jetified-emoji2-1.3.0\AndroidManifest.xml:24:9-32:20
+173            android:name="androidx.startup.InitializationProvider"
+173-->[androidx.emoji2:emoji2:1.3.0] C:\Users\Mehmet AVCI\.gradle\caches\8.13\transforms\0cbe343614403bb23b063726add83b65\transformed\jetified-emoji2-1.3.0\AndroidManifest.xml:25:13-67
+174            android:authorities="com.xoxo.gossipai.androidx-startup"
+174-->[androidx.emoji2:emoji2:1.3.0] C:\Users\Mehmet AVCI\.gradle\caches\8.13\transforms\0cbe343614403bb23b063726add83b65\transformed\jetified-emoji2-1.3.0\AndroidManifest.xml:26:13-68
+175            android:exported="false" >
+175-->[androidx.emoji2:emoji2:1.3.0] C:\Users\Mehmet AVCI\.gradle\caches\8.13\transforms\0cbe343614403bb23b063726add83b65\transformed\jetified-emoji2-1.3.0\AndroidManifest.xml:27:13-37
+176            <meta-data
+176-->[androidx.emoji2:emoji2:1.3.0] C:\Users\Mehmet AVCI\.gradle\caches\8.13\transforms\0cbe343614403bb23b063726add83b65\transformed\jetified-emoji2-1.3.0\AndroidManifest.xml:29:13-31:52
+177                android:name="androidx.emoji2.text.EmojiCompatInitializer"
+177-->[androidx.emoji2:emoji2:1.3.0] C:\Users\Mehmet AVCI\.gradle\caches\8.13\transforms\0cbe343614403bb23b063726add83b65\transformed\jetified-emoji2-1.3.0\AndroidManifest.xml:30:17-75
+178                android:value="androidx.startup" />
+178-->[androidx.emoji2:emoji2:1.3.0] C:\Users\Mehmet AVCI\.gradle\caches\8.13\transforms\0cbe343614403bb23b063726add83b65\transformed\jetified-emoji2-1.3.0\AndroidManifest.xml:31:17-49
+179            <meta-data
+179-->[androidx.lifecycle:lifecycle-process:2.6.2] C:\Users\Mehmet AVCI\.gradle\caches\8.13\transforms\7f422d072582d65d4bebf07b8951c54d\transformed\jetified-lifecycle-process-2.6.2\AndroidManifest.xml:29:13-31:52
+180                android:name="androidx.lifecycle.ProcessLifecycleInitializer"
+180-->[androidx.lifecycle:lifecycle-process:2.6.2] C:\Users\Mehmet AVCI\.gradle\caches\8.13\transforms\7f422d072582d65d4bebf07b8951c54d\transformed\jetified-lifecycle-process-2.6.2\AndroidManifest.xml:30:17-78
+181                android:value="androidx.startup" />
+181-->[androidx.lifecycle:lifecycle-process:2.6.2] C:\Users\Mehmet AVCI\.gradle\caches\8.13\transforms\7f422d072582d65d4bebf07b8951c54d\transformed\jetified-lifecycle-process-2.6.2\AndroidManifest.xml:31:17-49
+182            <meta-data
+182-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\Mehmet AVCI\.gradle\caches\8.13\transforms\4406a9fbde36da215b72289a02691bd5\transformed\jetified-profileinstaller-1.3.1\AndroidManifest.xml:29:13-31:52
+183                android:name="androidx.profileinstaller.ProfileInstallerInitializer"
+183-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\Mehmet AVCI\.gradle\caches\8.13\transforms\4406a9fbde36da215b72289a02691bd5\transformed\jetified-profileinstaller-1.3.1\AndroidManifest.xml:30:17-85
+184                android:value="androidx.startup" />
+184-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\Mehmet AVCI\.gradle\caches\8.13\transforms\4406a9fbde36da215b72289a02691bd5\transformed\jetified-profileinstaller-1.3.1\AndroidManifest.xml:31:17-49
+185        </provider>
+186
+187        <receiver
+187-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\Mehmet AVCI\.gradle\caches\8.13\transforms\4406a9fbde36da215b72289a02691bd5\transformed\jetified-profileinstaller-1.3.1\AndroidManifest.xml:34:9-52:20
+188            android:name="androidx.profileinstaller.ProfileInstallReceiver"
+188-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\Mehmet AVCI\.gradle\caches\8.13\transforms\4406a9fbde36da215b72289a02691bd5\transformed\jetified-profileinstaller-1.3.1\AndroidManifest.xml:35:13-76
+189            android:directBootAware="false"
+189-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\Mehmet AVCI\.gradle\caches\8.13\transforms\4406a9fbde36da215b72289a02691bd5\transformed\jetified-profileinstaller-1.3.1\AndroidManifest.xml:36:13-44
+190            android:enabled="true"
+190-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\Mehmet AVCI\.gradle\caches\8.13\transforms\4406a9fbde36da215b72289a02691bd5\transformed\jetified-profileinstaller-1.3.1\AndroidManifest.xml:37:13-35
+191            android:exported="true"
+191-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\Mehmet AVCI\.gradle\caches\8.13\transforms\4406a9fbde36da215b72289a02691bd5\transformed\jetified-profileinstaller-1.3.1\AndroidManifest.xml:38:13-36
+192            android:permission="android.permission.DUMP" >
+192-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\Mehmet AVCI\.gradle\caches\8.13\transforms\4406a9fbde36da215b72289a02691bd5\transformed\jetified-profileinstaller-1.3.1\AndroidManifest.xml:39:13-57
+193            <intent-filter>
+193-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\Mehmet AVCI\.gradle\caches\8.13\transforms\4406a9fbde36da215b72289a02691bd5\transformed\jetified-profileinstaller-1.3.1\AndroidManifest.xml:40:13-42:29
+194                <action android:name="androidx.profileinstaller.action.INSTALL_PROFILE" />
+194-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\Mehmet AVCI\.gradle\caches\8.13\transforms\4406a9fbde36da215b72289a02691bd5\transformed\jetified-profileinstaller-1.3.1\AndroidManifest.xml:41:17-91
+194-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\Mehmet AVCI\.gradle\caches\8.13\transforms\4406a9fbde36da215b72289a02691bd5\transformed\jetified-profileinstaller-1.3.1\AndroidManifest.xml:41:25-88
+195            </intent-filter>
+196            <intent-filter>
+196-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\Mehmet AVCI\.gradle\caches\8.13\transforms\4406a9fbde36da215b72289a02691bd5\transformed\jetified-profileinstaller-1.3.1\AndroidManifest.xml:43:13-45:29
+197                <action android:name="androidx.profileinstaller.action.SKIP_FILE" />
+197-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\Mehmet AVCI\.gradle\caches\8.13\transforms\4406a9fbde36da215b72289a02691bd5\transformed\jetified-profileinstaller-1.3.1\AndroidManifest.xml:44:17-85
+197-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\Mehmet AVCI\.gradle\caches\8.13\transforms\4406a9fbde36da215b72289a02691bd5\transformed\jetified-profileinstaller-1.3.1\AndroidManifest.xml:44:25-82
+198            </intent-filter>
+199            <intent-filter>
+199-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\Mehmet AVCI\.gradle\caches\8.13\transforms\4406a9fbde36da215b72289a02691bd5\transformed\jetified-profileinstaller-1.3.1\AndroidManifest.xml:46:13-48:29
+200                <action android:name="androidx.profileinstaller.action.SAVE_PROFILE" />
+200-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\Mehmet AVCI\.gradle\caches\8.13\transforms\4406a9fbde36da215b72289a02691bd5\transformed\jetified-profileinstaller-1.3.1\AndroidManifest.xml:47:17-88
+200-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\Mehmet AVCI\.gradle\caches\8.13\transforms\4406a9fbde36da215b72289a02691bd5\transformed\jetified-profileinstaller-1.3.1\AndroidManifest.xml:47:25-85
+201            </intent-filter>
+202            <intent-filter>
+202-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\Mehmet AVCI\.gradle\caches\8.13\transforms\4406a9fbde36da215b72289a02691bd5\transformed\jetified-profileinstaller-1.3.1\AndroidManifest.xml:49:13-51:29
+203                <action android:name="androidx.profileinstaller.action.BENCHMARK_OPERATION" />
+203-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\Mehmet AVCI\.gradle\caches\8.13\transforms\4406a9fbde36da215b72289a02691bd5\transformed\jetified-profileinstaller-1.3.1\AndroidManifest.xml:50:17-95
+203-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\Mehmet AVCI\.gradle\caches\8.13\transforms\4406a9fbde36da215b72289a02691bd5\transformed\jetified-profileinstaller-1.3.1\AndroidManifest.xml:50:25-92
+204            </intent-filter>
+205        </receiver>
+206
+207        <service
+207-->[com.google.android.datatransport:transport-backend-cct:3.1.8] C:\Users\Mehmet AVCI\.gradle\caches\8.13\transforms\ce0ef7a2ef2de1c3e9ddf70e857ccc25\transformed\jetified-transport-backend-cct-3.1.8\AndroidManifest.xml:28:9-34:19
+208            android:name="com.google.android.datatransport.runtime.backends.TransportBackendDiscovery"
+208-->[com.google.android.datatransport:transport-backend-cct:3.1.8] C:\Users\Mehmet AVCI\.gradle\caches\8.13\transforms\ce0ef7a2ef2de1c3e9ddf70e857ccc25\transformed\jetified-transport-backend-cct-3.1.8\AndroidManifest.xml:29:13-103
+209            android:exported="false" >
+209-->[com.google.android.datatransport:transport-backend-cct:3.1.8] C:\Users\Mehmet AVCI\.gradle\caches\8.13\transforms\ce0ef7a2ef2de1c3e9ddf70e857ccc25\transformed\jetified-transport-backend-cct-3.1.8\AndroidManifest.xml:30:13-37
+210            <meta-data
+210-->[com.google.android.datatransport:transport-backend-cct:3.1.8] C:\Users\Mehmet AVCI\.gradle\caches\8.13\transforms\ce0ef7a2ef2de1c3e9ddf70e857ccc25\transformed\jetified-transport-backend-cct-3.1.8\AndroidManifest.xml:31:13-33:39
+211                android:name="backend:com.google.android.datatransport.cct.CctBackendFactory"
+211-->[com.google.android.datatransport:transport-backend-cct:3.1.8] C:\Users\Mehmet AVCI\.gradle\caches\8.13\transforms\ce0ef7a2ef2de1c3e9ddf70e857ccc25\transformed\jetified-transport-backend-cct-3.1.8\AndroidManifest.xml:32:17-94
+212                android:value="cct" />
+212-->[com.google.android.datatransport:transport-backend-cct:3.1.8] C:\Users\Mehmet AVCI\.gradle\caches\8.13\transforms\ce0ef7a2ef2de1c3e9ddf70e857ccc25\transformed\jetified-transport-backend-cct-3.1.8\AndroidManifest.xml:33:17-36
+213        </service>
+214        <service
+214-->[com.google.android.datatransport:transport-runtime:3.1.8] C:\Users\Mehmet AVCI\.gradle\caches\8.13\transforms\6a8f052cedd2ff42927f8b32e8014631\transformed\jetified-transport-runtime-3.1.8\AndroidManifest.xml:26:9-30:19
+215            android:name="com.google.android.datatransport.runtime.scheduling.jobscheduling.JobInfoSchedulerService"
+215-->[com.google.android.datatransport:transport-runtime:3.1.8] C:\Users\Mehmet AVCI\.gradle\caches\8.13\transforms\6a8f052cedd2ff42927f8b32e8014631\transformed\jetified-transport-runtime-3.1.8\AndroidManifest.xml:27:13-117
+216            android:exported="false"
+216-->[com.google.android.datatransport:transport-runtime:3.1.8] C:\Users\Mehmet AVCI\.gradle\caches\8.13\transforms\6a8f052cedd2ff42927f8b32e8014631\transformed\jetified-transport-runtime-3.1.8\AndroidManifest.xml:28:13-37
+217            android:permission="android.permission.BIND_JOB_SERVICE" >
+217-->[com.google.android.datatransport:transport-runtime:3.1.8] C:\Users\Mehmet AVCI\.gradle\caches\8.13\transforms\6a8f052cedd2ff42927f8b32e8014631\transformed\jetified-transport-runtime-3.1.8\AndroidManifest.xml:29:13-69
+218        </service>
+219
+220        <receiver
+220-->[com.google.android.datatransport:transport-runtime:3.1.8] C:\Users\Mehmet AVCI\.gradle\caches\8.13\transforms\6a8f052cedd2ff42927f8b32e8014631\transformed\jetified-transport-runtime-3.1.8\AndroidManifest.xml:32:9-34:40
+221            android:name="com.google.android.datatransport.runtime.scheduling.jobscheduling.AlarmManagerSchedulerBroadcastReceiver"
+221-->[com.google.android.datatransport:transport-runtime:3.1.8] C:\Users\Mehmet AVCI\.gradle\caches\8.13\transforms\6a8f052cedd2ff42927f8b32e8014631\transformed\jetified-transport-runtime-3.1.8\AndroidManifest.xml:33:13-132
+222            android:exported="false" />
+222-->[com.google.android.datatransport:transport-runtime:3.1.8] C:\Users\Mehmet AVCI\.gradle\caches\8.13\transforms\6a8f052cedd2ff42927f8b32e8014631\transformed\jetified-transport-runtime-3.1.8\AndroidManifest.xml:34:13-37
+223    </application>
+224
+225</manifest>
