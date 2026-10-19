@@ -5,6 +5,7 @@ import {
 } from "./storage";
 import { api } from "@shared/routes";
 import Anthropic from "@anthropic-ai/sdk";
+import { createMessage, cachedSystem } from "./claude";
 import OpenAI from "openai";
 import { GoogleGenAI } from "@google/genai";
 import { WebSocketServer, WebSocket } from "ws";
@@ -806,16 +807,17 @@ async function triggerAutoAiResponse(room: { id: number; code: string; aiMode: n
     const aiPersonality = language === "en" ? (room.aiMode === 1 ? "Angel" : room.aiMode === 2 ? "Bestie" : "Snake") : (room.aiMode === 1 ? "Melek" : room.aiMode === 2 ? "Kanka" : "Yılan");
 
     console.log("[XRoom AI] language:", language, "aiMode:", room.aiMode);
-    const response = await anthropic.messages.create({
+    const response = await createMessage(anthropic, "xroom-auto", {
       model: "claude-sonnet-4-5",
       max_tokens: 60, // 15 SECOND RULE: ~15 words max for X-Room
       // Cinsiyet odayi kuranin secimi. Once sabit "female" idi.
-      system: getXRoomAiPrompt(
+      // Persona talimati sabit -> onbellek kesme noktasi; oda sohbeti user mesajinda.
+      system: cachedSystem(getXRoomAiPrompt(
         room.aiMode,
         1,
         (room as any).aiGender === "male" ? "male" : "female",
         language as "tr" | "en",
-      ),
+      )),
       messages: [{ role: "user", content: language === "en" ? `Recent chat:\n${conversationContext}\n\nJoin this conversation BRIEFLY (max 15 words).` : `Son sohbet:\n${conversationContext}\n\nBu sohbete KISA bir şekilde katıl (max 15 kelime).` }]
     });
 
@@ -3444,12 +3446,21 @@ Kullanıcının sorusu: "${message}"
       const userGender = (req.body.gender === "male" ? "male" : "female") as "male" | "female";
       const subLevel = parseInt(req.body.subLevel) || 1; // NEW: subLevel support (1 or 2)
 
-      const response = await anthropic.messages.create({
-        model: "claude-sonnet-4-5", 
+      // Sabit persona talimati once ve isaretli; degisken itiraf metni ondan
+      // sonra ayri blokta. Metin ve sira ayni, yalnizca blok sinirlari var.
+      const response = await createMessage(anthropic, "confession", {
+        model: "claude-sonnet-4-5",
         max_tokens: 100, // 15 SECOND RULE: ~20-25 words max
         messages: [{
           role: "user",
-          content: `${getSystemPrompt(judgmentLevel, language, userGender, subLevel)}\n\nKullanıcının itirafı: "${content}"`
+          content: [
+            {
+              type: "text",
+              text: getSystemPrompt(judgmentLevel, language, userGender, subLevel),
+              cache_control: { type: "ephemeral" },
+            },
+            { type: "text", text: `\n\nKullanıcının itirafı: "${content}"` },
+          ],
         }]
       });
 
@@ -3680,13 +3691,16 @@ Kullanıcının sorusu: "${message}"
         // SNAKE ACCELERATION: Haiku for Snake (200ms vs 2-5s), Sonnet for others
         const aiModel = session.judgmentLevel === 3 ? "claude-haiku-4-5-20251001" : "claude-sonnet-4-5";
 
-        const response = await anthropic.messages.create({
+        // Prompt caching: persona talimati (sabit) isaretli ilk system blogu,
+        // kullaniciya ozel hafiza ondan sonra ayri blok. Gecmis yalnizca sona
+        // eklendigi icin ust duzey otomatik caching sohbet kuyrugunu da tutar.
+        const response = await createMessage(anthropic, "chat", {
           model: aiModel,
           max_tokens: maxTokens, // Snake: 50, Others: 100
           temperature: temperature, // Snake: 0.8, Others: 0.7
-          system: systemPrompt + memoryContext,
+          system: cachedSystem(systemPrompt, memoryContext),
           messages: aiMessages
-        });
+        }, { auto: true });
 
         aiText = response.content
           .filter(item => item.type === 'text')
@@ -4470,10 +4484,10 @@ Kullanıcının sorusu: "${message}"
       const aiPersonality = language === "en" ? (room.aiMode === 1 ? "Angel" : room.aiMode === 2 ? "Bestie" : "Snake") : (room.aiMode === 1 ? "Melek" : room.aiMode === 2 ? "Kanka" : "Yılan");
 
       // Generate AI comment - 15 SECOND RULE: short, punchy responses
-      const response = await anthropic.messages.create({
+      const response = await createMessage(anthropic, "xroom-trigger", {
         model: "claude-sonnet-4-5",
         max_tokens: 80, // 15 SECOND RULE: ~15-20 words for X-Room comments
-        system: getSystemPrompt(room.aiMode) + "\n\nSen bir grup sohbetine dahil oldun. Arkadaşların aşağıdaki konuşmayı yaptı. Onlara KISA bir yorum yap (max 15-20 kelime).",
+        system: cachedSystem(getSystemPrompt(room.aiMode) + "\n\nSen bir grup sohbetine dahil oldun. Arkadaşların aşağıdaki konuşmayı yaptı. Onlara KISA bir yorum yap (max 15-20 kelime)."),
         messages: [{ role: "user", content: conversationContext }]
       });
 
